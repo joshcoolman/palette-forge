@@ -4,9 +4,11 @@ import type { Direction } from '#/features/palette/types'
 
 export function DirectionCard({
   direction,
+  active = false,
   onChoose,
 }: {
   direction: Direction
+  active?: boolean
   onChoose: () => void
 }) {
   return (
@@ -17,9 +19,21 @@ export function DirectionCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
       className="relative flex flex-col gap-3 rounded-2xl border p-4 text-left"
-      style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}
+      style={{
+        borderColor: active ? 'var(--app-text)' : 'var(--app-border)',
+        background: 'var(--app-surface)',
+        opacity: active ? 1 : undefined,
+      }}
     >
-      {direction.recommended && (
+      {active && (
+        <span
+          className="absolute left-3 top-3 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+          style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}
+        >
+          Exploring
+        </span>
+      )}
+      {direction.recommended && !active && (
         <span
           className="absolute right-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-semibold"
           style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}

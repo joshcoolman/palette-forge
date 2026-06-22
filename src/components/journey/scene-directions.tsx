@@ -9,23 +9,23 @@ import { DirectionCard } from '#/components/journey/direction-card'
 export function SceneDirections({
   directions,
   phase,
+  activeType,
   onChoose,
 }: {
   directions: Direction[]
   phase: Phase
+  activeType: PaletteType | null
   onChoose: (type: PaletteType) => void
 }) {
   const running = phase === 'running'
   return (
-    <motion.section
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col gap-4"
-    >
+    <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4">
       <AgentNarration>
         {running
           ? 'Reading your colors and sketching a few directions…'
-          : 'A few ways this could go. Pick a path to descend into.'}
+          : activeType
+            ? 'Pick a different path to branch a new set, or refine the one below.'
+            : 'A few ways this could go. Pick a path to descend into.'}
       </AgentNarration>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {running && directions.length === 0
@@ -40,6 +40,7 @@ export function SceneDirections({
               <DirectionCard
                 key={direction.type}
                 direction={direction}
+                active={direction.type === activeType}
                 onChoose={() => onChoose(direction.type)}
               />
             ))}

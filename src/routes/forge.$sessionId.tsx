@@ -2,7 +2,12 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 
 import type { ScoredPalette, Source } from '#/features/palette/types'
-import { chooseDirection, chooseVariation, useJourney } from '#/lib/journey-store'
+import {
+  chooseDirection,
+  chooseVariation,
+  refineJourney,
+  useJourney,
+} from '#/lib/journey-store'
 import { Backdrop } from '#/components/journey/backdrop'
 import { SceneDirections } from '#/components/journey/scene-directions'
 import { SceneVariations } from '#/components/journey/scene-variations'
@@ -40,17 +45,31 @@ function ForgePage() {
   const journey = useJourney(sessionId)
   const variationsRef = useRef<HTMLDivElement>(null)
   const paletteRef = useRef<HTMLDivElement>(null)
+  const hadChosen = useRef(false)
 
+  const roundCount = journey.rounds.length
+
+  // Descend to the variations when a path is picked.
   useEffect(() => {
     if (journey.chosenType) {
       variationsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [journey.chosenType])
 
+  // A new refine round appended — bring it (and the refine bar) into view.
   useEffect(() => {
-    if (journey.chosen) {
+    if (roundCount > 1) {
+      variationsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
+  }, [roundCount])
+
+  // Reveal the final palette only on the first selection, not on every re-pick.
+  useEffect(() => {
+    if (journey.chosen && !hadChosen.current) {
+      hadChosen.current = true
       paletteRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
+    if (!journey.chosen) hadChosen.current = false
   }, [journey.chosen])
 
   if (!journey.source) {
@@ -95,16 +114,17 @@ function ForgePage() {
         <SceneDirections
           directions={journey.directions}
           phase={journey.directionsPhase}
+          activeType={journey.chosenType}
           onChoose={(type) => void chooseDirection(sessionId, type)}
         />
 
         {journey.chosenType && (
           <div ref={variationsRef}>
             <SceneVariations
-              variations={journey.variations}
-              phase={journey.variationsPhase}
+              rounds={journey.rounds}
               chosenId={journey.chosen?.id}
               onChoose={(palette) => chooseVariation(sessionId, palette)}
+              onRefine={(instruction) => void refineJourney(sessionId, instruction)}
             />
           </div>
         )}

@@ -2,22 +2,33 @@
  * The live journey state, per session, kept out of the component tree. Engine
  * results are written in via actions; scenes subscribe with useSyncExternalStore.
  * Persisted palettes go through palette-repo, not this store.
+ *
+ * Variations are a *sequence of rounds*: the initial fan-out plus any refine
+ * steers stacked beneath it, so the trail shows where you came from. Re-picking
+ * a direction branches a fresh tail (rounds reset for the new type).
  */
 
 import { useSyncExternalStore } from 'react'
 
 import type { Direction, PaletteType, ScoredPalette, Source } from '#/features/palette/types'
 import { getEngine } from '#/features/agent/get-engine'
+import { makeId } from '#/lib/id'
 
 export type Phase = 'idle' | 'running' | 'done' | 'error'
+
+export type VariationRound = {
+  id: string
+  steer?: string
+  variations: ScoredPalette[]
+  phase: Phase
+}
 
 export type JourneyState = {
   source: Source | null
   directions: Direction[]
   directionsPhase: Phase
   chosenType: PaletteType | null
-  variations: ScoredPalette[]
-  variationsPhase: Phase
+  rounds: VariationRound[]
   chosen: ScoredPalette | null
 }
 
@@ -26,8 +37,7 @@ const EMPTY: JourneyState = {
   directions: [],
   directionsPhase: 'idle',
   chosenType: null,
-  variations: [],
-  variationsPhase: 'idle',
+  rounds: [],
   chosen: null,
 }
 
@@ -54,6 +64,19 @@ function patch(id: string, next: Partial<JourneyState>): void {
   emit()
 }
 
+function patchRound(id: string, roundId: string, next: Partial<VariationRound>): void {
+  const rounds = getState(id).rounds.map((r) => (r.id === roundId ? { ...r, ...next } : r))
+  patch(id, { rounds })
+}
+
+function recommendedOf(variations: ScoredPalette[]): ScoredPalette | null {
+  let best: ScoredPalette | null = null
+  for (const palette of variations) {
+    if (!best || palette.score.overall > best.score.overall) best = palette
+  }
+  return best
+}
+
 export function useJourney(id: string): JourneyState {
   return useSyncExternalStore(
     subscribe,
@@ -76,20 +99,45 @@ export async function startJourney(id: string, source: Source): Promise<void> {
   }
 }
 
+/** Pick a path — branches a fresh tail (rounds reset) for this type. */
 export async function chooseDirection(id: string, type: PaletteType): Promise<void> {
   const state = getState(id)
   if (!state.source) return
-  patch(id, { chosenType: type, variations: [], variationsPhase: 'running', chosen: null })
+  const roundId = makeId()
+  patch(id, {
+    chosenType: type,
+    chosen: null,
+    rounds: [{ id: roundId, variations: [], phase: 'running' }],
+  })
   try {
     const variations = await getEngine().composeVariations(state.source, type)
-    if (sessions[id]?.chosenType === type) patch(id, { variations, variationsPhase: 'done' })
+    if (sessions[id]?.chosenType === type) patchRound(id, roundId, { variations, phase: 'done' })
   } catch {
-    patch(id, { variationsPhase: 'error' })
+    patchRound(id, roundId, { phase: 'error' })
   }
 }
 
 export function chooseVariation(id: string, palette: ScoredPalette): void {
   patch(id, { chosen: palette })
+}
+
+/** Steer from the current pick (or the latest round's recommendation) — appends a round. */
+export async function refineJourney(id: string, instruction: string): Promise<void> {
+  const state = getState(id)
+  if (!state.chosenType || state.rounds.length === 0) return
+  const latest = state.rounds[state.rounds.length - 1]
+  const base = state.chosen ?? recommendedOf(latest.variations)
+  if (!base) return
+  const roundId = makeId()
+  patch(id, {
+    rounds: [...state.rounds, { id: roundId, steer: instruction, variations: [], phase: 'running' }],
+  })
+  try {
+    const variations = await getEngine().refine(base, instruction)
+    patchRound(id, roundId, { variations, phase: 'done' })
+  } catch {
+    patchRound(id, roundId, { phase: 'error' })
+  }
 }
 
 export function resetJourney(id: string): void {
