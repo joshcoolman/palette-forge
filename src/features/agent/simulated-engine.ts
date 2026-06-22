@@ -78,17 +78,19 @@ function accentHueFor(type: PaletteType, baseHue: number): number {
 
 function baseRecipe(type: PaletteType, baseHue: number): Recipe {
   const common = { type, baseHue }
+  // Dark accents are deliberately less saturated than their light counterparts —
+  // a full-saturation accent vibrates/glows on a dark ground.
   switch (type) {
     case 'monochrome':
-      return { ...common, neutralSat: 0.16, accentSatLight: 0.6, accentSatDark: 0.55, accentLightLight: 0.42, accentLightDark: 0.66 }
+      return { ...common, neutralSat: 0.16, accentSatLight: 0.6, accentSatDark: 0.46, accentLightLight: 0.42, accentLightDark: 0.66 }
     case 'analogous':
-      return { ...common, neutralSat: 0.12, accentSatLight: 0.66, accentSatDark: 0.62, accentLightLight: 0.43, accentLightDark: 0.66 }
+      return { ...common, neutralSat: 0.12, accentSatLight: 0.66, accentSatDark: 0.5, accentLightLight: 0.43, accentLightDark: 0.66 }
     case 'complementary':
-      return { ...common, neutralSat: 0.1, accentSatLight: 0.72, accentSatDark: 0.66, accentLightLight: 0.44, accentLightDark: 0.64 }
+      return { ...common, neutralSat: 0.1, accentSatLight: 0.72, accentSatDark: 0.54, accentLightLight: 0.44, accentLightDark: 0.64 }
     case 'triadic':
-      return { ...common, neutralSat: 0.1, accentSatLight: 0.68, accentSatDark: 0.64, accentLightLight: 0.44, accentLightDark: 0.65 }
+      return { ...common, neutralSat: 0.1, accentSatLight: 0.68, accentSatDark: 0.52, accentLightLight: 0.44, accentLightDark: 0.65 }
     case 'editorial':
-      return { ...common, neutralSat: 0.05, accentSatLight: 0.82, accentSatDark: 0.74, accentLightLight: 0.45, accentLightDark: 0.66 }
+      return { ...common, neutralSat: 0.05, accentSatLight: 0.82, accentSatDark: 0.6, accentLightLight: 0.45, accentLightDark: 0.66 }
   }
 }
 
@@ -106,16 +108,17 @@ function composeColors(recipe: Recipe): ColorRow[] {
   const floor = (sat: number): number => Math.max(sat, NEUTRAL_SAT_FLOOR)
   return [
     {
-      // Off-white, never pure white, always faintly tinted.
+      // Off-white in light; a warm/cool charcoal (not inverted white) in dark,
+      // carrying a touch more tint than light mode.
       role: 'background',
       light: tinted(baseHue, floor(t * 0.9), 0.965),
-      dark: tinted(baseHue, floor(t * 1.1), 0.115),
+      dark: tinted(baseHue, floor(t * 1.25), 0.13),
     },
     {
-      // A clear, slightly more tinted step down from background.
+      // A clear step in light; a small elevation lift in dark.
       role: 'surface',
       light: tinted(baseHue, floor(t * 1.6), 0.885),
-      dark: tinted(baseHue, floor(t * 1.5), 0.17),
+      dark: tinted(baseHue, floor(t * 1.5), 0.185),
     },
     {
       role: 'text',
@@ -125,7 +128,7 @@ function composeColors(recipe: Recipe): ColorRow[] {
     {
       role: 'muted',
       light: tinted(baseHue, floor(t * 1.1), 0.46),
-      dark: tinted(baseHue, floor(t * 0.9), 0.64),
+      dark: tinted(baseHue, floor(t * 0.9), 0.66),
     },
     {
       role: 'accent',

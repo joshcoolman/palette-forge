@@ -25,12 +25,14 @@ export function SceneVariations({
   progress,
   onChoose,
   onRefine,
+  onRegenerate,
 }: {
   rounds: VariationRound[]
   chosenId?: string
   progress?: string
   onChoose: (palette: ScoredPalette) => void
   onRefine: (instruction: string) => void
+  onRegenerate?: () => void
 }) {
   const latest = rounds[rounds.length - 1]
   const refining = latest?.phase === 'running'
@@ -41,13 +43,25 @@ export function SceneVariations({
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col gap-6"
     >
-      <AgentNarration pending={refining}>
-        {refining
-          ? progress || 'Composing variations and checking contrast on each…'
-          : rounds.length > 1
-            ? 'Steered. Pick from the new takes, or keep refining.'
-            : 'Here are the takes — start with the recommended one, or steer with a refine.'}
-      </AgentNarration>
+      <div className="flex items-start justify-between gap-3">
+        <AgentNarration pending={refining}>
+          {refining
+            ? progress || 'Composing variations and checking contrast on each…'
+            : rounds.length > 1
+              ? 'Steered. Pick from the new takes, or keep refining.'
+              : 'Here are the takes — start with the recommended one, or steer with a refine.'}
+        </AgentNarration>
+        {onRegenerate && !refining && (
+          <button
+            type="button"
+            onClick={onRegenerate}
+            className="shrink-0 text-xs underline"
+            style={{ color: 'var(--app-muted)' }}
+          >
+            Re-run
+          </button>
+        )}
+      </div>
 
       {rounds.map((round) => {
         const topId = recommendedId(round.variations)

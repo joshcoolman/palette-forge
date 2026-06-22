@@ -9,7 +9,7 @@ import {
   useJourney,
 } from '#/lib/journey-store'
 import { Backdrop } from '#/components/journey/backdrop'
-import { EngineBadge } from '#/components/settings/engine-badge'
+import { ModelControl } from '#/components/settings/model-control'
 import { SceneDirections } from '#/components/journey/scene-directions'
 import { SceneVariations } from '#/components/journey/scene-variations'
 import { ScenePalette } from '#/components/journey/scene-palette'
@@ -108,7 +108,7 @@ function ForgePage() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <EngineBadge />
+            <ModelControl />
             <Link to="/" className="text-xs underline" style={{ color: 'var(--app-muted)' }}>
               Start over
             </Link>
@@ -131,6 +131,9 @@ function ForgePage() {
               progress={journey.progress}
               onChoose={(palette) => chooseVariation(sessionId, palette)}
               onRefine={(instruction) => void refineJourney(sessionId, instruction)}
+              onRegenerate={() => {
+                if (journey.chosenType) void chooseDirection(sessionId, journey.chosenType)
+              }}
             />
           </div>
         )}
