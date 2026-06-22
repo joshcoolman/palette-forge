@@ -1,0 +1,5 @@
+# pnpm 11 reads build-script approvals from here (no longer from package.json).
+# esbuild + lightningcss ship native binaries that must be built on install.
+onlyBuiltDependencies:
+  - esbuild
+  - lightningcss
