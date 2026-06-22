@@ -12,4 +12,8 @@
 
 ## Current state
 
-Scaffold only (TanStack Start + React 19 + TS + Tailwind v4 + Vitest). No agent loop, no `/knowledge`, no BYO-key flow yet. The status landing lives in `src/components/status-landing.tsx`, driven by `src/app-meta.ts`.
+M0–M1 built (uncommitted as of 2026-06-22). The product is a vertical animated **journey**: source (image/seed) → typed direction cards → scored variations → final palette with light/dark mocks and honest WCAG badges. It runs on a deterministic **SimulatedEngine** behind a `PaletteEngine` seam (`src/features/agent/`) — no key, no tokens — with the real `ClaudeEngine` deferred to M4. Contrast math is locked in `src/features/color/contrast.ts`; contrast policy + taste live in `/knowledge/*.md`. Live journey state is a `useSyncExternalStore` store (`src/lib/journey-store.ts`); palettes persist to IndexedDB.
+
+## Build log
+
+This repo keeps a working record of how the build actually goes in [`log/`](log/) — decisions, reasoning, and dead-ends the git diff can't capture. Write an entry at natural beats (a unit of work done, a notable or reversed decision, a phase change, a wall); see [`log/README.md`](log/README.md) for the convention and voice. Lean on the *why*.

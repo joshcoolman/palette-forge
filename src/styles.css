@@ -1,5 +1,35 @@
-
 @import "tailwindcss";
+
+/* Registered so the gradient backdrop can animate angle and cross-fade stops. */
+@property --pf-grad-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --pf-grad-a {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #1b1b2e;
+}
+@property --pf-grad-b {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #0a0a0f;
+}
+@property --pf-grad-c {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #241b33;
+}
+
+:root {
+  /* App chrome — a calm dark canvas so the colorful palettes carry the page. */
+  --app-bg: #0a0a0f;
+  --app-surface: #14141c;
+  --app-text: #ececf1;
+  --app-muted: #9a9ab0;
+  --app-border: #26263a;
+}
 
 * {
   box-sizing: border-box;
@@ -13,5 +43,38 @@ body,
 
 body {
   margin: 0;
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* Living gradient backdrop, tinted by the current palette as the journey descends. */
+.pf-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60% 60% at 18% 20%, var(--pf-grad-a) 0%, transparent 60%),
+    radial-gradient(55% 55% at 85% 28%, var(--pf-grad-c) 0%, transparent 55%),
+    linear-gradient(var(--pf-grad-angle), var(--pf-grad-b), var(--app-bg));
+  opacity: 0.85;
+  animation: pf-rotate 32s linear infinite;
+  transition:
+    --pf-grad-a 1.2s ease,
+    --pf-grad-b 1.2s ease,
+    --pf-grad-c 1.2s ease;
+}
+
+@keyframes pf-rotate {
+  to {
+    --pf-grad-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-backdrop {
+    animation: none;
+    transition: none;
+  }
+}

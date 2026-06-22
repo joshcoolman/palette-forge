@@ -17,6 +17,7 @@
     "check": "prettier --check ."
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.105.0",
     "@tailwindcss/vite": "^4.3.1",
     "@tanstack/react-devtools": "^0.10.7",
     "@tanstack/react-router": "^1.170.16",
@@ -25,6 +26,7 @@
     "@tanstack/react-start": "^1.168.26",
     "@tanstack/router-plugin": "^1.168.18",
     "lucide-react": "^0.545.0",
+    "motion": "^12.40.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwindcss": "^4.3.1"
@@ -41,6 +43,7 @@
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9.20.0",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^28.1.0",
     "prettier": "^3.8.1",
     "typescript": "^6.0.2",
