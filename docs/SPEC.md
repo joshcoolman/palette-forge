@@ -14,7 +14,7 @@ If a feature doesn't serve that sentence, it's not v1.
 
 ## What it does NOT do (the boundary)
 
-The lane is welded. You can retune *what good color means* via `/knowledge`; you cannot talk it into being something else.
+The lane is welded. You can retune _what good color means_ via `/knowledge`; you cannot talk it into being something else.
 
 - Not a design-system builder. No type, no spacing, no components.
 - Not an image generator, not an image editor.
@@ -40,9 +40,10 @@ Two verifiers stacked: contrast (automatic, non-negotiable) and you (taste, live
 
 ## The knowledge layer (the differentiator)
 
-**`/knowledge` is plain, human-readable markdown. Read it and you know exactly what this app considers good. Edit it and the output changes.** It ships with solid design expertise out of the box (that's *your* domain — color, type, composition). A different expert can fork it and rewrite it for their own taste — by hand, or by pointing their own agent at the folder. No code required.
+**`/knowledge` is plain, human-readable markdown. Read it and you know exactly what this app considers good. Edit it and the output changes.** It ships with solid design expertise out of the box (that's _your_ domain — color, type, composition). A different expert can fork it and rewrite it for their own taste — by hand, or by pointing their own agent at the folder. No code required.
 
 Knowledge influences output in **two** places, and that's the whole point:
+
 1. It **guides what the agent proposes** (the generation side).
 2. It **is the rubric the agent self-checks against** before fan-out (the judgment side).
 
@@ -60,7 +61,7 @@ knowledge/
 └── roles.md        # what each role means: background, surface, text, muted, accent, border
 ```
 
-Note: contrast *math* is mechanism (locked, in code). Contrast *policy* (which targets, which pairings) lives in knowledge, so an expert can tighten or loosen it without touching code.
+Note: contrast _math_ is mechanism (locked, in code). Contrast _policy_ (which targets, which pairings) lives in knowledge, so an expert can tighten or loosen it without touching code.
 
 **Deliberately deferred:** an in-app "talk to it and it edits its own knowledge" mode. Tempting, over-engineered for v1. The folder is just files — a human or an external agent can already edit it. Build the conversational authoring mode as v2, only if v1 earns it.
 
@@ -68,7 +69,8 @@ Note: contrast *math* is mechanism (locked, in code). Contrast *policy* (which t
 
 ## Core interaction: fan-out-and-refine (this IS the product)
 
-Get this loop to *feel good*; everything else is plumbing.
+Get this loop to _feel good_; everything else is plumbing.
+
 - **Fan out** N variations as a comparison set (contact-sheet feeling).
 - **Switch** between them instantly, previewed in a realistic light/dark UI mock.
 - **Refine** by natural-language steer ("warmer," "rework the neutrals," "more like #2").
@@ -84,13 +86,18 @@ Don't bury palettes in React state. Keep them as clean, addressable records with
 
 ```ts
 type Palette = {
-  id: string;
-  name: string;                      // "corporate", "PNW-hero"
-  seed: { type: "image" | "color"; value: string };
-  colors: { role: string; light: string; dark: string }[];
-  contrast: { pairing: string; mode: "light" | "dark"; ratio: number; passes: "AA" | "AAA" | "fail" }[];
-  createdAt: string;
-};
+  id: string
+  name: string // "corporate", "PNW-hero"
+  seed: { type: 'image' | 'color'; value: string }
+  colors: { role: string; light: string; dark: string }[]
+  contrast: {
+    pairing: string
+    mode: 'light' | 'dark'
+    ratio: number
+    passes: 'AA' | 'AAA' | 'fail'
+  }[]
+  createdAt: string
+}
 ```
 
 Local storage for v1 (IndexedDB ages better than localStorage).

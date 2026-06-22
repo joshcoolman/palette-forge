@@ -5,17 +5,24 @@
  */
 
 import type { ContrastPolicy } from '#/features/palette/types'
-import { getKnowledge, KNOWLEDGE_ORDER } from '#/features/knowledge/knowledge-loader'
+import {
+  getKnowledge,
+  KNOWLEDGE_ORDER,
+} from '#/features/knowledge/knowledge-loader'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
 
-function targetText(target: ContrastPolicy['pairings'][number]['target']): string {
+function targetText(
+  target: ContrastPolicy['pairings'][number]['target'],
+): string {
   if (target === 'AA') return 'AA (4.5:1)'
   if (target === 'AAA') return 'AAA (7:1)'
   return `${target}:1`
 }
 
 function renderPolicy(policy: ContrastPolicy): string {
-  const lines = policy.pairings.map((p) => `- ${p.pairing} — ${targetText(p.target)}`)
+  const lines = policy.pairings.map(
+    (p) => `- ${p.pairing} — ${targetText(p.target)}`,
+  )
   return [
     'Check every pairing below in BOTH light and dark. The baseline floor is AA',
     '(4.5:1) for all text pairings and is non-negotiable.',

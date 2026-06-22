@@ -1,6 +1,13 @@
 import { useState } from 'react'
 
-const CHIPS = ['warmer', 'cooler', 'more vibrant', 'more muted', 'rework the neutrals', 'deeper']
+const CHIPS = [
+  'warmer',
+  'cooler',
+  'more vibrant',
+  'more muted',
+  'rework the neutrals',
+  'deeper',
+]
 
 /** Natural-language steer — quick chips plus a free-text "more like this, but…". */
 export function RefineBar({
@@ -22,7 +29,10 @@ export function RefineBar({
   return (
     <div
       className="flex flex-col gap-3 rounded-2xl border p-4"
-      style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}
+      style={{
+        borderColor: 'var(--app-border)',
+        background: 'var(--app-surface)',
+      }}
     >
       <div className="flex flex-wrap gap-2">
         {CHIPS.map((chip) => (
@@ -32,7 +42,10 @@ export function RefineBar({
             disabled={busy}
             onClick={() => submit(chip)}
             className="rounded-full border px-3 py-1 text-xs disabled:opacity-40"
-            style={{ borderColor: 'var(--app-border)', color: 'var(--app-text)' }}
+            style={{
+              borderColor: 'var(--app-border)',
+              color: 'var(--app-text)',
+            }}
           >
             {chip}
           </button>
@@ -51,7 +64,11 @@ export function RefineBar({
           onChange={(e) => setText(e.target.value)}
           placeholder="More like this, but…"
           className="flex-1 rounded-md border px-3 py-2 text-sm outline-none disabled:opacity-50"
-          style={{ borderColor: 'var(--app-border)', background: 'var(--app-bg)', color: 'var(--app-text)' }}
+          style={{
+            borderColor: 'var(--app-border)',
+            background: 'var(--app-bg)',
+            color: 'var(--app-text)',
+          }}
         />
         <button
           type="submit"

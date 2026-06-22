@@ -10,7 +10,10 @@ import {
 } from '#/lib/settings'
 
 const MODELS = [
-  { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 — fast, balanced (default)' },
+  {
+    id: 'claude-sonnet-4-6',
+    label: 'Claude Sonnet 4.6 — fast, balanced (default)',
+  },
   { id: 'claude-opus-4-8', label: 'Claude Opus 4.8 — highest quality' },
   { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 — cheapest' },
 ]
@@ -55,10 +58,16 @@ export function KeyEntry() {
   return (
     <div
       className="flex flex-col gap-5 rounded-2xl border p-6"
-      style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}
+      style={{
+        borderColor: 'var(--app-border)',
+        background: 'var(--app-surface)',
+      }}
     >
       <div className="flex flex-col gap-1">
-        <h2 className="text-base font-semibold" style={{ color: 'var(--app-text)' }}>
+        <h2
+          className="text-base font-semibold"
+          style={{ color: 'var(--app-text)' }}
+        >
           Your Anthropic key
         </h2>
         <p className="text-sm" style={{ color: 'var(--app-muted)' }}>
@@ -77,7 +86,11 @@ export function KeyEntry() {
           spellCheck={false}
           autoComplete="off"
           className="flex-1 rounded-md border px-3 py-2 text-sm outline-none"
-          style={{ borderColor: 'var(--app-border)', background: 'var(--app-bg)', color: 'var(--app-text)' }}
+          style={{
+            borderColor: 'var(--app-border)',
+            background: 'var(--app-bg)',
+            color: 'var(--app-text)',
+          }}
         />
         <button
           type="button"
@@ -93,20 +106,30 @@ export function KeyEntry() {
             type="button"
             onClick={() => void handleClear()}
             className="rounded-md border px-4 py-2 text-sm"
-            style={{ borderColor: 'var(--app-border)', color: 'var(--app-text)' }}
+            style={{
+              borderColor: 'var(--app-border)',
+              color: 'var(--app-text)',
+            }}
           >
             Clear
           </button>
         )}
       </div>
 
-      <label className="flex flex-col gap-1 text-sm" style={{ color: 'var(--app-muted)' }}>
+      <label
+        className="flex flex-col gap-1 text-sm"
+        style={{ color: 'var(--app-muted)' }}
+      >
         Model
         <select
           value={model}
           onChange={(e) => void handleModel(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none"
-          style={{ borderColor: 'var(--app-border)', background: 'var(--app-bg)', color: 'var(--app-text)' }}
+          style={{
+            borderColor: 'var(--app-border)',
+            background: 'var(--app-bg)',
+            color: 'var(--app-text)',
+          }}
         >
           {MODELS.map((m) => (
             <option key={m.id} value={m.id}>
@@ -116,9 +139,13 @@ export function KeyEntry() {
         </select>
       </label>
 
-      <p className="text-xs leading-relaxed" style={{ color: 'var(--app-muted)' }}>
-        Stored only in this browser (IndexedDB) and sent only to Anthropic — it never touches a
-        server, which is what makes this free to host. Get a key from the{' '}
+      <p
+        className="text-xs leading-relaxed"
+        style={{ color: 'var(--app-muted)' }}
+      >
+        Stored only in this browser (IndexedDB) and sent only to Anthropic — it
+        never touches a server, which is what makes this free to host. Get a key
+        from the{' '}
         <a
           href="https://console.anthropic.com/settings/keys"
           target="_blank"

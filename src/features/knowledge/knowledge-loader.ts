@@ -12,7 +12,10 @@ const rawFiles = import.meta.glob<string>('/knowledge/*.md', {
 
 /** Map of basename (e.g. `contrast.md`) -> raw markdown. */
 export const knowledgeFiles: Record<string, string> = Object.fromEntries(
-  Object.entries(rawFiles).map(([path, content]) => [path.split('/').pop() ?? path, content]),
+  Object.entries(rawFiles).map(([path, content]) => [
+    path.split('/').pop() ?? path,
+    content,
+  ]),
 )
 
 export function getKnowledge(name: string): string {
@@ -20,4 +23,9 @@ export function getKnowledge(name: string): string {
 }
 
 /** Ordered knowledge for the system prompt: roles first, then taste, then policy prose. */
-export const KNOWLEDGE_ORDER = ['roles.md', 'palettes.md', 'harmony.md', 'contrast.md'] as const
+export const KNOWLEDGE_ORDER = [
+  'roles.md',
+  'palettes.md',
+  'harmony.md',
+  'contrast.md',
+] as const

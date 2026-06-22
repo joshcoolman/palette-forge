@@ -97,9 +97,11 @@ describe('policyFailures', () => {
   it('flags only pairings below their target', () => {
     const failures = policyFailures(COLORS, POLICY)
     // #cccccc border on #ffffff is ~1.6 — below the 3.0 non-text target (light mode).
-    expect(failures.some((f) => f.pairing === 'border-on-background' && f.mode === 'light')).toBe(
-      true,
-    )
+    expect(
+      failures.some(
+        (f) => f.pairing === 'border-on-background' && f.mode === 'light',
+      ),
+    ).toBe(true)
     // text-on-background easily clears AAA in both modes.
     expect(failures.some((f) => f.pairing === 'text-on-background')).toBe(false)
   })

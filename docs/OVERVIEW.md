@@ -20,7 +20,7 @@ Two reasons, both honest.
 
 ## The core idea: agent-first, not agent-added
 
-The old shape is a tool where a human does the work and an agent is bolted into a sidebar to assist. The new shape inverts it: **the agent is the product, and the UI exists to serve the agent's loop.** The test: if you deleted the agent, is there still an app? In these tools, mostly no — the agent *is* the thing. That's the line they're built to hold.
+The old shape is a tool where a human does the work and an agent is bolted into a sidebar to assist. The new shape inverts it: **the agent is the product, and the UI exists to serve the agent's loop.** The test: if you deleted the agent, is there still an app? In these tools, mostly no — the agent _is_ the thing. That's the line they're built to hold.
 
 ## The shared shape (a set, not a suite)
 
@@ -29,9 +29,9 @@ Every tool instantiates the same structure. Nothing is coupled; the "sameness" i
 - **Mechanism** — the loop, the verifier, the generation. Domain-invariant, lives in code, locked to forkers.
 - **Boundary** — a short, fixed declaration of what the tool does and refuses to do. The welded lane that keeps "make it your own" from drifting into "make it anything."
 - **Knowledge** — `/knowledge`, plain human-readable markdown. The expertise that makes outputs good. Ships solid out of the box; swappable by a domain expert.
-- **(Deferred) Authoring** — an optional v2 where you talk to the tool and an agent edits its own knowledge under your review. Explicitly *not* a starting point.
+- **(Deferred) Authoring** — an optional v2 where you talk to the tool and an agent edits its own knowledge under your review. Explicitly _not_ a starting point.
 
-Because they're independent, they compose *later* through the thinnest possible seam — one tool's output as another's input, a small shared data format (markdown/frontmatter, OKF-ish) — never through shared state. Pipes, not a monolith. That seam is discovered empirically once two tools exist, never designed up front.
+Because they're independent, they compose _later_ through the thinnest possible seam — one tool's output as another's input, a small shared data format (markdown/frontmatter, OKF-ish) — never through shared state. Pipes, not a monolith. That seam is discovered empirically once two tools exist, never designed up front.
 
 ## The knowledge layer (the distinctive bet)
 
@@ -44,22 +44,22 @@ The payoff is an **extension surface**: the tool ships generic-but-good, then a 
 The intellectual backbone, and arguably the most credible thing the collection demonstrates. Each tool is built against a running set of disciplines:
 
 - **Does it actually need a loop?** Half of "agent" demos are a single call in a costume. A loop is earned only when the path can't be predetermined. Each tool's loop is justified, not decorative.
-- **Where does the verifier come from?** "Good agentic app" reduces to "has a way to check its own work." The four honest sources: *free* (contrast math), *supplied* (a stated complaint, a test set), *harvested* (accepted outputs become labeled examples — "gets better with use"), and *live human* (your taste, in the refine loop). Each tool names its verifier.
+- **Where does the verifier come from?** "Good agentic app" reduces to "has a way to check its own work." The four honest sources: _free_ (contrast math), _supplied_ (a stated complaint, a test set), _harvested_ (accepted outputs become labeled examples — "gets better with use"), and _live human_ (your taste, in the refine loop). Each tool names its verifier.
 - **Single-purpose, anti-creep.** Each repo does one thing. The boundary is the brand. This is the corrective to feature-creep sprawl.
 - **Clean, addressable data from day one.** The one forward-looking concession: store outputs as records with stable IDs so they can later be served over MCP in ~30 lines — turning each tool from "an app you visit" into "a capability your agents can call."
 - **Build concrete first; extract templates backward.** Never build the general thing before two specific things show what "general" means. The template is the residue of having shipped, not the blueprint.
 
 ## The three utilities
 
-**palette-forge** — image or seed color in, refined light/dark palettes out. Verifier is *free and automatic*: WCAG contrast. The agent proposes, checks contrast itself, self-corrects, fans out variations; you refine to taste. The gentle flagship — cleanest data model, best later MCP story.
+**palette-forge** — image or seed color in, refined light/dark palettes out. Verifier is _free and automatic_: WCAG contrast. The agent proposes, checks contrast itself, self-corrects, fans out variations; you refine to taste. The gentle flagship — cleanest data model, best later MCP story.
 
-**outpaint-studio** — image + target ratio in, seam-aware extension out (the "make this hero 21:9" case). Verifier is *vision*: generate, look at the seam, regenerate the bad region. Agent-first competence that stays invisible — it's just weirdly good. Best showcase of the knowledge-as-extension-surface idea.
+**outpaint-studio** — image + target ratio in, seam-aware extension out (the "make this hero 21:9" case). Verifier is _vision_: generate, look at the seam, regenerate the bad region. Agent-first competence that stays invisible — it's just weirdly good. Best showcase of the knowledge-as-extension-surface idea.
 
-**prompt-smith** — a prompt plus a complaint in, an improved prompt out. Verifier is the *stated complaint* plus the standing `/knowledge` rubric. Small and immediately useful; the natural capstone is a later optimizer version (optimize a system prompt against a held-out test set, watch the score climb) — the evals/optimization rung.
+**prompt-smith** — a prompt plus a complaint in, an improved prompt out. Verifier is the _stated complaint_ plus the standing `/knowledge` rubric. Small and immediately useful; the natural capstone is a later optimizer version (optimize a system prompt against a held-out test set, watch the score climb) — the evals/optimization rung.
 
 ## What they demonstrate
 
-Read together, the three walk a competence ladder: a hand-written agent loop (not an SDK hiding it), tool dispatch, dynamic tool choice, verifiers and self-correction, evals and prompt optimization, a clean mechanism/knowledge architecture, extensibility as an emergent property, and a path to MCP exposure. The claim they support isn't "I can call an LLM API." It's: *I build apps where the agent is the product, the agent can check its own work, its expertise is legible and swappable, and it's built to become a capability other agents can call.*
+Read together, the three walk a competence ladder: a hand-written agent loop (not an SDK hiding it), tool dispatch, dynamic tool choice, verifiers and self-correction, evals and prompt optimization, a clean mechanism/knowledge architecture, extensibility as an emergent property, and a path to MCP exposure. The claim they support isn't "I can call an LLM API." It's: _I build apps where the agent is the product, the agent can check its own work, its expertise is legible and swappable, and it's built to become a capability other agents can call._
 
 ## Sequencing
 

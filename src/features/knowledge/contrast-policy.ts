@@ -5,12 +5,16 @@
  * edit can never brick the app or drop below the AA floor.
  */
 
-import type { ContrastPolicy, ContrastTarget, PolicyPairing } from '#/features/palette/types'
+import type {
+  ContrastPolicy,
+  ContrastTarget,
+  PolicyPairing,
+} from '#/features/palette/types'
 import { BASELINE } from '#/features/color/contrast'
 import { getKnowledge } from '#/features/knowledge/knowledge-loader'
 
 function extractFrontmatter(markdown: string): string | null {
-  const text = markdown.replace(/^﻿/, '')
+  const text = markdown.replace(/^\uFEFF/, '')
   if (!text.startsWith('---')) return null
   const end = text.indexOf('\n---', 3)
   if (end === -1) return null
@@ -36,7 +40,8 @@ export function parseContrastPolicy(markdown: string): ContrastPolicy {
   const fm = extractFrontmatter(markdown)
   if (!fm) return BASELINE
 
-  const baseline = /baseline:\s*(AAA|AA)\b/.exec(fm)?.[1] === 'AAA' ? 'AAA' : 'AA'
+  const baseline =
+    /baseline:\s*(AAA|AA)\b/.exec(fm)?.[1] === 'AAA' ? 'AAA' : 'AA'
 
   const pairings: PolicyPairing[] = []
   const lineRe = /^\s*-\s*([a-z][a-z-]*):\s*(AAA|AA|\d+(?:\.\d+)?)\s*$/gim

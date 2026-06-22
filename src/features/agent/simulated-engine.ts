@@ -19,8 +19,17 @@ import type {
   Source,
 } from '#/features/palette/types'
 import { PALETTE_TYPES } from '#/features/palette/types'
-import { clamp, hexToHsl, hexToRgb, hslToHex } from '#/features/color/color-utils'
-import { parsePairing, policyFailures, relativeLuminance } from '#/features/color/contrast'
+import {
+  clamp,
+  hexToHsl,
+  hexToRgb,
+  hslToHex,
+} from '#/features/color/color-utils'
+import {
+  parsePairing,
+  policyFailures,
+  relativeLuminance,
+} from '#/features/color/contrast'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
 import type { PaletteEngine, ProgressFn } from '#/features/agent/engine'
 import { finalizePalette } from '#/features/agent/engine'
@@ -52,7 +61,9 @@ function luminance(hex: string): number {
 function pickBaseHue(source: Source): number {
   let hue = 220
   let bestSat = -1
-  for (const hex of source.extracted.length > 0 ? source.extracted : [source.value]) {
+  for (const hex of source.extracted.length > 0
+    ? source.extracted
+    : [source.value]) {
     const hsl = hexToHsl(hex)
     if (hsl.s > bestSat) {
       bestSat = hsl.s
@@ -82,15 +93,50 @@ function baseRecipe(type: PaletteType, baseHue: number): Recipe {
   // a full-saturation accent vibrates/glows on a dark ground.
   switch (type) {
     case 'monochrome':
-      return { ...common, neutralSat: 0.16, accentSatLight: 0.6, accentSatDark: 0.46, accentLightLight: 0.42, accentLightDark: 0.66 }
+      return {
+        ...common,
+        neutralSat: 0.16,
+        accentSatLight: 0.6,
+        accentSatDark: 0.46,
+        accentLightLight: 0.42,
+        accentLightDark: 0.66,
+      }
     case 'analogous':
-      return { ...common, neutralSat: 0.12, accentSatLight: 0.66, accentSatDark: 0.5, accentLightLight: 0.43, accentLightDark: 0.66 }
+      return {
+        ...common,
+        neutralSat: 0.12,
+        accentSatLight: 0.66,
+        accentSatDark: 0.5,
+        accentLightLight: 0.43,
+        accentLightDark: 0.66,
+      }
     case 'complementary':
-      return { ...common, neutralSat: 0.1, accentSatLight: 0.72, accentSatDark: 0.54, accentLightLight: 0.44, accentLightDark: 0.64 }
+      return {
+        ...common,
+        neutralSat: 0.1,
+        accentSatLight: 0.72,
+        accentSatDark: 0.54,
+        accentLightLight: 0.44,
+        accentLightDark: 0.64,
+      }
     case 'triadic':
-      return { ...common, neutralSat: 0.1, accentSatLight: 0.68, accentSatDark: 0.52, accentLightLight: 0.44, accentLightDark: 0.65 }
+      return {
+        ...common,
+        neutralSat: 0.1,
+        accentSatLight: 0.68,
+        accentSatDark: 0.52,
+        accentLightLight: 0.44,
+        accentLightDark: 0.65,
+      }
     case 'editorial':
-      return { ...common, neutralSat: 0.05, accentSatLight: 0.82, accentSatDark: 0.6, accentLightLight: 0.45, accentLightDark: 0.66 }
+      return {
+        ...common,
+        neutralSat: 0.05,
+        accentSatLight: 0.82,
+        accentSatDark: 0.6,
+        accentLightLight: 0.45,
+        accentLightDark: 0.66,
+      }
   }
 }
 
@@ -132,8 +178,16 @@ function composeColors(recipe: Recipe): ColorRow[] {
     },
     {
       role: 'accent',
-      light: hslToHex({ h: aHue, s: recipe.accentSatLight, l: recipe.accentLightLight }),
-      dark: hslToHex({ h: aHue, s: recipe.accentSatDark, l: recipe.accentLightDark }),
+      light: hslToHex({
+        h: aHue,
+        s: recipe.accentSatLight,
+        l: recipe.accentLightLight,
+      }),
+      dark: hslToHex({
+        h: aHue,
+        s: recipe.accentSatDark,
+        l: recipe.accentLightDark,
+      }),
     },
     {
       role: 'border',
@@ -148,7 +202,10 @@ function composeColors(recipe: Recipe): ColorRow[] {
  * (non-ground) role of each failing pairing toward more contrast until the
  * policy is satisfied or we run out of steps (then the badge stays honest).
  */
-function repair(colors: ColorRow[], policy: ReturnType<typeof loadContrastPolicy>): ColorRow[] {
+function repair(
+  colors: ColorRow[],
+  policy: ReturnType<typeof loadContrastPolicy>,
+): ColorRow[] {
   const out = colors.map((c) => ({ ...c }))
   for (let step = 0; step < 48; step += 1) {
     const failures = policyFailures(out, policy)
@@ -162,8 +219,12 @@ function repair(colors: ColorRow[], policy: ReturnType<typeof loadContrastPolicy
       const ground = out.find((c) => c.role === groundRole)
       if (!row || !ground) continue
       const hsl = hexToHsl(row[failure.mode])
-      const direction = luminance(row[failure.mode]) >= luminance(ground[failure.mode]) ? 1 : -1
-      row[failure.mode] = hslToHex({ ...hsl, l: clamp(hsl.l + direction * 0.03, 0, 1) })
+      const direction =
+        luminance(row[failure.mode]) >= luminance(ground[failure.mode]) ? 1 : -1
+      row[failure.mode] = hslToHex({
+        ...hsl,
+        l: clamp(hsl.l + direction * 0.03, 0, 1),
+      })
     }
   }
   return out
@@ -211,7 +272,8 @@ function applySteer(recipe: Recipe, instruction: string): Recipe {
     next.accentSatDark = clamp(next.accentSatDark - 0.12, 0.3, 1)
     next.neutralSat = clamp(next.neutralSat - 0.03, 0, 0.3)
   }
-  if (/(neutral|gray|grey)/.test(text)) next.neutralSat = clamp(next.neutralSat - 0.05, 0, 0.3)
+  if (/(neutral|gray|grey)/.test(text))
+    next.neutralSat = clamp(next.neutralSat - 0.05, 0, 0.3)
   if (/(deep|dark|moody|rich)/.test(text)) {
     next.accentLightLight = clamp(next.accentLightLight - 0.06, 0.28, 0.58)
     next.neutralSat = clamp(next.neutralSat + 0.04, 0, 0.3)
@@ -226,10 +288,19 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-const PREVIEW_ORDER = ['background', 'surface', 'muted', 'border', 'accent', 'text'] as const
+const PREVIEW_ORDER = [
+  'background',
+  'surface',
+  'muted',
+  'border',
+  'accent',
+  'text',
+] as const
 
 function previewHexes(colors: ColorRow[]): string[] {
-  return PREVIEW_ORDER.map((role) => colors.find((c) => c.role === role)?.light ?? '#888888')
+  return PREVIEW_ORDER.map(
+    (role) => colors.find((c) => c.role === role)?.light ?? '#888888',
+  )
 }
 
 function toSeed(source: Source): Seed {
@@ -237,12 +308,16 @@ function toSeed(source: Source): Seed {
 }
 
 function sourceFromPalette(base: Palette): Source {
-  const accent = base.colors.find((c) => c.role === 'accent')?.light ?? base.seed.value
+  const accent =
+    base.colors.find((c) => c.role === 'accent')?.light ?? base.seed.value
   return { type: base.seed.type, value: base.seed.value, extracted: [accent] }
 }
 
 export class SimulatedEngine implements PaletteEngine {
-  async proposeDirections(source: Source, onProgress?: ProgressFn): Promise<Direction[]> {
+  async proposeDirections(
+    source: Source,
+    onProgress?: ProgressFn,
+  ): Promise<Direction[]> {
     onProgress?.('Reading your colors…')
     const policy = loadContrastPolicy()
     const baseHue = pickBaseHue(source)
@@ -257,7 +332,9 @@ export class SimulatedEngine implements PaletteEngine {
       })
       return { type, colors, overall: palette.score.overall }
     })
-    const topType = scored.reduce((best, d) => (d.overall > best.overall ? d : best)).type
+    const topType = scored.reduce((best, d) =>
+      d.overall > best.overall ? d : best,
+    ).type
     return scored.map((d) => ({
       type: d.type,
       label: capitalize(d.type),
@@ -296,6 +373,11 @@ export class SimulatedEngine implements PaletteEngine {
     onProgress?: ProgressFn,
   ): Promise<ScoredPalette[]> {
     const type = (base as Partial<ScoredPalette>).type ?? 'analogous'
-    return this.composeVariations(sourceFromPalette(base), type, instruction, onProgress)
+    return this.composeVariations(
+      sourceFromPalette(base),
+      type,
+      instruction,
+      onProgress,
+    )
   }
 }

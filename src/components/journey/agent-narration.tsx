@@ -22,8 +22,16 @@ export function AgentNarration({
         aria-hidden
         className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
         style={{ background: 'var(--app-text)' }}
-        animate={pending ? { opacity: [0.25, 1, 0.25], scale: [0.85, 1, 0.85] } : { opacity: 1, scale: 1 }}
-        transition={pending ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.2 }}
+        animate={
+          pending
+            ? { opacity: [0.25, 1, 0.25], scale: [0.85, 1, 0.85] }
+            : { opacity: 1, scale: 1 }
+        }
+        transition={
+          pending
+            ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' }
+            : { duration: 0.2 }
+        }
       />
       <span>{children}</span>
     </motion.p>

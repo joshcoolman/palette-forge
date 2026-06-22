@@ -100,7 +100,10 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 /** Browser-only: rasterize a data URL to a small canvas and extract colors. */
-export async function extractDominantColors(src: string, count = 6): Promise<string[]> {
+export async function extractDominantColors(
+  src: string,
+  count = 6,
+): Promise<string[]> {
   if (typeof document === 'undefined') return []
   const img = await loadImage(src)
   const maxDim = 120

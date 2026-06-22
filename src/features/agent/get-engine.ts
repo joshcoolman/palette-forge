@@ -26,10 +26,3 @@ export function getEngine(): PaletteEngine {
   if (!simulated) simulated = new SimulatedEngine()
   return simulated
 }
-
-export type EngineInfo = { mode: 'demo' | 'claude'; model?: string }
-
-export function activeEngine(): EngineInfo {
-  const { apiKey, model } = getSettings()
-  return apiKey ? { mode: 'claude', model } : { mode: 'demo' }
-}

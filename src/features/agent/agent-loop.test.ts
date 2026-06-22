@@ -1,3 +1,4 @@
+/* eslint-disable import/first -- vitest's vi.mock must be hoisted above the mocked-module imports below */
 import { describe, it, expect, vi } from 'vitest'
 
 import type { ColorRow, Source } from '#/features/palette/types'
@@ -13,10 +14,17 @@ import { SimulatedEngine } from '#/features/agent/simulated-engine'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
 import { policyFailures } from '#/features/color/contrast'
 
-const SOURCE: Source = { type: 'color', value: '#3d405b', extracted: ['#3d405b'] }
+const SOURCE: Source = {
+  type: 'color',
+  value: '#3d405b',
+  extracted: ['#3d405b'],
+}
 
 function structured(obj: unknown) {
-  return { stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(obj) }] }
+  return {
+    stop_reason: 'end_turn',
+    content: [{ type: 'text', text: JSON.stringify(obj) }],
+  }
 }
 
 function draft(name: string, colors: ColorRow[]) {
@@ -29,7 +37,10 @@ function draft(name: string, colors: ColorRow[]) {
 
 // A palette the SimulatedEngine repaired — guaranteed to pass the policy.
 async function passingColors(): Promise<ColorRow[]> {
-  const variations = await new SimulatedEngine().composeVariations(SOURCE, 'analogous')
+  const variations = await new SimulatedEngine().composeVariations(
+    SOURCE,
+    'analogous',
+  )
   return variations[0].colors
 }
 
@@ -76,6 +87,8 @@ describe('ClaudeEngine self-check + revise loop', () => {
     createMock.mockResolvedValue({ stop_reason: 'refusal', content: [] })
 
     const engine = new ClaudeEngine('test-key', 'claude-sonnet-4-6')
-    await expect(engine.composeVariations(SOURCE, 'analogous')).rejects.toThrow()
+    await expect(
+      engine.composeVariations(SOURCE, 'analogous'),
+    ).rejects.toThrow()
   })
 })

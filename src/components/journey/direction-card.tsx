@@ -43,11 +43,18 @@ export function DirectionCard({
       )}
       <div className="flex h-10 overflow-hidden rounded-lg">
         {direction.preview.map((hex, i) => (
-          <span key={`${hex}-${i}`} className="flex-1" style={{ background: hex }} />
+          <span
+            key={`${hex}-${i}`}
+            className="flex-1"
+            style={{ background: hex }}
+          />
         ))}
       </div>
       <div>
-        <h3 className="text-base font-semibold" style={{ color: 'var(--app-text)' }}>
+        <h3
+          className="text-base font-semibold"
+          style={{ color: 'var(--app-text)' }}
+        >
           {direction.label}
         </h3>
         <p className="mt-0.5 text-xs" style={{ color: 'var(--app-muted)' }}>

@@ -5,8 +5,8 @@
 ## Hold the line
 
 - **Agent-first, not agent-added.** The agent is the product; the UI serves its loop. If deleting the agent leaves a working app, something went wrong.
-- **The boundary is welded.** Image/seed color in → palettes out. Not a design system, not an image editor, not a SaaS. Retune *what good color means* via `/knowledge` only.
-- **Mechanism vs knowledge.** Contrast *math* is locked mechanism (code). Contrast *policy* and taste live in `/knowledge` as plain, human-rewritable markdown — it both guides proposals and is the self-check rubric.
+- **The boundary is welded.** Image/seed color in → palettes out. Not a design system, not an image editor, not a SaaS. Retune _what good color means_ via `/knowledge` only.
+- **Mechanism vs knowledge.** Contrast _math_ is locked mechanism (code). Contrast _policy_ and taste live in `/knowledge` as plain, human-rewritable markdown — it both guides proposals and is the self-check rubric.
 - **Free verifier:** WCAG contrast (automatic). **Live verifier:** the user's taste.
 - **Data model:** clean, addressable records with stable IDs (MCP-ready later). Don't bury palettes in React state.
 
@@ -16,4 +16,4 @@ M0–M1 built (uncommitted as of 2026-06-22). The product is a vertical animated
 
 ## Build log
 
-This repo keeps a working record of how the build actually goes in [`log/`](log/) — decisions, reasoning, and dead-ends the git diff can't capture. Write an entry at natural beats (a unit of work done, a notable or reversed decision, a phase change, a wall); see [`log/README.md`](log/README.md) for the convention and voice. Lean on the *why*.
+This repo keeps a working record of how the build actually goes in [`log/`](log/) — decisions, reasoning, and dead-ends the git diff can't capture. Write an entry at natural beats (a unit of work done, a notable or reversed decision, a phase change, a wall); see [`log/README.md`](log/README.md) for the convention and voice. Lean on the _why_.

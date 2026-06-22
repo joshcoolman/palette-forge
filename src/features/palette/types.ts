@@ -4,7 +4,13 @@
  * code computes contrast; the UI renders records.
  */
 
-export type Role = 'background' | 'surface' | 'text' | 'muted' | 'accent' | 'border'
+export type Role =
+  | 'background'
+  | 'surface'
+  | 'text'
+  | 'muted'
+  | 'accent'
+  | 'border'
 
 export const ROLES: readonly Role[] = [
   'background',
@@ -46,7 +52,11 @@ export type Seed = { type: 'image' | 'color'; value: string }
  * The live input to a journey: the seed plus the anchor colors extracted from
  * it (dominant colors for an image, a derived neighborhood for a seed color).
  */
-export type Source = { type: 'image' | 'color'; value: string; extracted: string[] }
+export type Source = {
+  type: 'image' | 'color'
+  value: string
+  extracted: string[]
+}
 
 /** The addressable palette record. Persisted in IndexedDB. */
 export type Palette = {

@@ -30,14 +30,21 @@ export function ModelControl() {
 
   if (!hasKey) {
     return (
-      <Link to="/settings" className="text-xs underline" style={{ color: 'var(--app-muted)' }}>
+      <Link
+        to="/settings"
+        className="text-xs underline"
+        style={{ color: 'var(--app-muted)' }}
+      >
         Demo engine · add key
       </Link>
     )
   }
 
   return (
-    <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--app-muted)' }}>
+    <div
+      className="flex items-center gap-2 text-xs"
+      style={{ color: 'var(--app-muted)' }}
+    >
       <span>Claude</span>
       <select
         aria-label="Model"
@@ -47,7 +54,11 @@ export function ModelControl() {
           void saveModel(e.target.value)
         }}
         className="rounded-md border px-2 py-1 text-xs outline-none"
-        style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface)', color: 'var(--app-text)' }}
+        style={{
+          borderColor: 'var(--app-border)',
+          background: 'var(--app-surface)',
+          color: 'var(--app-text)',
+        }}
       >
         {MODELS.map((m) => (
           <option key={m.id} value={m.id}>
@@ -55,6 +66,13 @@ export function ModelControl() {
           </option>
         ))}
       </select>
+      <Link
+        to="/settings"
+        className="underline"
+        style={{ color: 'var(--app-muted)' }}
+      >
+        Settings
+      </Link>
     </div>
   )
 }

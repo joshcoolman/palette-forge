@@ -1,23 +1,23 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Registered so the gradient backdrop can animate angle and cross-fade stops. */
 @property --pf-grad-angle {
-  syntax: "<angle>";
+  syntax: '<angle>';
   inherits: false;
   initial-value: 0deg;
 }
 @property --pf-grad-a {
-  syntax: "<color>";
+  syntax: '<color>';
   inherits: false;
   initial-value: #1b1b2e;
 }
 @property --pf-grad-b {
-  syntax: "<color>";
+  syntax: '<color>';
   inherits: false;
   initial-value: #0a0a0f;
 }
 @property --pf-grad-c {
-  syntax: "<color>";
+  syntax: '<color>';
   inherits: false;
   initial-value: #241b33;
 }
@@ -45,7 +45,13 @@ body {
   margin: 0;
   background: var(--app-bg);
   color: var(--app-text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 

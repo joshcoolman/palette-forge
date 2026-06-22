@@ -16,7 +16,14 @@ function sample(id: string, createdAt: string): Palette {
     name: `palette-${id}`,
     seed: { type: 'color', value: '#3d405b' },
     colors: [{ role: 'background', light: '#ffffff', dark: '#111111' }],
-    contrast: [{ pairing: 'text-on-background', mode: 'light', ratio: 18.5, passes: 'AAA' }],
+    contrast: [
+      {
+        pairing: 'text-on-background',
+        mode: 'light',
+        ratio: 18.5,
+        passes: 'AAA',
+      },
+    ],
     createdAt,
   }
 }

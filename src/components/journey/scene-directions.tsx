@@ -21,7 +21,11 @@ export function SceneDirections({
 }) {
   const running = phase === 'running'
   return (
-    <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4">
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col gap-4"
+    >
       <AgentNarration pending={running}>
         {running
           ? progress || 'Reading your colors and sketching a few directions…'

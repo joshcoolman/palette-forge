@@ -34,7 +34,7 @@ export function SceneVariations({
   onRefine: (instruction: string) => void
   onRegenerate?: () => void
 }) {
-  const latest = rounds[rounds.length - 1]
+  const latest = rounds.at(-1)
   const refining = latest?.phase === 'running'
 
   return (

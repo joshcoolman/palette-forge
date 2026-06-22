@@ -14,11 +14,17 @@ import { SceneDirections } from '#/components/journey/scene-directions'
 import { SceneVariations } from '#/components/journey/scene-variations'
 import { ScenePalette } from '#/components/journey/scene-palette'
 
-export const Route = createFileRoute('/forge/$sessionId')({ component: ForgePage })
+export const Route = createFileRoute('/forge/$sessionId')({
+  component: ForgePage,
+})
 
-function backdropColors(chosen: ScoredPalette | null, fallback: string[]): string[] {
+function backdropColors(
+  chosen: ScoredPalette | null,
+  fallback: string[],
+): string[] {
   if (!chosen) return fallback
-  const get = (role: string): string => chosen.colors.find((c) => c.role === role)?.dark ?? ''
+  const get = (role: string): string =>
+    chosen.colors.find((c) => c.role === role)?.dark ?? ''
   return [get('accent'), get('surface'), get('background')].filter(Boolean)
 }
 
@@ -36,7 +42,10 @@ function SourceThumb({ source }: { source: Source }) {
   return (
     <span
       className="h-10 w-10 rounded-lg"
-      style={{ background: source.value, outline: '1px solid var(--app-border)' }}
+      style={{
+        background: source.value,
+        outline: '1px solid var(--app-border)',
+      }}
     />
   )
 }
@@ -53,14 +62,20 @@ function ForgePage() {
   // Descend to the variations when a path is picked.
   useEffect(() => {
     if (journey.chosenType) {
-      variationsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      variationsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
     }
   }, [journey.chosenType])
 
   // A new refine round appended — bring it (and the refine bar) into view.
   useEffect(() => {
     if (roundCount > 1) {
-      variationsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      variationsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      })
     }
   }, [roundCount])
 
@@ -78,7 +93,8 @@ function ForgePage() {
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
         <Backdrop colors={[]} />
         <p className="text-sm" style={{ color: 'var(--app-muted)' }}>
-          This journey has no source — it was probably reloaded. Start a new one.
+          This journey has no source — it was probably reloaded. Start a new
+          one.
         </p>
         <Link
           to="/"
@@ -93,23 +109,41 @@ function ForgePage() {
 
   return (
     <>
-      <Backdrop colors={backdropColors(journey.chosen, journey.source.extracted)} />
+      <Backdrop
+        colors={backdropColors(journey.chosen, journey.source.extracted)}
+      />
       <main className="mx-auto flex max-w-5xl flex-col gap-12 px-4 py-16">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <SourceThumb source={journey.source} />
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--app-text)' }}>
+              <p
+                className="text-sm font-medium"
+                style={{ color: 'var(--app-text)' }}
+              >
                 Your journey
               </p>
               <p className="text-xs" style={{ color: 'var(--app-muted)' }}>
-                {journey.source.type === 'image' ? 'From an image' : `From ${journey.source.value}`}
+                {journey.source.type === 'image'
+                  ? 'From an image'
+                  : `From ${journey.source.value}`}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <ModelControl />
-            <Link to="/" className="text-xs underline" style={{ color: 'var(--app-muted)' }}>
+            <Link
+              to="/library"
+              className="text-xs underline"
+              style={{ color: 'var(--app-muted)' }}
+            >
+              Library
+            </Link>
+            <Link
+              to="/"
+              className="text-xs underline"
+              style={{ color: 'var(--app-muted)' }}
+            >
               Start over
             </Link>
           </div>
@@ -130,9 +164,12 @@ function ForgePage() {
               chosenId={journey.chosen?.id}
               progress={journey.progress}
               onChoose={(palette) => chooseVariation(sessionId, palette)}
-              onRefine={(instruction) => void refineJourney(sessionId, instruction)}
+              onRefine={(instruction) =>
+                void refineJourney(sessionId, instruction)
+              }
               onRegenerate={() => {
-                if (journey.chosenType) void chooseDirection(sessionId, journey.chosenType)
+                if (journey.chosenType)
+                  void chooseDirection(sessionId, journey.chosenType)
               }}
             />
           </div>

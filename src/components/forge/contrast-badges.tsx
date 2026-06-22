@@ -11,7 +11,13 @@ function shortPairing(pairing: string): string {
 }
 
 /** Honest WCAG badges per pairing. `fail` is deliberately loud. */
-export function ContrastBadges({ checks, mode }: { checks: ContrastCheck[]; mode?: Mode }) {
+export function ContrastBadges({
+  checks,
+  mode,
+}: {
+  checks: ContrastCheck[]
+  mode?: Mode
+}) {
   const shown = mode ? checks.filter((c) => c.mode === mode) : checks
   return (
     <ul className="flex flex-wrap gap-1.5">

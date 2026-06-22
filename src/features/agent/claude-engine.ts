@@ -57,7 +57,8 @@ const DIRECTIONS_SCHEMA: Record<string, unknown> = {
           character: { type: 'string', description: 'one short line' },
           preview: {
             type: 'array',
-            description: 'six representative light-mode hexes: background, surface, muted, border, accent, text',
+            description:
+              'six representative light-mode hexes: background, surface, muted, border, accent, text',
             items: { type: 'string' },
           },
           recommended: { type: 'boolean' },
@@ -110,7 +111,9 @@ function toSeed(source: Source): Seed {
 }
 
 /** All six roles present once -> ordered rows; otherwise null (drop the draft). */
-function toColorRows(colors: { role: Role; light: string; dark: string }[]): ColorRow[] | null {
+function toColorRows(
+  colors: { role: Role; light: string; dark: string }[],
+): ColorRow[] | null {
   const byRole = new Map(colors.map((c) => [c.role, c]))
   const rows: ColorRow[] = []
   for (const role of ROLES) {
@@ -143,11 +146,16 @@ export class ClaudeEngine implements PaletteEngine {
     this.client = makeClient(apiKey)
   }
 
-  private async runStructured<T>(userText: string, schema: Record<string, unknown>): Promise<T> {
+  private async runStructured<T>(
+    userText: string,
+    schema: Record<string, unknown>,
+  ): Promise<T> {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: MAX_TOKENS,
-      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+      system: [
+        { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
+      ],
       messages: [{ role: 'user', content: userText }],
       output_config: { format: { type: 'json_schema', schema } },
     })
@@ -160,9 +168,13 @@ export class ClaudeEngine implements PaletteEngine {
     return JSON.parse(text) as T
   }
 
-  async proposeDirections(source: Source, onProgress?: ProgressFn): Promise<Direction[]> {
+  async proposeDirections(
+    source: Source,
+    onProgress?: ProgressFn,
+  ): Promise<Direction[]> {
     onProgress?.('Reading your colors and sketching directions…')
-    const colors = source.extracted.length > 0 ? source.extracted.join(', ') : source.value
+    const colors =
+      source.extracted.length > 0 ? source.extracted.join(', ') : source.value
     const userText = [
       `Source colors extracted from the user's ${source.type}: ${colors}.`,
       `Propose one direction for each palette type: ${PALETTE_TYPES.join(', ')}.`,
@@ -195,7 +207,8 @@ export class ClaudeEngine implements PaletteEngine {
     steer?: string,
     onProgress?: ProgressFn,
   ): Promise<ScoredPalette[]> {
-    const colors = source.extracted.length > 0 ? source.extracted.join(', ') : source.value
+    const colors =
+      source.extracted.length > 0 ? source.extracted.join(', ') : source.value
     const userText = [
       `Source colors: ${colors}.`,
       `Compose ${VARIATION_COUNT} distinct ${type} palettes from this source. Make them genuinely different from each other in temperature, value range, and mood — not minor tweaks of one idea.`,
@@ -233,14 +246,23 @@ export class ClaudeEngine implements PaletteEngine {
   ): Promise<ScoredPalette[]> {
     const policy = loadContrastPolicy()
     onProgress?.('Composing four takes…')
-    let drafts = withRows(
-      (await this.runStructured<{ palettes: PaletteDraft[] }>(userText, VARIATIONS_SCHEMA)).palettes,
+    const drafts = withRows(
+      (
+        await this.runStructured<{ palettes: PaletteDraft[] }>(
+          userText,
+          VARIATIONS_SCHEMA,
+        )
+      ).palettes,
     )
     onProgress?.('Checking every pairing for contrast…')
 
     for (let revision = 0; revision < MAX_REVISIONS; revision += 1) {
       const failing = drafts
-        .map((draft, index) => ({ draft, index, failures: policyFailures(draft.rows, policy) }))
+        .map((draft, index) => ({
+          draft,
+          index,
+          failures: policyFailures(draft.rows, policy),
+        }))
         .filter((entry) => entry.failures.length > 0)
       if (failing.length === 0) break
       onProgress?.(
@@ -255,27 +277,43 @@ export class ClaudeEngine implements PaletteEngine {
             `Palette "${entry.draft.name}":`,
             colorsToText(entry.draft.rows),
             `Failures: ${entry.failures
-              .map((f) => `${f.pairing} (${f.mode}) is ${f.ratio}:1, needs ${f.required}:1`)
+              .map(
+                (f) =>
+                  `${f.pairing} (${f.mode}) is ${f.ratio}:1, needs ${f.required}:1`,
+              )
               .join('; ')}`,
           ].join('\n'),
         ),
       ].join('\n')
 
       const corrected = withRows(
-        (await this.runStructured<{ palettes: PaletteDraft[] }>(reviseText, VARIATIONS_SCHEMA))
-          .palettes,
+        (
+          await this.runStructured<{ palettes: PaletteDraft[] }>(
+            reviseText,
+            VARIATIONS_SCHEMA,
+          )
+        ).palettes,
       )
       failing.forEach((entry, k) => {
-        const fix = corrected[k]
+        const fix = corrected.at(k)
         if (fix) drafts[entry.index] = fix
       })
     }
 
     return drafts.map((draft) => {
-      const palette = finalizePalette({ seed, name: draft.name, type, colors: draft.rows, policy })
+      const palette = finalizePalette({
+        seed,
+        name: draft.name,
+        type,
+        colors: draft.rows,
+        policy,
+      })
       return {
         ...palette,
-        score: { ...palette.score, rationale: draft.rationale || palette.score.rationale },
+        score: {
+          ...palette.score,
+          rationale: draft.rationale || palette.score.rationale,
+        },
       }
     })
   }

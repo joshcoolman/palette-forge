@@ -29,7 +29,9 @@ function channel(c: number): number {
 
 /** WCAG 2.x relative luminance. */
 export function relativeLuminance(rgb: RGB): number {
-  return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b)
+  return (
+    0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b)
+  )
 }
 
 /** WCAG contrast ratio between two hex colors (1–21), order-independent. */
@@ -60,7 +62,9 @@ export function meetsTarget(ratio: number, target: ContrastTarget): boolean {
 }
 
 /** Split a `"fg-on-bg"` pairing into its two role names. */
-export function parsePairing(pairing: string): { fg: string; bg: string } | null {
+export function parsePairing(
+  pairing: string,
+): { fg: string; bg: string } | null {
   const idx = pairing.indexOf('-on-')
   if (idx === -1) return null
   const fg = pairing.slice(0, idx)
@@ -97,7 +101,12 @@ export function computeContrastChecks(
       const resolved = resolvePairing(colors, p.pairing, mode)
       if (!resolved) continue
       const ratio = contrastRatio(resolved.fg, resolved.bg)
-      checks.push({ pairing: p.pairing, mode, ratio: round2(ratio), passes: classify(ratio) })
+      checks.push({
+        pairing: p.pairing,
+        mode,
+        ratio: round2(ratio),
+        passes: classify(ratio),
+      })
     }
   }
   return checks

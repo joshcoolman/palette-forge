@@ -32,16 +32,23 @@ export type ProgressFn = (message: string) => void
 
 export interface PaletteEngine {
   /** Scene 1: from a source, the palette-type directions to choose between. */
-  proposeDirections(source: Source, onProgress?: ProgressFn): Promise<Direction[]>
+  proposeDirections: (
+    source: Source,
+    onProgress?: ProgressFn,
+  ) => Promise<Direction[]>
   /** Scene 2: within a chosen type, fan out scored, contrast-checked palettes. */
-  composeVariations(
+  composeVariations: (
     source: Source,
     type: PaletteType,
     steer?: string,
     onProgress?: ProgressFn,
-  ): Promise<ScoredPalette[]>
+  ) => Promise<ScoredPalette[]>
   /** Scene 2 steer: recompose from a kept palette + a natural-language instruction. */
-  refine(base: Palette, instruction: string, onProgress?: ProgressFn): Promise<ScoredPalette[]>
+  refine: (
+    base: Palette,
+    instruction: string,
+    onProgress?: ProgressFn,
+  ) => Promise<ScoredPalette[]>
 }
 
 const NEUTRAL_ROLES: Role[] = ['background', 'surface', 'muted', 'border']
@@ -94,7 +101,9 @@ export function scorePalette(
   }
   const passFraction = total === 0 ? 1 : passed / total
   const avgHeadroom = total === 0 ? 0 : headroom / total
-  const contrast = Math.round(clamp(passFraction * 70 + avgHeadroom * 30, 0, 100))
+  const contrast = Math.round(
+    clamp(passFraction * 70 + avgHeadroom * 30, 0, 100),
+  )
 
   const neutralSat = mean(
     NEUTRAL_ROLES.map((role) => hexToHsl(byRole(colors, role).light).s),
@@ -103,9 +112,13 @@ export function scorePalette(
 
   const accent = hexToHsl(byRole(colors, 'accent').light)
   const distinctAccent = clamp((accent.s - neutralSat) * 120, 0, 55)
-  const lightnesses = ROLES.map((role) => hexToHsl(byRole(colors, role).light).l)
+  const lightnesses = ROLES.map(
+    (role) => hexToHsl(byRole(colors, role).light).l,
+  )
   const valueRange = Math.max(...lightnesses) - Math.min(...lightnesses)
-  const harmony = Math.round(clamp(distinctAccent + valueRange * 45 + 8, 0, 100))
+  const harmony = Math.round(
+    clamp(distinctAccent + valueRange * 45 + 8, 0, 100),
+  )
 
   const overall = Math.round(contrast * 0.4 + harmony * 0.34 + cohesion * 0.26)
 

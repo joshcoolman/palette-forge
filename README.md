@@ -2,11 +2,11 @@
 
 > An image or seed color in, refined and accessible light + dark palettes out. Fan out variations, switch between them, refine to taste.
 
-**Status: scaffolding** — the tech-stack shell is in place and runs; the agent loop is not built yet. Active development. Built in public, so the history from scaffold to shipped tool is all here.
+**Status: v1 shipped** — image or seed in; an agent that proposes, checks its own WCAG contrast, revises, and fans out; a journey you can branch and refine; a saved library; and Tailwind / CSS / hex export. Built in public — the full history from scaffold to v1 lives in [`log/`](log/).
 
 ---
 
-## What this will be
+## What this is
 
 A focused, **agent-first**, BYO-key utility for building accessible color palettes. The agent proposes a palette (guided by a legible `/knowledge` folder), **checks WCAG contrast itself**, self-corrects until it passes, and fans out variations — and you are the final oracle for taste.
 
@@ -34,4 +34,4 @@ pnpm lint
 
 ## Boundary (the lane is welded)
 
-Does one thing: image/seed color in, palettes out. Not a design-system builder, not an image generator/editor, not multi-user, not a SaaS. You can retune *what good color means* via `/knowledge`; you cannot talk it into being something else.
+Does one thing: image/seed color in, palettes out. Not a design-system builder, not an image generator/editor, not multi-user, not a SaaS. You can retune _what good color means_ via `/knowledge`; you cannot talk it into being something else.

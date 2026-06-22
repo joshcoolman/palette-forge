@@ -10,7 +10,12 @@
 
 import { useSyncExternalStore } from 'react'
 
-import type { Direction, PaletteType, ScoredPalette, Source } from '#/features/palette/types'
+import type {
+  Direction,
+  PaletteType,
+  ScoredPalette,
+  Source,
+} from '#/features/palette/types'
 import { getEngine } from '#/features/agent/get-engine'
 import { ensureHydrated } from '#/lib/settings'
 import { makeId } from '#/lib/id'
@@ -67,8 +72,14 @@ function patch(id: string, next: Partial<JourneyState>): void {
   emit()
 }
 
-function patchRound(id: string, roundId: string, next: Partial<VariationRound>): void {
-  const rounds = getState(id).rounds.map((r) => (r.id === roundId ? { ...r, ...next } : r))
+function patchRound(
+  id: string,
+  roundId: string,
+  next: Partial<VariationRound>,
+): void {
+  const rounds = getState(id).rounds.map((r) =>
+    r.id === roundId ? { ...r, ...next } : r,
+  )
   patch(id, { rounds })
 }
 
@@ -88,16 +99,14 @@ export function useJourney(id: string): JourneyState {
   )
 }
 
-export function hasJourney(id: string): boolean {
-  return Boolean(sessions[id]?.source)
-}
-
 export async function startJourney(id: string, source: Source): Promise<void> {
   patch(id, { ...EMPTY, source, directionsPhase: 'running' })
   try {
     await ensureHydrated()
-    const directions = await getEngine().proposeDirections(source, (m) => patch(id, { progress: m }))
-    if (sessions[id]?.source === source) {
+    const directions = await getEngine().proposeDirections(source, (m) =>
+      patch(id, { progress: m }),
+    )
+    if (getState(id).source === source) {
       patch(id, { directions, directionsPhase: 'done', progress: '' })
     }
   } catch {
@@ -106,7 +115,10 @@ export async function startJourney(id: string, source: Source): Promise<void> {
 }
 
 /** Pick a path — branches a fresh tail (rounds reset) for this type. */
-export async function chooseDirection(id: string, type: PaletteType): Promise<void> {
+export async function chooseDirection(
+  id: string,
+  type: PaletteType,
+): Promise<void> {
   const state = getState(id)
   if (!state.source) return
   const roundId = makeId()
@@ -117,10 +129,13 @@ export async function chooseDirection(id: string, type: PaletteType): Promise<vo
   })
   try {
     await ensureHydrated()
-    const variations = await getEngine().composeVariations(state.source, type, undefined, (m) =>
-      patch(id, { progress: m }),
+    const variations = await getEngine().composeVariations(
+      state.source,
+      type,
+      undefined,
+      (m) => patch(id, { progress: m }),
     )
-    if (sessions[id]?.chosenType === type) {
+    if (getState(id).chosenType === type) {
       patchRound(id, roundId, { variations, phase: 'done' })
       patch(id, { progress: '' })
     }
@@ -135,7 +150,10 @@ export function chooseVariation(id: string, palette: ScoredPalette): void {
 }
 
 /** Steer from the current pick (or the latest round's recommendation) — appends a round. */
-export async function refineJourney(id: string, instruction: string): Promise<void> {
+export async function refineJourney(
+  id: string,
+  instruction: string,
+): Promise<void> {
   const state = getState(id)
   if (!state.chosenType || state.rounds.length === 0) return
   const latest = state.rounds[state.rounds.length - 1]
@@ -143,11 +161,16 @@ export async function refineJourney(id: string, instruction: string): Promise<vo
   if (!base) return
   const roundId = makeId()
   patch(id, {
-    rounds: [...state.rounds, { id: roundId, steer: instruction, variations: [], phase: 'running' }],
+    rounds: [
+      ...state.rounds,
+      { id: roundId, steer: instruction, variations: [], phase: 'running' },
+    ],
   })
   try {
     await ensureHydrated()
-    const variations = await getEngine().refine(base, instruction, (m) => patch(id, { progress: m }))
+    const variations = await getEngine().refine(base, instruction, (m) =>
+      patch(id, { progress: m }),
+    )
     patchRound(id, roundId, { variations, phase: 'done' })
     patch(id, { progress: '' })
   } catch {

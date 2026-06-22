@@ -2,10 +2,19 @@ import { motion } from 'motion/react'
 
 import type { ColorRow, Mode, ScoredPalette } from '#/features/palette/types'
 
-const BAND_ORDER = ['background', 'surface', 'muted', 'border', 'accent', 'text'] as const
+const BAND_ORDER = [
+  'background',
+  'surface',
+  'muted',
+  'border',
+  'accent',
+  'text',
+] as const
 
 function band(colors: ColorRow[], mode: Mode): string[] {
-  return BAND_ORDER.map((role) => colors.find((c) => c.role === role)?.[mode] ?? '#888888')
+  return BAND_ORDER.map(
+    (role) => colors.find((c) => c.role === role)?.[mode] ?? '#888888',
+  )
 }
 
 export function PaletteCard({
@@ -40,23 +49,40 @@ export function PaletteCard({
           Recommended
         </span>
       )}
-      <div className="overflow-hidden rounded-xl border" style={{ borderColor: 'var(--app-border)' }}>
+      <div
+        className="overflow-hidden rounded-xl border"
+        style={{ borderColor: 'var(--app-border)' }}
+      >
         <div className="flex h-20">
           {band(palette.colors, 'light').map((hex, i) => (
-            <span key={`l-${i}`} className="flex-1" style={{ background: hex }} />
+            <span
+              key={`l-${i}`}
+              className="flex-1"
+              style={{ background: hex }}
+            />
           ))}
         </div>
         <div className="flex h-5">
           {band(palette.colors, 'dark').map((hex, i) => (
-            <span key={`d-${i}`} className="flex-1" style={{ background: hex }} />
+            <span
+              key={`d-${i}`}
+              className="flex-1"
+              style={{ background: hex }}
+            />
           ))}
         </div>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium" style={{ color: 'var(--app-text)' }}>
+        <span
+          className="text-xs font-medium"
+          style={{ color: 'var(--app-text)' }}
+        >
           {palette.name}
         </span>
-        <span className="text-xs tabular-nums" style={{ color: 'var(--app-muted)' }}>
+        <span
+          className="text-xs tabular-nums"
+          style={{ color: 'var(--app-muted)' }}
+        >
           {palette.score.overall}
         </span>
       </div>

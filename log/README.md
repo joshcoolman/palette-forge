@@ -2,7 +2,7 @@
 
 **Purpose.** This project is built in public. `log/` is the trail from scaffold to shipped: the decisions, the reasoning, and the things tried and abandoned. It is a working record, not a publication — a separate site distills these into a public "follow along" narrative later. The job here is a faithful, detailed trail, not a polished story. Don't write for an audience; don't market; don't smooth over the messy parts — the mess is the most useful part.
 
-**Why it's worth the effort.** The git diff already captures what changed, line by line. It never captures *why* — why this approach over another, what looked right but broke, what was learned. That "why" is the decision record that makes the code legible to future-me, to forkers, and to people following along. Spend words there.
+**Why it's worth the effort.** The git diff already captures what changed, line by line. It never captures _why_ — why this approach over another, what looked right but broke, what was learned. That "why" is the decision record that makes the code legible to future-me, to forkers, and to people following along. Spend words there.
 
 ## Where & format
 

@@ -18,7 +18,9 @@ async function getSetting(key: string): Promise<string | undefined> {
 }
 
 function putSetting(key: string, value: string): Promise<void> {
-  return idbPut<SettingRecord>(STORE_SETTINGS, { key, value }).then(() => undefined)
+  return idbPut<SettingRecord>(STORE_SETTINGS, { key, value }).then(
+    () => undefined,
+  )
 }
 
 export function getApiKey(): Promise<string | undefined> {

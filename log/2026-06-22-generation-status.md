@@ -8,17 +8,17 @@ The user ran the real Claude path with their own key — it works ("works really
 
 ## What I did
 
-Added a live progress channel: `PaletteEngine` methods take an optional `onProgress(message)`; the engine emits its current move; the journey store holds it; the narration line that was already there goes *live* through the stages, with the dot pulsing while pending. On Claude you see: "Composing four takes…" → "Checking every pairing for contrast…" → "Reworking the 2 that missed a target…".
+Added a live progress channel: `PaletteEngine` methods take an optional `onProgress(message)`; the engine emits its current move; the journey store holds it; the narration line that was already there goes _live_ through the stages, with the dot pulsing while pending. On Claude you see: "Composing four takes…" → "Checking every pairing for contrast…" → "Reworking the 2 that missed a target…".
 
 ## Why this shape
 
 - **Non-intrusive:** reuses the existing narration line and dot — no spinner, no new chrome. It just makes a line that was static go live.
-- **Honest, and on-thesis:** the messages are the *actual* loop stages, not a fake progress bar. It deliberately surfaces the code-side contrast self-check and the revise step — the free-verifier loop is the product's whole differentiator, so the wait becomes a window onto the machinery rather than dead time.
+- **Honest, and on-thesis:** the messages are the _actual_ loop stages, not a fake progress bar. It deliberately surfaces the code-side contrast self-check and the revise step — the free-verifier loop is the product's whole differentiator, so the wait becomes a window onto the machinery rather than dead time.
 - **Zero added latency:** it's just callbacks around the awaits the loop already does.
 
 ## Considered / deferred
 
-Streaming Claude's *actual* summarized thinking (`thinking: {type:"adaptive", display:"summarized"}` over a streamed request) — more genuinely "fun," but it adds thinking tokens and latency, which is ironic against a complaint that it's already a bit slow. Kept as a possible opt-in later; led with the free, honest stage-narration instead.
+Streaming Claude's _actual_ summarized thinking (`thinking: {type:"adaptive", display:"summarized"}` over a streamed request) — more genuinely "fun," but it adds thinking tokens and latency, which is ironic against a complaint that it's already a bit slow. Kept as a possible opt-in later; led with the free, honest stage-narration instead.
 
 ## Verified / not
 

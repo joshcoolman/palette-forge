@@ -52,8 +52,15 @@ async function withStore<T>(
   })
 }
 
-export function idbGet<T>(store: string, key: IDBValidKey): Promise<T | undefined> {
-  return withStore<T | undefined>(store, 'readonly', (s) => s.get(key) as IDBRequest<T | undefined>)
+export function idbGet<T>(
+  store: string,
+  key: IDBValidKey,
+): Promise<T | undefined> {
+  return withStore<T | undefined>(
+    store,
+    'readonly',
+    (s) => s.get(key) as IDBRequest<T | undefined>,
+  )
 }
 
 export function idbGetAll<T>(store: string): Promise<T[]> {
@@ -65,5 +72,9 @@ export function idbPut<T>(store: string, value: T): Promise<IDBValidKey> {
 }
 
 export function idbDelete(store: string, key: IDBValidKey): Promise<void> {
-  return withStore<void>(store, 'readwrite', (s) => s.delete(key) as IDBRequest<void>)
+  return withStore<void>(
+    store,
+    'readwrite',
+    (s) => s.delete(key) as IDBRequest<void>,
+  )
 }

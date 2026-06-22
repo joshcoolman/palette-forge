@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import type { Source } from '#/features/palette/types'
 import { makeId } from '#/lib/id'
@@ -21,15 +21,26 @@ function Home() {
   return (
     <main className="relative mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-8 px-4 py-16">
       <Backdrop colors={[]} />
-      <div className="absolute right-4 top-4">
+      <div className="absolute right-4 top-4 flex items-center gap-4">
         <ModelControl />
+        <Link
+          to="/library"
+          className="text-xs underline"
+          style={{ color: 'var(--app-muted)' }}
+        >
+          Library
+        </Link>
       </div>
       <div className="text-center">
-        <h1 className="text-4xl font-semibold tracking-tight" style={{ color: 'var(--app-text)' }}>
+        <h1
+          className="text-4xl font-semibold tracking-tight"
+          style={{ color: 'var(--app-text)' }}
+        >
           palette-forge
         </h1>
         <p className="mt-2 text-sm" style={{ color: 'var(--app-muted)' }}>
-          An image or a seed color in — refined, accessible light and dark palettes out.
+          An image or a seed color in — refined, accessible light and dark
+          palettes out.
         </p>
       </div>
       <SceneSource onStart={handleStart} />

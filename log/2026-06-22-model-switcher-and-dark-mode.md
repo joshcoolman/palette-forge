@@ -8,7 +8,7 @@ Three things from user feedback after the M4 commit.
 
 ## Settings round-trip lost the journey
 
-Symptom: open Settings from a journey, come back, "lose everything." Cause was *not* state loss — the journey lives in a module-level store that survives client-side navigation. The bug was that Settings's "Back" hardcoded `<Link to="/">` (home), so you landed on home with no link back to `/forge/$sessionId`. Fix: Back now does `router.history.back()`, returning you to the journey, which was there the whole time.
+Symptom: open Settings from a journey, come back, "lose everything." Cause was _not_ state loss — the journey lives in a module-level store that survives client-side navigation. The bug was that Settings's "Back" hardcoded `<Link to="/">` (home), so you landed on home with no link back to `/forge/$sessionId`. Fix: Back now does `router.history.back()`, returning you to the journey, which was there the whole time.
 
 ## Front-end model switcher
 
@@ -16,10 +16,10 @@ Added `ModelControl` in the journey + home header: with a key, a compact Sonnet 
 
 ## Dark mode — compose it, don't invert
 
-The user clocked that dark looked like "an inversion of sorts." It wasn't a math inversion, but the value relationships did mirror. Two changes, knowledge first because it's the lever that shapes the *real* (Claude) output:
+The user clocked that dark looked like "an inversion of sorts." It wasn't a math inversion, but the value relationships did mirror. Two changes, knowledge first because it's the lever that shapes the _real_ (Claude) output:
 
 - **Knowledge:** added a "Dark mode — compose it, don't invert" section to `knowledge/palettes.md` — concrete rules: warm/cool charcoal backgrounds (~10–16% L, never `#000`), small elevation steps (~4–7%), **desaturate the accent ~10–20%** (a full-sat accent glows on dark), soften text (~90–94% L), quiet borders. This is the high-value change — editing this markdown changes what Claude composes.
-- **Simulated recipe:** matched it so the no-key demo looks composed too — dark accents desaturated (~0.1 lower), dark background lifted into warm charcoal (0.115 → 0.13 with a touch more tint), smaller surface elevation step, muted raised for legibility. The accent already *flipped* lightness between modes; now it also clearly de-saturates, which is the bit that reads as "designed dark" rather than "lightened light accent."
+- **Simulated recipe:** matched it so the no-key demo looks composed too — dark accents desaturated (~0.1 lower), dark background lifted into warm charcoal (0.115 → 0.13 with a touch more tint), smaller surface elevation step, muted raised for legibility. The accent already _flipped_ lightness between modes; now it also clearly de-saturates, which is the bit that reads as "designed dark" rather than "lightened light accent."
 
 ## Decision
 

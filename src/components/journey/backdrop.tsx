@@ -6,8 +6,8 @@ export function Backdrop({ colors }: { colors: string[] }) {
   if (!a) return <div className="pf-backdrop" aria-hidden />
   const style = {
     '--pf-grad-a': a,
-    '--pf-grad-b': colors[1] ?? a,
-    '--pf-grad-c': colors[2] ?? colors[1] ?? a,
+    '--pf-grad-b': colors.at(1) ?? a,
+    '--pf-grad-c': colors.at(2) ?? colors.at(1) ?? a,
   } as CSSProperties
   return <div className="pf-backdrop" style={style} aria-hidden />
 }
