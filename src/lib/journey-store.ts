@@ -12,6 +12,7 @@ import { useSyncExternalStore } from 'react'
 
 import type { Direction, PaletteType, ScoredPalette, Source } from '#/features/palette/types'
 import { getEngine } from '#/features/agent/get-engine'
+import { ensureHydrated } from '#/lib/settings'
 import { makeId } from '#/lib/id'
 
 export type Phase = 'idle' | 'running' | 'done' | 'error'
@@ -30,6 +31,7 @@ export type JourneyState = {
   chosenType: PaletteType | null
   rounds: VariationRound[]
   chosen: ScoredPalette | null
+  progress: string
 }
 
 const EMPTY: JourneyState = {
@@ -39,6 +41,7 @@ const EMPTY: JourneyState = {
   chosenType: null,
   rounds: [],
   chosen: null,
+  progress: '',
 }
 
 let sessions: Record<string, JourneyState> = {}
@@ -92,10 +95,13 @@ export function hasJourney(id: string): boolean {
 export async function startJourney(id: string, source: Source): Promise<void> {
   patch(id, { ...EMPTY, source, directionsPhase: 'running' })
   try {
-    const directions = await getEngine().proposeDirections(source)
-    if (sessions[id]?.source === source) patch(id, { directions, directionsPhase: 'done' })
+    await ensureHydrated()
+    const directions = await getEngine().proposeDirections(source, (m) => patch(id, { progress: m }))
+    if (sessions[id]?.source === source) {
+      patch(id, { directions, directionsPhase: 'done', progress: '' })
+    }
   } catch {
-    patch(id, { directionsPhase: 'error' })
+    patch(id, { directionsPhase: 'error', progress: '' })
   }
 }
 
@@ -110,10 +116,17 @@ export async function chooseDirection(id: string, type: PaletteType): Promise<vo
     rounds: [{ id: roundId, variations: [], phase: 'running' }],
   })
   try {
-    const variations = await getEngine().composeVariations(state.source, type)
-    if (sessions[id]?.chosenType === type) patchRound(id, roundId, { variations, phase: 'done' })
+    await ensureHydrated()
+    const variations = await getEngine().composeVariations(state.source, type, undefined, (m) =>
+      patch(id, { progress: m }),
+    )
+    if (sessions[id]?.chosenType === type) {
+      patchRound(id, roundId, { variations, phase: 'done' })
+      patch(id, { progress: '' })
+    }
   } catch {
     patchRound(id, roundId, { phase: 'error' })
+    patch(id, { progress: '' })
   }
 }
 
@@ -133,10 +146,13 @@ export async function refineJourney(id: string, instruction: string): Promise<vo
     rounds: [...state.rounds, { id: roundId, steer: instruction, variations: [], phase: 'running' }],
   })
   try {
-    const variations = await getEngine().refine(base, instruction)
+    await ensureHydrated()
+    const variations = await getEngine().refine(base, instruction, (m) => patch(id, { progress: m }))
     patchRound(id, roundId, { variations, phase: 'done' })
+    patch(id, { progress: '' })
   } catch {
     patchRound(id, roundId, { phase: 'error' })
+    patch(id, { progress: '' })
   }
 }
 

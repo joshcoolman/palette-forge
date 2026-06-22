@@ -10,19 +10,21 @@ export function SceneDirections({
   directions,
   phase,
   activeType,
+  progress,
   onChoose,
 }: {
   directions: Direction[]
   phase: Phase
   activeType: PaletteType | null
+  progress?: string
   onChoose: (type: PaletteType) => void
 }) {
   const running = phase === 'running'
   return (
     <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4">
-      <AgentNarration>
+      <AgentNarration pending={running}>
         {running
-          ? 'Reading your colors and sketching a few directions…'
+          ? progress || 'Reading your colors and sketching a few directions…'
           : activeType
             ? 'Pick a different path to branch a new set, or refine the one below.'
             : 'A few ways this could go. Pick a path to descend into.'}

@@ -22,7 +22,7 @@ import { PALETTE_TYPES } from '#/features/palette/types'
 import { clamp, hexToHsl, hexToRgb, hslToHex } from '#/features/color/color-utils'
 import { parsePairing, policyFailures, relativeLuminance } from '#/features/color/contrast'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
-import type { PaletteEngine } from '#/features/agent/engine'
+import type { PaletteEngine, ProgressFn } from '#/features/agent/engine'
 import { finalizePalette } from '#/features/agent/engine'
 
 const CHARACTER: Record<PaletteType, string> = {
@@ -239,7 +239,8 @@ function sourceFromPalette(base: Palette): Source {
 }
 
 export class SimulatedEngine implements PaletteEngine {
-  async proposeDirections(source: Source): Promise<Direction[]> {
+  async proposeDirections(source: Source, onProgress?: ProgressFn): Promise<Direction[]> {
+    onProgress?.('Reading your colors…')
     const policy = loadContrastPolicy()
     const baseHue = pickBaseHue(source)
     const scored = PALETTE_TYPES.map((type) => {
@@ -267,7 +268,9 @@ export class SimulatedEngine implements PaletteEngine {
     source: Source,
     type: PaletteType,
     steer?: string,
+    onProgress?: ProgressFn,
   ): Promise<ScoredPalette[]> {
+    onProgress?.('Composing palettes…')
     const policy = loadContrastPolicy()
     const base = baseRecipe(type, pickBaseHue(source))
     return VARIATION_DELTAS.map((delta) => {
@@ -284,8 +287,12 @@ export class SimulatedEngine implements PaletteEngine {
     })
   }
 
-  async refine(base: Palette, instruction: string): Promise<ScoredPalette[]> {
+  async refine(
+    base: Palette,
+    instruction: string,
+    onProgress?: ProgressFn,
+  ): Promise<ScoredPalette[]> {
     const type = (base as Partial<ScoredPalette>).type ?? 'analogous'
-    return this.composeVariations(sourceFromPalette(base), type, instruction)
+    return this.composeVariations(sourceFromPalette(base), type, instruction, onProgress)
   }
 }

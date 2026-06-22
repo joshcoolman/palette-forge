@@ -22,11 +22,13 @@ function recommendedId(variations: ScoredPalette[]): string {
 export function SceneVariations({
   rounds,
   chosenId,
+  progress,
   onChoose,
   onRefine,
 }: {
   rounds: VariationRound[]
   chosenId?: string
+  progress?: string
   onChoose: (palette: ScoredPalette) => void
   onRefine: (instruction: string) => void
 }) {
@@ -39,10 +41,12 @@ export function SceneVariations({
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col gap-6"
     >
-      <AgentNarration>
-        {rounds.length > 1
-          ? 'Steered. Pick from the new takes, or keep refining.'
-          : 'Here are the takes — start with the recommended one, or steer with a refine.'}
+      <AgentNarration pending={refining}>
+        {refining
+          ? progress || 'Composing variations and checking contrast on each…'
+          : rounds.length > 1
+            ? 'Steered. Pick from the new takes, or keep refining.'
+            : 'Here are the takes — start with the recommended one, or steer with a refine.'}
       </AgentNarration>
 
       {rounds.map((round) => {

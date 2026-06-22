@@ -27,13 +27,21 @@ import {
 } from '#/features/color/contrast'
 import { makeId } from '#/lib/id'
 
+/** Live, human-readable status of the agent's current move, in its own voice. */
+export type ProgressFn = (message: string) => void
+
 export interface PaletteEngine {
   /** Scene 1: from a source, the palette-type directions to choose between. */
-  proposeDirections(source: Source): Promise<Direction[]>
+  proposeDirections(source: Source, onProgress?: ProgressFn): Promise<Direction[]>
   /** Scene 2: within a chosen type, fan out scored, contrast-checked palettes. */
-  composeVariations(source: Source, type: PaletteType, steer?: string): Promise<ScoredPalette[]>
+  composeVariations(
+    source: Source,
+    type: PaletteType,
+    steer?: string,
+    onProgress?: ProgressFn,
+  ): Promise<ScoredPalette[]>
   /** Scene 2 steer: recompose from a kept palette + a natural-language instruction. */
-  refine(base: Palette, instruction: string): Promise<ScoredPalette[]>
+  refine(base: Palette, instruction: string, onProgress?: ProgressFn): Promise<ScoredPalette[]>
 }
 
 const NEUTRAL_ROLES: Role[] = ['background', 'surface', 'muted', 'border']

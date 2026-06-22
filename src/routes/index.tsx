@@ -5,6 +5,7 @@ import { makeId } from '#/lib/id'
 import { startJourney } from '#/lib/journey-store'
 import { Backdrop } from '#/components/journey/backdrop'
 import { SceneSource } from '#/components/journey/scene-source'
+import { EngineBadge } from '#/components/settings/engine-badge'
 
 export const Route = createFileRoute('/')({ component: Home })
 
@@ -20,6 +21,9 @@ function Home() {
   return (
     <main className="relative mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-8 px-4 py-16">
       <Backdrop colors={[]} />
+      <div className="absolute right-4 top-4">
+        <EngineBadge />
+      </div>
       <div className="text-center">
         <h1 className="text-4xl font-semibold tracking-tight" style={{ color: 'var(--app-text)' }}>
           palette-forge
