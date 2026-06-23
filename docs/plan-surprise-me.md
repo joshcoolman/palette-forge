@@ -113,7 +113,7 @@ a usable UI palette, not just a pretty swatch set.
   name over hex; the on-image treatment keeps name-left / hex-right. Same type
   across treatments — only the composition differs.
 - **v1 display = the geometric grid card** (template `"a a b b" / "a a c d" /
-  "e e f f"`, rows `2.4fr 1fr 1fr`). Decided: that one card is the display for
+"e e f f"`, rows `2.4fr 1fr 1fr`). Decided: that one card is the display for
   now. The `/lab` route **stays** as the design surface. The palette-over-image
   treatment and a multi-treatment gallery are **parked** (nice, not now) — stay
   focused on the one card.
