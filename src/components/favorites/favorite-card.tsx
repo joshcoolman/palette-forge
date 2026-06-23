@@ -180,7 +180,7 @@ export function FavoriteCard({
   }
 
   return (
-    <div className="group flex w-[285px] max-w-full flex-col gap-2">
+    <div className="group flex w-full flex-col gap-2">
       <div className="relative">
         <button
           type="button"
@@ -201,13 +201,13 @@ export function FavoriteCard({
             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
           >
             <div
-              className="absolute inset-0 overflow-hidden rounded-[5px] border"
+              className="absolute inset-0 overflow-hidden rounded-[var(--app-radius)] border"
               style={faceStyle}
             >
               <SwatchFace palette={palette} mode={mode} />
             </div>
             <div
-              className="absolute inset-0 overflow-hidden rounded-[5px] border"
+              className="absolute inset-0 overflow-hidden rounded-[var(--app-radius)] border"
               style={{ ...faceStyle, transform: 'rotateY(180deg)' }}
             >
               <TextSpecimen palette={palette} mode={mode} />

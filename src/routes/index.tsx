@@ -66,7 +66,7 @@ function SourceThumb({
       <img
         src={source.value}
         alt=""
-        className="h-10 w-10 rounded-lg object-cover"
+        className="h-10 w-10 rounded-[var(--app-radius)] object-cover"
         style={{ outline: '1px solid var(--app-border)' }}
       />
     )
@@ -79,7 +79,7 @@ function SourceThumb({
       aria-label="Change source color"
       title="Change source color"
       onClick={onEdit}
-      className="h-10 w-10 cursor-pointer rounded-lg transition hover:ring-2 hover:ring-white/40"
+      className="h-10 w-10 cursor-pointer rounded-[var(--app-radius)] transition hover:ring-2 hover:ring-white/40"
       style={{
         background: source.value,
         outline: '1px solid var(--app-border)',
@@ -187,7 +187,7 @@ function Home() {
           journey.source?.extracted ?? [],
         )}
       />
-      <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-4 py-12">
+      <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-5 px-4 py-12">
         <header className="flex items-center justify-between gap-4">
           <div>
             <h1
@@ -207,7 +207,7 @@ function Home() {
 
         {active && journey.source && (
           <section
-            className="flex flex-col gap-8 rounded-2xl border p-5"
+            className="flex flex-col gap-8 rounded-[var(--app-radius)] border p-5"
             style={{
               borderColor: 'var(--app-border)',
               background: 'var(--app-surface)',
@@ -264,7 +264,7 @@ function Home() {
 
         {loaded && palettes.length === 0 ? (
           <div
-            className="flex flex-col items-center gap-4 rounded-2xl border p-10 text-center text-sm"
+            className="flex flex-col items-center gap-4 rounded-[var(--app-radius)] border p-10 text-center text-sm"
             style={{
               borderColor: 'var(--app-border)',
               color: 'var(--app-muted)',
@@ -286,7 +286,13 @@ function Home() {
             </button>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-5">
+          <div
+            className="grid gap-5"
+            style={{
+              gridTemplateColumns:
+                'repeat(auto-fill, minmax(min(285px, 100%), 1fr))',
+            }}
+          >
             {palettes.map((p) => (
               <FavoriteCard
                 key={p.id}
