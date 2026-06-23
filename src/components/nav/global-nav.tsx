@@ -90,7 +90,7 @@ export function GlobalNav() {
         {open && (
           <div
             role="listbox"
-            className="absolute right-0 z-50 mt-1.5 w-60 overflow-hidden rounded-xl border p-1 shadow-2xl"
+            className="absolute right-0 z-50 mt-1.5 w-60 overflow-hidden rounded-[var(--app-radius)] border p-1 shadow-2xl"
             style={{
               borderColor: 'var(--app-border)',
               background: 'var(--app-surface)',

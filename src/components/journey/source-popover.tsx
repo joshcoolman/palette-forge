@@ -113,14 +113,14 @@ export function SourcePopover({
             const file = e.dataTransfer.files.item(0)
             if (file) void startFromFile(file)
           }}
-          className="absolute right-0 z-50 mt-2 w-72 rounded-2xl border p-3 shadow-2xl"
+          className="absolute right-0 z-50 mt-2 w-72 rounded-[var(--app-radius)] border p-3 shadow-2xl"
           style={{
             borderColor: 'var(--app-border)',
             background: 'var(--app-surface)',
           }}
         >
           <label
-            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 text-center"
+            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--app-radius-sm)] border border-dashed p-6 text-center"
             style={{ borderColor: 'var(--app-border)' }}
           >
             <ImageUp size={22} style={{ color: 'var(--app-muted)' }} />

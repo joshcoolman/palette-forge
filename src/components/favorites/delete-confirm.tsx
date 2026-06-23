@@ -50,14 +50,14 @@ export function DeleteConfirm({
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         onClick={(e) => e.stopPropagation()}
-        className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border p-5"
+        className="flex w-full max-w-sm flex-col gap-4 rounded-[var(--app-radius)] border p-5"
         style={{
           borderColor: 'var(--app-border)',
           background: 'var(--app-surface)',
         }}
       >
         <div
-          className="overflow-hidden rounded-xl border"
+          className="overflow-hidden rounded-[var(--app-radius-sm)] border"
           style={{ borderColor: 'var(--app-border)' }}
         >
           <div className="flex h-16">

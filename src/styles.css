@@ -30,6 +30,12 @@
   --app-muted: #9a9ab0;
   --app-border: #26263a;
 
+  /* Corner radius — one knob for the whole site. The crisp card radius is the
+     standard; `--app-radius-sm` (derived) is the step for panels nested directly
+     inside a radiused surface (inner swatch previews, modal previews). */
+  --app-radius: 8px;
+  --app-radius-sm: calc(var(--app-radius) - 2px);
+
   /* Global, fixed font pairing (set by type-store; defaults to Fraunces + Inter,
      SSR-loaded in __root so the app opens in it). Applied app-wide: body uses
      --font-body, page titles + content use --font-heading via .pf-heading. */

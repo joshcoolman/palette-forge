@@ -42,7 +42,7 @@ export function PaletteCard({
   return (
     <motion.div
       layout
-      className="group relative flex flex-col rounded-2xl border"
+      className="group relative flex flex-col rounded-[var(--app-radius)] border"
       style={{
         borderColor: selected ? 'var(--app-text)' : 'var(--app-border)',
         background: 'var(--app-surface)',
@@ -51,10 +51,10 @@ export function PaletteCard({
       <button
         type="button"
         onClick={onSelect}
-        className="flex flex-col gap-2.5 rounded-2xl p-3 text-left"
+        className="flex flex-col gap-2.5 rounded-[var(--app-radius)] p-3 text-left"
       >
         <div
-          className="overflow-hidden rounded-xl border"
+          className="overflow-hidden rounded-[var(--app-radius-sm)] border"
           style={{ borderColor: 'var(--app-border)' }}
         >
           <div className="flex h-20">

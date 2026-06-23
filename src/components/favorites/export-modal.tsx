@@ -65,7 +65,7 @@ export function ExportModal({
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         onClick={(e) => e.stopPropagation()}
-        className="flex h-[600px] max-h-[85vh] w-full max-w-lg flex-col gap-4 rounded-2xl border p-5"
+        className="flex h-[600px] max-h-[85vh] w-full max-w-lg flex-col gap-4 rounded-[var(--app-radius)] border p-5"
         style={{
           borderColor: 'var(--app-border)',
           background: 'var(--app-surface)',
@@ -84,7 +84,7 @@ export function ExportModal({
         </div>
 
         <div
-          className="shrink-0 overflow-hidden rounded-xl border"
+          className="shrink-0 overflow-hidden rounded-[var(--app-radius-sm)] border"
           style={{ borderColor: 'var(--app-border)' }}
         >
           <div className="flex h-20">
@@ -153,7 +153,7 @@ export function ExportModal({
 
         <div className="relative min-h-0 flex-1">
           <pre
-            className="h-full overflow-auto rounded-lg border py-3 pl-3 pr-12 text-xs leading-relaxed"
+            className="h-full overflow-auto rounded-[var(--app-radius-sm)] border py-3 pl-3 pr-12 text-xs leading-relaxed"
             style={{
               borderColor: 'var(--app-border)',
               background: 'var(--app-bg)',

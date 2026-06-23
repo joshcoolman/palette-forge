@@ -78,7 +78,7 @@ export function SceneSource({
           const file = e.dataTransfer.files.item(0)
           if (file) void startFromFile(file)
         }}
-        className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed p-12 text-center"
+        className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-[var(--app-radius)] border border-dashed p-12 text-center"
         style={{
           borderColor: 'var(--app-border)',
           background: 'var(--app-surface)',

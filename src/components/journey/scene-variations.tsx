@@ -40,7 +40,7 @@ export function SceneVariations({
           <div key={round.id} className="flex flex-col gap-3">
             {errored ? (
               <div
-                className="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-5"
+                className="flex flex-col items-start gap-3 rounded-[var(--app-radius)] border border-dashed p-5"
                 style={{ borderColor: 'var(--app-border)' }}
               >
                 <p className="text-sm" style={{ color: 'var(--app-text)' }}>
@@ -66,7 +66,7 @@ export function SceneVariations({
                   ? Array.from({ length: 4 }).map((_, i) => (
                       <div
                         key={i}
-                        className="h-40 animate-pulse rounded-2xl"
+                        className="h-40 animate-pulse rounded-[var(--app-radius)]"
                         style={{ background: 'var(--app-surface)' }}
                       />
                     ))

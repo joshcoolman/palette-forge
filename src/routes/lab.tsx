@@ -78,7 +78,7 @@ function luminance(hex: string): number {
 function PaletteCard({ palette }: { palette: Palette }) {
   return (
     <div
-      className="grid w-full overflow-hidden rounded-2xl"
+      className="grid w-full overflow-hidden rounded-[var(--app-radius)]"
       style={{
         gridTemplateAreas: AREAS,
         gridTemplateColumns: 'repeat(4, 1fr)',
@@ -125,7 +125,7 @@ function PaletteOverImage({
 }) {
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl"
+      className="relative w-full overflow-hidden rounded-[var(--app-radius)]"
       style={{ aspectRatio: '5 / 6' }}
     >
       <img

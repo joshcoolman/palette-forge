@@ -32,7 +32,7 @@ export function Preferences() {
 
   return (
     <div
-      className="flex flex-col gap-5 rounded-2xl border p-6"
+      className="flex flex-col gap-5 rounded-[var(--app-radius)] border p-6"
       style={{
         borderColor: 'var(--app-border)',
         background: 'var(--app-surface)',
