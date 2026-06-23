@@ -15,6 +15,14 @@ export default [
     },
   },
   {
-    ignores: ['eslint.config.js', 'prettier.config.js'],
+    // Build artifacts — nitro emits .output / .vercel; never lint generated code.
+    ignores: [
+      'eslint.config.js',
+      'prettier.config.js',
+      'dist/**',
+      '.output/**',
+      '.vercel/**',
+      '.nitro/**',
+    ],
   },
 ]
