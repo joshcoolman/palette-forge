@@ -17,11 +17,16 @@ import {
   toggleSaved,
   useJourney,
 } from '#/lib/journey-store'
-import { ensureHydrated, getSettings } from '#/lib/settings'
+import {
+  ensureHydrated,
+  getSettings,
+  saveSkipDeleteConfirm,
+} from '#/lib/settings'
 import { IconButton } from '#/components/ui/icon-button'
 import { Backdrop } from '#/components/journey/backdrop'
 import { SceneVariations } from '#/components/journey/scene-variations'
 import { SourcePopover } from '#/components/journey/source-popover'
+import { ColorPicker } from '#/components/journey/color-picker'
 import { FavoriteCard } from '#/components/favorites/favorite-card'
 import { ExportModal } from '#/components/favorites/export-modal'
 import { DeleteConfirm } from '#/components/favorites/delete-confirm'
@@ -52,10 +57,10 @@ function backdropColors(
 
 function SourceThumb({
   source,
-  onPickColor,
+  onEdit,
 }: {
   source: Source
-  onPickColor?: (hex: string) => void
+  onEdit?: () => void
 }) {
   if (source.type === 'image') {
     return (
@@ -67,25 +72,20 @@ function SourceThumb({
       />
     )
   }
-  // A color source is editable: click the swatch to retune the hue (native
-  // picker). It only updates the source — Re-run regenerates when you're ready.
+  // A color source is editable: click the swatch to open the picker, then Done
+  // retunes the source and re-runs.
   return (
-    <label
+    <button
+      type="button"
       aria-label="Change source color"
       title="Change source color"
-      className="relative block h-10 w-10 cursor-pointer rounded-lg transition hover:ring-2 hover:ring-white/40"
+      onClick={onEdit}
+      className="h-10 w-10 cursor-pointer rounded-lg transition hover:ring-2 hover:ring-white/40"
       style={{
         background: source.value,
         outline: '1px solid var(--app-border)',
       }}
-    >
-      <input
-        type="color"
-        value={source.value}
-        onChange={(e) => onPickColor?.(e.target.value)}
-        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-      />
-    </label>
+    />
   )
 }
 
@@ -98,6 +98,8 @@ function Home() {
   const [confirming, setConfirming] = useState<Palette | null>(null)
   const [seeding, setSeeding] = useState(false)
   const [hasKey, setHasKey] = useState(false)
+  const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false)
+  const [editingColor, setEditingColor] = useState(false)
 
   const active = !!journey.source
   const savedKey = journey.saved.join(',')
@@ -115,11 +117,14 @@ function Home() {
     void hydrateJourney(ACTIVE)
   }, [])
 
-  // Mirror the BYO-key presence so the refine UI can be hidden without one.
+  // Mirror persisted prefs: BYO-key presence (gates refine) and the
+  // skip-delete-confirm setting (whether deleting a favorite needs the popup).
   useEffect(() => {
     let alive = true
     void ensureHydrated().then(() => {
-      if (alive) setHasKey(Boolean(getSettings().apiKey))
+      if (!alive) return
+      setHasKey(Boolean(getSettings().apiKey))
+      setSkipDeleteConfirm(getSettings().skipDeleteConfirm)
     })
     return () => {
       alive = false
@@ -149,6 +154,24 @@ function Home() {
   async function remove(id: string) {
     await deletePalette(id)
     await refresh()
+  }
+
+  // Delete a favorite: straight through if the user opted out of the popup,
+  // otherwise open the confirm dialog.
+  function requestDelete(palette: Palette) {
+    if (skipDeleteConfirm) void remove(palette.id)
+    else setConfirming(palette)
+  }
+
+  // From the confirm dialog: honor "Don't ask me again", then delete.
+  function confirmDelete(dontAskAgain: boolean) {
+    if (!confirming) return
+    if (dontAskAgain) {
+      setSkipDeleteConfirm(true)
+      void saveSkipDeleteConfirm(true)
+    }
+    void remove(confirming.id)
+    setConfirming(null)
   }
 
   async function addSamples() {
@@ -199,7 +222,7 @@ function Home() {
               <div className="flex items-center gap-3">
                 <SourceThumb
                   source={journey.source}
-                  onPickColor={(hex) => setSourceColor(ACTIVE, hex)}
+                  onEdit={() => setEditingColor(true)}
                 />
                 <div>
                   <p
@@ -278,22 +301,31 @@ function Home() {
                 key={p.id}
                 palette={p}
                 onOpen={() => setOpen(p)}
-                onDelete={() => setConfirming(p)}
+                onDelete={() => requestDelete(p)}
               />
             ))}
           </div>
         )}
       </main>
 
+      {editingColor && journey.source && (
+        <ColorPicker
+          initial={journey.source.value}
+          onDone={(hex) => {
+            setEditingColor(false)
+            setSourceColor(ACTIVE, hex)
+            void rerunJourney(ACTIVE)
+          }}
+          onCancel={() => setEditingColor(false)}
+        />
+      )}
+
       {open && <ExportModal palette={open} onClose={() => setOpen(null)} />}
       {confirming && (
         <DeleteConfirm
           palette={confirming}
           onCancel={() => setConfirming(null)}
-          onConfirm={() => {
-            void remove(confirming.id)
-            setConfirming(null)
-          }}
+          onConfirm={confirmDelete}
         />
       )}
     </>

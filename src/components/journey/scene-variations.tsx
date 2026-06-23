@@ -7,18 +7,6 @@ import { PaletteCard } from '#/components/journey/palette-card'
 import { RefineBar } from '#/components/forge/refine-bar'
 import { ExportModal } from '#/components/favorites/export-modal'
 
-function recommendedId(variations: ScoredPalette[]): string {
-  let best = ''
-  let bestScore = -1
-  for (const palette of variations) {
-    if (palette.score.overall > bestScore) {
-      bestScore = palette.score.overall
-      best = palette.id
-    }
-  }
-  return best
-}
-
 /** Scene 2 — composed, scored variations as a stack of rounds, plus a refine bar. */
 export function SceneVariations({
   rounds,
@@ -54,7 +42,6 @@ export function SceneVariations({
         .map((round, roundIndex) => ({ round, roundIndex }))
         .reverse()
         .map(({ round, roundIndex }) => {
-        const topId = recommendedId(round.variations)
         const running = round.phase === 'running'
         const errored = round.phase === 'error'
         return (
@@ -100,7 +87,6 @@ export function SceneVariations({
                       <PaletteCard
                         key={palette.id}
                         palette={palette}
-                        recommended={palette.id === topId}
                         selected={palette.id === chosenId}
                         saved={savedIds.includes(palette.id)}
                         onSelect={() => onChoose(palette)}

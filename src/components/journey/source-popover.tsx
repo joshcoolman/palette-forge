@@ -6,6 +6,7 @@ import { extractDominantColors } from '#/features/color/dominant-color'
 import { normalizeHex } from '#/features/color/color-utils'
 import type { Source } from '#/features/palette/types'
 import { IconButton } from '#/components/ui/icon-button'
+import { ColorPicker } from '#/components/journey/color-picker'
 
 function readAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -48,6 +49,7 @@ export function SourcePopover({
   onStart: (source: Source) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [picking, setPicking] = useState(false)
   const [busy, setBusy] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -158,8 +160,13 @@ export function SourcePopover({
                 style={{ background: hex, borderColor: 'var(--app-border)' }}
               />
             ))}
-            <label
+            <button
+              type="button"
               aria-label="Pick a custom color"
+              onClick={() => {
+                setOpen(false)
+                setPicking(true)
+              }}
               className="flex aspect-square cursor-pointer items-center justify-center rounded-lg border transition-transform hover:-translate-y-0.5"
               style={{
                 borderColor: 'var(--app-border)',
@@ -168,15 +175,20 @@ export function SourcePopover({
               }}
             >
               <Pipette size={15} />
-              <input
-                type="color"
-                defaultValue="#3d5c49"
-                className="hidden"
-                onChange={(e) => startFromColor(e.target.value)}
-              />
-            </label>
+            </button>
           </div>
         </motion.div>
+      )}
+
+      {picking && (
+        <ColorPicker
+          initial="#3d5c49"
+          onDone={(hex) => {
+            setPicking(false)
+            startFromColor(hex)
+          }}
+          onCancel={() => setPicking(false)}
+        />
       )}
     </div>
   )

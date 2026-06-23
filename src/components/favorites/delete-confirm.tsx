@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 
 import type { Mode, Palette, Role } from '#/features/palette/types'
@@ -27,8 +27,11 @@ export function DeleteConfirm({
 }: {
   palette: Palette
   onCancel: () => void
-  onConfirm: () => void
+  /** `dontAskAgain` is the checkbox state — the parent persists the preference. */
+  onConfirm: (dontAskAgain: boolean) => void
 }) {
+  const [dontAsk, setDontAsk] = useState(false)
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') onCancel()
@@ -81,6 +84,19 @@ export function DeleteConfirm({
           </p>
         </div>
 
+        <label
+          className="flex cursor-pointer items-center gap-2 text-sm"
+          style={{ color: 'var(--app-muted)' }}
+        >
+          <input
+            type="checkbox"
+            checked={dontAsk}
+            onChange={(e) => setDontAsk(e.target.checked)}
+            className="h-4 w-4 cursor-pointer accent-current"
+          />
+          Don’t ask me again
+        </label>
+
         <div className="flex justify-end gap-2">
           <button
             type="button"
@@ -92,7 +108,7 @@ export function DeleteConfirm({
           </button>
           <button
             type="button"
-            onClick={onConfirm}
+            onClick={() => onConfirm(dontAsk)}
             className="rounded-md px-3 py-1.5 text-sm font-medium"
             style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}
           >

@@ -51,11 +51,16 @@ describe('keyless re-run variety', () => {
     }
   })
 
-  it('color-seed re-runs stay close to the seed hue', async () => {
+  it('color-seed re-runs explore harmonic relationships to the seed', async () => {
     const base = accentHue((await engine.compose(COLOR, undefined, undefined, 0))[0])
+    // Round 1 is the complementary scheme (~180° off the seed); every re-run is
+    // a big move, not the old "stay close" wobble. (±25° absorbs the recipe
+    // jitter and rounding.)
+    const v1 = accentHue((await engine.compose(COLOR, undefined, undefined, 1))[0])
+    expect(hueGap(v1, (base + 180) % 360)).toBeLessThan(25)
     for (const v of [1, 2, 3]) {
       const h = accentHue((await engine.compose(COLOR, undefined, undefined, v))[0])
-      expect(hueGap(h, base)).toBeLessThan(25)
+      expect(hueGap(h, base)).toBeGreaterThan(60)
     }
   })
 })

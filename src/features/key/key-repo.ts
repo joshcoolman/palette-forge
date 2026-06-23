@@ -9,6 +9,7 @@ type SettingRecord = { key: string; value: string }
 
 const KEY_API = 'anthropic-api-key'
 const KEY_MODEL = 'model'
+const KEY_SKIP_DELETE_CONFIRM = 'skip-delete-confirm'
 
 export const DEFAULT_MODEL = 'claude-sonnet-4-6'
 
@@ -45,4 +46,13 @@ export async function getModel(): Promise<string> {
 
 export function setModel(value: string): Promise<void> {
   return putSetting(KEY_MODEL, value)
+}
+
+/** Preference: skip the delete-confirm popup. Default off (popup shows). */
+export async function getSkipDeleteConfirm(): Promise<boolean> {
+  return (await getSetting(KEY_SKIP_DELETE_CONFIRM)) === 'true'
+}
+
+export function setSkipDeleteConfirm(value: boolean): Promise<void> {
+  return putSetting(KEY_SKIP_DELETE_CONFIRM, value ? 'true' : 'false')
 }

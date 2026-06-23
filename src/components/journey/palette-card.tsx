@@ -1,5 +1,5 @@
 import { motion } from 'motion/react'
-import { Braces, Heart } from 'lucide-react'
+import { Code, Heart } from 'lucide-react'
 
 import type { ColorRow, Mode, ScoredPalette } from '#/features/palette/types'
 
@@ -26,7 +26,6 @@ function band(colors: ColorRow[], mode: Mode): string[] {
  */
 export function PaletteCard({
   palette,
-  recommended = false,
   selected = false,
   saved = false,
   onSelect,
@@ -34,7 +33,6 @@ export function PaletteCard({
   onExport,
 }: {
   palette: ScoredPalette
-  recommended?: boolean
   selected?: boolean
   saved?: boolean
   onSelect: () => void
@@ -44,7 +42,6 @@ export function PaletteCard({
   return (
     <motion.div
       layout
-      whileHover={{ y: -4 }}
       className="group relative flex flex-col rounded-2xl border"
       style={{
         borderColor: selected ? 'var(--app-text)' : 'var(--app-border)',
@@ -105,15 +102,6 @@ export function PaletteCard({
         </div>
       </button>
 
-      {recommended && (
-        <span
-          className="pointer-events-none absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-          style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}
-        >
-          Recommended
-        </span>
-      )}
-
       <div className="absolute right-2 top-2 z-10 flex items-center gap-1.5">
         <button
           type="button"
@@ -122,9 +110,9 @@ export function PaletteCard({
             onExport()
           }}
           aria-label={`Export ${palette.name}`}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white/90 opacity-0 transition group-hover:opacity-100 hover:bg-black/60"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white/90 transition hover:bg-black/60"
         >
-          <Braces size={13} />
+          <Code size={14} />
         </button>
         <button
           type="button"

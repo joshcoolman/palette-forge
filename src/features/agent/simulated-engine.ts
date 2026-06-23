@@ -121,23 +121,32 @@ function anchorHues(source: Source): number[] {
 const GOLDEN_ANGLE = 137.508
 
 /**
+ * Classic color-theory offsets from the seed hue, ordered so consecutive re-runs
+ * jump across the wheel: monochromatic, complementary, the two triadics, the two
+ * split-complementaries, the two analogous. A color re-run walks this list, so
+ * every round is a recognizable, intentional scheme *derived from* the seed —
+ * not a random hue. Index 0 (mono) is the opening and isn't reached by re-runs.
+ */
+const HARMONICS = [0, 180, 120, 240, 150, 330, 210, 30]
+
+/**
  * The base hue for a round. Variation 0 (the opening) anchors on the most
  * saturated source color — the honest read, unchanged for both source types.
  *
- * Re-runs diverge by source type:
- * - **Image:** rotate the whole palette by the golden angle each round. Walking
- *   the image's own colors (the prior approach) collapses to a wobble when the
- *   image is hue-narrow — all browns/olives re-run to themselves. A re-run is
- *   "surprise me again," not "stay true," so we explore the wheel boldly; the
- *   accent swings most, the near-neutral grounds just re-tint.
- * - **Color:** stay on the seed's hue (the literal "from #xxxxxx" promise);
- *   `varyRecipe` adds only a small ±15° jitter so it reads as the same seed.
+ * Re-runs diverge by source type, but both now move boldly each round:
+ * - **Image:** rotate the whole palette by the golden angle. Walking the image's
+ *   own colors (the prior approach) collapses to a wobble when the image is
+ *   hue-narrow — all browns/olives re-run to themselves. A re-run is "surprise me
+ *   again," so we explore the wheel; the accent swings most, grounds re-tint.
+ * - **Color:** rotate through `HARMONICS` — complementary / triadic / etc.
+ *   relative to the seed. Still keyed off the chosen color (every offset is a
+ *   relationship to it), but with the same across-round variety images get.
  */
 function pickBaseHue(source: Source, variation: number): number {
   const base = anchorHues(source)[0] ?? 220
   if (variation <= 0) return base
   if (source.type === 'image') return (base + variation * GOLDEN_ANGLE) % 360
-  return base
+  return (base + HARMONICS[variation % HARMONICS.length]) % 360
 }
 
 /**

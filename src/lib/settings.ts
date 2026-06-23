@@ -9,21 +9,35 @@ import {
   clearApiKey,
   getApiKey,
   getModel,
+  getSkipDeleteConfirm,
   setApiKey,
   setModel,
+  setSkipDeleteConfirm,
 } from '#/features/key/key-repo'
 
-export type Settings = { apiKey?: string; model: string }
+export type Settings = {
+  apiKey?: string
+  model: string
+  skipDeleteConfirm: boolean
+}
 
-let current: Settings = { apiKey: undefined, model: DEFAULT_MODEL }
+let current: Settings = {
+  apiKey: undefined,
+  model: DEFAULT_MODEL,
+  skipDeleteConfirm: false,
+}
 let hydration: Promise<void> | null = null
 
-/** Read the persisted key/model into memory once (idempotent, client-only). */
+/** Read the persisted key/model/prefs into memory once (idempotent, client-only). */
 export function ensureHydrated(): Promise<void> {
   if (!hydration) {
     hydration = (async () => {
-      const [apiKey, model] = await Promise.all([getApiKey(), getModel()])
-      current = { apiKey, model }
+      const [apiKey, model, skipDeleteConfirm] = await Promise.all([
+        getApiKey(),
+        getModel(),
+        getSkipDeleteConfirm(),
+      ])
+      current = { apiKey, model, skipDeleteConfirm }
     })().catch(() => {
       // IndexedDB unavailable (e.g. during SSR) — keep defaults.
     })
@@ -51,4 +65,10 @@ export async function saveModel(model: string): Promise<void> {
   await ensureHydrated()
   await setModel(model)
   current = { ...current, model }
+}
+
+export async function saveSkipDeleteConfirm(value: boolean): Promise<void> {
+  await ensureHydrated()
+  await setSkipDeleteConfirm(value)
+  current = { ...current, skipDeleteConfirm: value }
 }
