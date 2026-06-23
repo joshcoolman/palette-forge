@@ -1,14 +1,14 @@
 /**
  * The engine seam. Everything above it (journey UI, store, contrast verifier,
- * repo, export) is engine-agnostic; a SimulatedEngine and a ClaudeEngine both
- * implement this. Shared helpers — contrast verification and scoring — live
- * here so both engines produce honest, comparable records.
+ * repo, export) is engine-agnostic; the deterministic SimulatedEngine implements
+ * this today, and the seam stays so another impl (e.g. agent-driven) could slot
+ * in. Shared helpers — contrast verification and scoring — live here so any
+ * engine produces honest, comparable records.
  */
 
 import type {
   ColorRow,
   ContrastPolicy,
-  Palette,
   Role,
   Score,
   ScoredPalette,
@@ -31,23 +31,20 @@ export type ProgressFn = (message: string) => void
 export interface PaletteEngine {
   /**
    * The surprise: from a source, four genuinely distinct, contrast-checked,
-   * UI-ready palettes — each its own character. `steer` re-surprises within a
-   * nudge (used by re-run / the simulated refine path). `variation` is the
-   * round index (0 = opening): re-runs pass 1, 2, … so the deterministic engine
-   * can produce a genuinely different four each time instead of repeating the
-   * opening. The Claude engine varies on its own and ignores it.
+   * UI-ready palettes — each its own character. `variation` is the round index
+   * (0 = opening): re-runs pass 1, 2, … so each four is genuinely different
+   * instead of repeating the opening. `usedNames` are names already on screen
+   * this journey, so re-run names don't repeat them.
+   *
+   * This is the one seam between everything above (UI, store, verifier, repo)
+   * and palette generation — kept clean and addressable so the engine could be
+   * driven by an external agent (MCP/API) later. Today: one deterministic impl.
    */
   compose: (
     source: Source,
-    steer?: string,
     onProgress?: ProgressFn,
     variation?: number,
-  ) => Promise<ScoredPalette[]>
-  /** Steer: recompose from a kept palette + a natural-language instruction. */
-  refine: (
-    base: Palette,
-    instruction: string,
-    onProgress?: ProgressFn,
+    usedNames?: Iterable<string>,
   ) => Promise<ScoredPalette[]>
 }
 

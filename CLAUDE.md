@@ -4,17 +4,21 @@
 
 ## Hold the line
 
-- **Agent-first, not agent-added.** The agent is the product; the UI serves its loop. If deleting the agent leaves a working app, something went wrong.
+- **Deterministic core, agent at the boundary.** There is no in-app LLM. Generation is a deterministic engine (four distinct characters + harmonic re-run variety) checked by a free WCAG verifier and your live taste. The `PaletteEngine` seam (`src/features/agent/`) and addressable records stay clean so an external agent could drive generation later (MCP/API) — AI belongs at the boundary, not inside the loop. See the `ai-at-the-boundary` memory.
 - **The boundary is welded.** Image/seed color in → palettes out. Not a design system, not an image editor, not a SaaS. Retune _what good color means_ via `/knowledge` only.
-- **Mechanism vs knowledge.** Contrast _math_ is locked mechanism (code). Contrast _policy_ and taste live in `/knowledge` as plain, human-rewritable markdown — it both guides proposals and is the self-check rubric.
-- **Free verifier:** WCAG contrast (automatic). **Live verifier:** the user's taste.
-- **Data model:** clean, addressable records with stable IDs (MCP-ready later). Don't bury palettes in React state.
+- **Mechanism vs knowledge.** Contrast _math_ is locked mechanism (code). Contrast _policy_ and taste live in `/knowledge` as plain, human-rewritable markdown — the policy the verifier and the scoring rubric read.
+- **Free verifier:** WCAG contrast (automatic). **Live verifier:** the user's taste (heart what's right).
+- **Data model:** clean, addressable records with stable IDs (MCP-ready). Don't bury palettes in React state.
 
 ## Current state
 
-The **"surprise me" journey** is shipped: source (image/seed) → **four distinct, contrast-checked takes** (each a named character, not a wheel type) → select → action bar (save / copy / export); refine appends a round, Re-run re-surprises. Light/dark, honest WCAG badges throughout. Both engines sit behind the `PaletteEngine` seam (`src/features/agent/`), now `compose(source, steer?)` + `refine`: a deterministic **SimulatedEngine** (no key — four fixed characters: Vivid / Composed / Nocturne / Hush) and the real **ClaudeEngine** (BYO key, vision-enabled — sends the 120px sampled image, names each take's character). Contrast math locked in `src/features/color/contrast.ts`; policy + taste in `/knowledge/*.md` (`characters.md` carries the four-distinct-characters guidance); journey state in a `useSyncExternalStore` store (`src/lib/journey-store.ts`); palettes in IndexedDB. `Source` is shaped for the deferred mood board (`images?` / `prompt?`).
+The **"surprise me" journey**: source (image/seed) → **four distinct, contrast-checked takes** (each a named character) → select → per-card actions (save / copy / export). **Re-run** appends a fresh four, **newest-first**; color seeds rotate through harmonic relationships (complementary / triadic / split-comp / analogous) per re-run, image seeds rotate by the golden angle — so re-runs stay genuinely varied. Names are deterministic and evocative (`src/features/palette/namer.ts`: a hue-bucket word + a character mood word, hashed from the colors, deduped journey-wide). Light/dark, honest WCAG badges throughout. The editable source swatch opens an in-app color picker (Done retunes + re-runs).
 
-**Plan delivered:** [`docs/plan-surprise-me.md`](docs/plan-surprise-me.md) milestones R1–R3 are done (color-theory types removed; engine seam reshaped; knowledge + card polish). **Next (parked, not started):** adopt the **geometric grid card** from the `/lab` route as the takes display (the lab stays as the design surface; type treatment locked there) — today the takes still use the band-preview card with name + character. Further out: the **mood board** input (N inspo images + optional prompt) and authored `knowledge/characters/*.md` reference languages — see the plan's _Deferred_ section.
+One deterministic **SimulatedEngine** behind the `PaletteEngine` seam: `compose(source, onProgress?, variation?, usedNames?)`. Contrast math locked in `src/features/color/contrast.ts`; policy + taste in `/knowledge/*.md` (`characters.md` carries the four-distinct-characters guidance); journey state in a `useSyncExternalStore` store (`src/lib/journey-store.ts`, fixed `'active'` key, IndexedDB-persisted); saved palettes in IndexedDB (`palette-repo`); prefs in `src/features/prefs/`. `Source` keeps `images?` / `prompt?` for the deferred mood board.
+
+The app is **one page** (`/`, the combined source picker + working area + saved grid) plus **Settings** (only the delete-confirm preference). No BYO-key, no model selector — those were removed once the deterministic engine + namer made the LLM redundant (see [`docs/plan-remove-ai.md`](docs/plan-remove-ai.md) and the `sim-engine-may-be-enough` memory).
+
+**Parked:** the mood-board input (N inspo images + optional prompt); lifting the color "comfort band" (never-pure-white/black, sat caps) into explicit constants / `/knowledge` (the `color-comfort-band` memory); exposing the engine as an agent-callable MCP/API surface.
 
 ## Build log
 

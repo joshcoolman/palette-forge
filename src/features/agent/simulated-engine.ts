@@ -11,7 +11,6 @@
 
 import type {
   ColorRow,
-  Palette,
   ScoredPalette,
   Seed,
   Source,
@@ -28,6 +27,7 @@ import {
   relativeLuminance,
 } from '#/features/color/contrast'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
+import { nameFor } from '#/features/palette/namer'
 import type { PaletteEngine, ProgressFn } from '#/features/agent/engine'
 import { finalizePalette } from '#/features/agent/engine'
 
@@ -281,74 +281,33 @@ function repair(
   return out
 }
 
-/** Best-effort natural-language steer for the simulated refine path. */
-function applySteer(recipe: Recipe, instruction: string): Recipe {
-  const text = instruction.toLowerCase()
-  const next = { ...recipe }
-  if (/\bwarm/.test(text)) next.baseHue = (next.baseHue + 340) % 360
-  if (/\bcool/.test(text)) next.baseHue = (next.baseHue + 200) % 360
-  if (/(vibrant|bold|saturat|punch)/.test(text)) {
-    next.accentSatLight = clamp(next.accentSatLight + 0.12, 0.3, 1)
-    next.accentSatDark = clamp(next.accentSatDark + 0.12, 0.3, 1)
-  }
-  if (/(muted|subtle|calm|soft)/.test(text)) {
-    next.accentSatLight = clamp(next.accentSatLight - 0.12, 0.3, 1)
-    next.accentSatDark = clamp(next.accentSatDark - 0.12, 0.3, 1)
-    next.neutralSat = clamp(next.neutralSat - 0.03, 0, 0.3)
-  }
-  if (/(neutral|gray|grey)/.test(text))
-    next.neutralSat = clamp(next.neutralSat - 0.05, 0, 0.3)
-  if (/(deep|dark|moody|rich)/.test(text)) {
-    next.accentLightLight = clamp(next.accentLightLight - 0.06, 0.28, 0.58)
-    next.neutralSat = clamp(next.neutralSat + 0.04, 0, 0.3)
-  }
-  if (/(light|airy|bright|pastel)/.test(text)) {
-    next.accentLightLight = clamp(next.accentLightLight + 0.06, 0.28, 0.58)
-  }
-  return next
-}
-
 function toSeed(source: Source): Seed {
   return { type: source.type, value: source.value }
-}
-
-function sourceFromPalette(base: Palette): Source {
-  const accent =
-    base.colors.find((c) => c.role === 'accent')?.light ?? base.seed.value
-  return { type: base.seed.type, value: base.seed.value, extracted: [accent] }
 }
 
 export class SimulatedEngine implements PaletteEngine {
   async compose(
     source: Source,
-    steer?: string,
     onProgress?: ProgressFn,
     variation = 0,
+    usedNames?: Iterable<string>,
   ): Promise<ScoredPalette[]> {
     onProgress?.('Composing four takes…')
     const policy = loadContrastPolicy()
     const baseHue = pickBaseHue(source, variation)
-    // Fold an optional source prompt (mood-board seam) into the steer.
-    const merged = [source.prompt, steer].filter(Boolean).join(' ').trim()
+    // Seeded with names already on screen this journey, so a re-run's four don't
+    // collide with each other *or* with earlier rounds.
+    const seen = new Set<string>(usedNames)
     return COMPOSITIONS.map((comp) => {
-      let recipe = varyRecipe(recipeFor(comp, baseHue), variation)
-      if (merged) recipe = applySteer(recipe, merged)
+      const recipe = varyRecipe(recipeFor(comp, baseHue), variation)
       const colors = repair(composeColors(recipe), policy)
       return finalizePalette({
         seed: toSeed(source),
-        name: comp.name,
+        name: nameFor(colors, comp.name, seen),
         character: comp.character,
         colors,
         policy,
       })
     })
-  }
-
-  async refine(
-    base: Palette,
-    instruction: string,
-    onProgress?: ProgressFn,
-  ): Promise<ScoredPalette[]> {
-    return this.compose(sourceFromPalette(base), instruction, onProgress)
   }
 }

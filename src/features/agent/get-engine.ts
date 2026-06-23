@@ -1,28 +1,15 @@
 /**
- * Resolves the active engine from settings: a key present -> the real
- * ClaudeEngine; no key -> the deterministic SimulatedEngine (the no-key demo
- * and fallback). Synchronous — callers ensure settings are hydrated first.
+ * The active palette engine. One deterministic implementation now — kept behind
+ * this resolver (and the `PaletteEngine` seam) so generation stays a single,
+ * swappable surface (e.g. an agent-driven MCP/API engine later).
  */
 
 import type { PaletteEngine } from '#/features/agent/engine'
 import { SimulatedEngine } from '#/features/agent/simulated-engine'
-import { ClaudeEngine } from '#/features/agent/claude-engine'
-import { getSettings } from '#/lib/settings'
 
-let simulated: SimulatedEngine | null = null
-let claude: ClaudeEngine | null = null
-let claudeKey = ''
+let engine: SimulatedEngine | null = null
 
 export function getEngine(): PaletteEngine {
-  const { apiKey, model } = getSettings()
-  if (apiKey) {
-    const cacheKey = `${model}::${apiKey}`
-    if (!claude || claudeKey !== cacheKey) {
-      claude = new ClaudeEngine(apiKey, model)
-      claudeKey = cacheKey
-    }
-    return claude
-  }
-  if (!simulated) simulated = new SimulatedEngine()
-  return simulated
+  if (!engine) engine = new SimulatedEngine()
+  return engine
 }

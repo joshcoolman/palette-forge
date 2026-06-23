@@ -1,14 +1,14 @@
 # palette-forge
 
-> A focused, BYO-key utility that turns an image or seed color into refined, accessible color palettes. Tuned for design out of the box — its expertise lives in `/knowledge` as plain markdown you can read and rewrite.
+> A focused, fully-local utility that turns an image or seed color into refined, accessible color palettes. Tuned for design out of the box — its expertise lives in `/knowledge` as plain markdown you can read and rewrite.
 
-Starting spec, not a locked design. Keep what's useful, change the rest in the build.
+Reference spec for what shipped. It started as a BYO-key, vision-agent tool; building it revealed the deterministic engine was the product, so the in-app LLM was removed. This describes the result.
 
 ---
 
 ## The one thing it does
 
-Image or seed color in → refined palettes (light + dark) out. Fan out variations, switch between them, refine to taste.
+Image or seed color in → refined palettes (light + dark) out. A fan of four distinct takes; re-run for fresh fours; keep the ones you like.
 
 If a feature doesn't serve that sentence, it's not v1.
 
@@ -18,65 +18,63 @@ The lane is welded. You can retune _what good color means_ via `/knowledge`; you
 
 - Not a design-system builder. No type, no spacing, no components.
 - Not an image generator, not an image editor.
-- Not multi-user, not a SaaS. Single user, your key.
+- Not multi-user, not a SaaS. Single user, fully local.
 
-This is the discipline that stops it becoming GenZen.
+This is the discipline that stops it becoming a sprawl.
 
 ---
 
-## Why an agent is here (honest about the loop)
+## Why this is more than a color picker
 
-Fan-out alone is a workflow. The agent earns its place because this domain has a **free, automatic verifier**: contrast ratio.
+A color picker gives you one swatch. This runs a real **generate → verify → choose** loop, and it earns that because the domain has a **free, automatic verifier**: contrast ratio.
 
-1. Agent proposes a palette (from the image's colors, or the seed), guided by `/knowledge`.
-2. Agent **computes contrast itself** for the key pairings, light and dark.
-3. Fails the target → revises and re-checks. Self-corrects before you see it.
-4. Fans out N variations in parallel.
-5. **You** are the final oracle for taste — switch, "more like this," refine.
+1. The engine **composes four distinct characters** from the source (image colors or seed), guided by `/knowledge`.
+2. It **computes contrast itself** for the key role-pairings, light and dark, and **repairs** until the policy is met — self-corrected before you see it.
+3. It **scores** each take against the taste rubric (distinct accent, quiet neutrals, deliberate value range) and shows the honest WCAG badges.
+4. **Re-run** explores — color seeds walk color-theory relationships to the seed (complementary, triadic, …), image seeds rotate around the wheel — so each four is genuinely different.
+5. **You** are the final oracle for taste — switch, retune the source color, heart what's right.
 
-Two verifiers stacked: contrast (automatic, non-negotiable) and you (taste, live). Delete the agent and you've got a color picker — so the agent is the product. Good.
+Two verifiers stacked: contrast (automatic, non-negotiable) and you (taste, live). The loop is deterministic — no model, no key, instant, free to host.
+
+> **AI at the boundary, not in the loop.** The in-app LLM was removed because the deterministic engine + a deterministic namer deliver the whole loop better (instant, predictable, no key wall). The `PaletteEngine` seam and the clean records stay so the engine can be exposed as an **agent-callable capability (MCP/API)** later — AI returns at the boundary, driving the tool, rather than living inside it.
 
 ---
 
 ## The knowledge layer (the differentiator)
 
-**`/knowledge` is plain, human-readable markdown. Read it and you know exactly what this app considers good. Edit it and the output changes.** It ships with solid design expertise out of the box (that's _your_ domain — color, type, composition). A different expert can fork it and rewrite it for their own taste — by hand, or by pointing their own agent at the folder. No code required.
+**`/knowledge` is plain, human-readable markdown. Read it and you know exactly what this app considers good. Edit it and the output changes.** It ships with solid design expertise out of the box (color, type, composition). A different expert can fork it and rewrite it for their own taste — by hand, or by pointing their own agent at the folder. No code required.
 
 Knowledge influences output in **two** places, and that's the whole point:
 
-1. It **guides what the agent proposes** (the generation side).
-2. It **is the rubric the agent self-checks against** before fan-out (the judgment side).
+1. It **guides what the engine generates** (the generation side — characters, neutrals, accent policy).
+2. It **is the rubric the scoring checks against** (the judgment side — the WCAG policy and the taste score).
 
-Change `harmony.md` and both the proposals and the judgment shift. That visible cause-and-effect is the feature.
-
-Starter contents (keep them short and legible):
+Change the policy and both the generation and the judgment shift. That visible cause-and-effect is the feature.
 
 ```
 knowledge/
-├── palettes.md     # value range, accent must be distinct from neutrals,
-│                   # light AND dark are both first-class, avoid muddy mid-tones
-├── harmony.md      # color relationships, temperature, mood; when analogous vs complementary
-├── contrast.md     # accessibility policy: AA minimum (AAA where feasible),
+├── palettes.md     # value range, accent distinct from neutrals,
+│                   # light AND dark both first-class, avoid muddy mid-tones
+├── characters.md   # the four distinct characters (Vivid / Composed / Nocturne / Hush)
+├── contrast.md     # accessibility policy: AA floor (AAA where feasible),
 │                   # which role-pairings must be checked (text-on-bg, text-on-surface…)
 └── roles.md        # what each role means: background, surface, text, muted, accent, border
 ```
 
 Note: contrast _math_ is mechanism (locked, in code). Contrast _policy_ (which targets, which pairings) lives in knowledge, so an expert can tighten or loosen it without touching code.
 
-**Deliberately deferred:** an in-app "talk to it and it edits its own knowledge" mode. Tempting, over-engineered for v1. The folder is just files — a human or an external agent can already edit it. Build the conversational authoring mode as v2, only if v1 earns it.
+**Deliberately deferred:** an in-app "talk to it and it edits its own knowledge" mode. The folder is just files — a human or an external agent can already edit it.
 
 ---
 
-## Core interaction: fan-out-and-refine (this IS the product)
+## Core interaction: surprise-and-keep (this IS the product)
 
 Get this loop to _feel good_; everything else is plumbing.
 
-- **Fan out** N variations as a comparison set (contact-sheet feeling).
-- **Switch** between them instantly, previewed in a realistic light/dark UI mock.
-- **Refine** by natural-language steer ("warmer," "rework the neutrals," "more like #2").
-- **Keep** the one you like.
-
-This is the interaction you'll reuse in every later tool. Build it once, here, right.
+- **Four takes** as a comparison set, each a named character, previewed in a realistic light/dark UI.
+- **Re-run** for a fresh, genuinely-different four (newest stacked on top).
+- **Retune** the source color in-place (the editable swatch + picker) and re-run.
+- **Keep** the ones you like — they save to the local library.
 
 ---
 
@@ -87,7 +85,7 @@ Don't bury palettes in React state. Keep them as clean, addressable records with
 ```ts
 type Palette = {
   id: string
-  name: string // "corporate", "PNW-hero"
+  name: string // "Loden Frost", "Rust Studio"
   seed: { type: 'image' | 'color'; value: string }
   colors: { role: string; light: string; dark: string }[]
   contrast: {
@@ -100,22 +98,22 @@ type Palette = {
 }
 ```
 
-Local storage for v1 (IndexedDB ages better than localStorage).
+Stored in IndexedDB (ages better than localStorage).
 
-## BYO-key
+## Fully local, no key
 
-User's own key, browser-stored, sent only to the provider. This is what makes it free to host. Make the key-entry moment clean and trustworthy.
+No API key, no account, nothing sent anywhere — generation is deterministic and runs entirely in the browser. That's what makes it free to host and instant to use.
 
 ## Stack
 
-TanStack Start + React + TypeScript + Tailwind, Vercel. Default installs; let Claude Code scaffold the shell.
+TanStack Start + React + TypeScript + Tailwind, Vercel.
 
 ## v1 cut
 
-1. Key entry. 2. Input: image or seed color. 3. Loop: propose (knowledge-guided) → self-check contrast → revise → fan out. 4. Comparison view with light/dark mock. 5. Refine via language. 6. Save to local library. 7. Copy/download as JSON + CSS vars.
+1. Input: image or seed color (a `+` popover — upload / curated seeds / picker). 2. Compose four contrast-checked, named takes with light/dark mock. 3. Re-run for varied fours; retune the seed color and re-run. 4. Heart to the local library; copy/download as JSON + CSS vars. 5. Settings = a single delete-confirm preference.
 
-Deferred (write them down so they stop nagging): MCP server, subdomain hosting, knowledge-authoring mode, "improves with use," any second tool.
+Deferred (so they stop nagging): the mood-board input, MCP/API exposure, a knowledge-authoring mode, the color "comfort band" as explicit constants.
 
 ## The thesis
 
-A focused utility whose expertise is **legible markdown anyone can read and rewrite**, made genuinely agentic by a free verifier (contrast) plus a live one (your taste), with a clean data model that becomes a callable capability later.
+A focused utility whose expertise is **legible markdown anyone can read and rewrite**, made genuinely useful by a free verifier (contrast) plus a live one (your taste), with a clean data model and engine seam that become an **agent-callable capability** later.

@@ -4,9 +4,9 @@
  * Persisted palettes go through palette-repo, not this store.
  *
  * Variations are a *sequence of rounds*: the opening "surprise me" four, plus any
- * re-runs (fresh fours) and refine steers stacked beneath it, so the trail shows
- * everything you've generated. A settled journey is mirrored to IndexedDB and
- * rehydrated on reload — only Start over clears it.
+ * re-runs (fresh fours) stacked newest-first, so the trail shows everything
+ * you've generated. A settled journey is mirrored to IndexedDB and rehydrated on
+ * reload — only Start over clears it.
  */
 
 import { useSyncExternalStore } from 'react'
@@ -22,7 +22,6 @@ export type Phase = 'idle' | 'running' | 'done' | 'error'
 
 export type VariationRound = {
   id: string
-  steer?: string
   variations: ScoredPalette[]
   phase: Phase
   error?: string
@@ -142,14 +141,6 @@ function messageFrom(e: unknown): string {
   return 'The composer hit an error. Try again.'
 }
 
-function recommendedOf(variations: ScoredPalette[]): ScoredPalette | null {
-  let best: ScoredPalette | null = null
-  for (const palette of variations) {
-    if (!best || palette.score.overall > best.score.overall) best = palette
-  }
-  return best
-}
-
 export function useJourney(id: string): JourneyState {
   return useSyncExternalStore(
     subscribe,
@@ -228,11 +219,16 @@ async function runSurprise(
 ): Promise<void> {
   try {
     await ensureHydrated()
+    // Names already on screen this journey — so a re-run's four don't repeat
+    // earlier rounds' names (journey-wide dedup).
+    const usedNames = getState(id).rounds.flatMap((r) =>
+      r.variations.map((v) => v.name),
+    )
     const variations = await getEngine().compose(
       source,
-      undefined,
       (m) => patch(id, { progress: m }),
       variation,
+      usedNames,
     )
     if (getState(id).source !== source) return
     if (variations.length === 0) {
@@ -276,40 +272,6 @@ export function toggleSaved(id: string, palette: ScoredPalette): void {
   } else {
     patch(id, { saved: [...saved, palette.id] })
     void savePalette(palette)
-  }
-}
-
-/** Steer from the current pick (or the latest round's recommendation) — appends a round. */
-export async function refineJourney(
-  id: string,
-  instruction: string,
-): Promise<void> {
-  const state = getState(id)
-  if (state.rounds.length === 0) return
-  const latest = state.rounds[state.rounds.length - 1]
-  const base = state.chosen ?? recommendedOf(latest.variations)
-  if (!base) return
-  const roundId = makeId()
-  patch(id, {
-    rounds: [
-      ...state.rounds,
-      { id: roundId, steer: instruction, variations: [], phase: 'running' },
-    ],
-  })
-  try {
-    await ensureHydrated()
-    const variations = await getEngine().refine(base, instruction, (m) =>
-      patch(id, { progress: m }),
-    )
-    if (variations.length === 0) {
-      patchRound(id, roundId, { phase: 'error', error: EMPTY_RESULT })
-    } else {
-      patchRound(id, roundId, { variations, phase: 'done' })
-    }
-    patch(id, { progress: '' })
-  } catch (e) {
-    patchRound(id, roundId, { phase: 'error', error: messageFrom(e) })
-    patch(id, { progress: '' })
   }
 }
 

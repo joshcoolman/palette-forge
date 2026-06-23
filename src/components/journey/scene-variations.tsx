@@ -4,33 +4,25 @@ import { motion } from 'motion/react'
 import type { ScoredPalette } from '#/features/palette/types'
 import type { VariationRound } from '#/lib/journey-store'
 import { PaletteCard } from '#/components/journey/palette-card'
-import { RefineBar } from '#/components/forge/refine-bar'
 import { ExportModal } from '#/components/favorites/export-modal'
 
-/** Scene 2 — composed, scored variations as a stack of rounds, plus a refine bar. */
+/** Scene 2 — composed, scored variations as a stack of rounds (newest first). */
 export function SceneVariations({
   rounds,
   chosenId,
   savedIds,
-  canRefine = false,
   onChoose,
   onToggleSave,
-  onRefine,
   onRegenerate,
 }: {
   rounds: VariationRound[]
   chosenId?: string
   savedIds: string[]
-  /** Refine (the natural-language steer) is shown only with a key. */
-  canRefine?: boolean
   onChoose: (palette: ScoredPalette) => void
   onToggleSave: (palette: ScoredPalette) => void
-  onRefine: (instruction: string) => void
   onRegenerate?: () => void
 }) {
   const [exporting, setExporting] = useState<ScoredPalette | null>(null)
-  const latest = rounds.at(-1)
-  const refining = latest?.phase === 'running'
 
   return (
     <motion.section
@@ -46,11 +38,6 @@ export function SceneVariations({
         const errored = round.phase === 'error'
         return (
           <div key={round.id} className="flex flex-col gap-3">
-            {round.steer && (
-              <p className="text-xs" style={{ color: 'var(--app-muted)' }}>
-                Refined · {round.steer}
-              </p>
-            )}
             {errored ? (
               <div
                 className="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-5"
@@ -99,8 +86,6 @@ export function SceneVariations({
           </div>
         )
       })}
-
-      {canRefine && <RefineBar onRefine={onRefine} busy={refining} />}
 
       {exporting && (
         <ExportModal palette={exporting} onClose={() => setExporting(null)} />

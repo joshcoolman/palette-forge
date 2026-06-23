@@ -1,43 +1,23 @@
 /**
- * In-memory mirror of the browser-stored BYO key + model, so the synchronous
- * engine selector (get-engine) can read them without an async IndexedDB hop.
- * Hydrated once on the client; updated by the settings UI.
+ * In-memory mirror of browser-stored preferences, so the UI can read them
+ * synchronously without an async IndexedDB hop. Hydrated once on the client.
  */
 
 import {
-  DEFAULT_MODEL,
-  clearApiKey,
-  getApiKey,
-  getModel,
   getSkipDeleteConfirm,
-  setApiKey,
-  setModel,
   setSkipDeleteConfirm,
-} from '#/features/key/key-repo'
+} from '#/features/prefs/prefs-repo'
 
-export type Settings = {
-  apiKey?: string
-  model: string
-  skipDeleteConfirm: boolean
-}
+export type Settings = { skipDeleteConfirm: boolean }
 
-let current: Settings = {
-  apiKey: undefined,
-  model: DEFAULT_MODEL,
-  skipDeleteConfirm: false,
-}
+let current: Settings = { skipDeleteConfirm: false }
 let hydration: Promise<void> | null = null
 
-/** Read the persisted key/model/prefs into memory once (idempotent, client-only). */
+/** Read the persisted prefs into memory once (idempotent, client-only). */
 export function ensureHydrated(): Promise<void> {
   if (!hydration) {
     hydration = (async () => {
-      const [apiKey, model, skipDeleteConfirm] = await Promise.all([
-        getApiKey(),
-        getModel(),
-        getSkipDeleteConfirm(),
-      ])
-      current = { apiKey, model, skipDeleteConfirm }
+      current = { skipDeleteConfirm: await getSkipDeleteConfirm() }
     })().catch(() => {
       // IndexedDB unavailable (e.g. during SSR) — keep defaults.
     })
@@ -47,24 +27,6 @@ export function ensureHydrated(): Promise<void> {
 
 export function getSettings(): Settings {
   return current
-}
-
-export async function saveApiKey(key: string): Promise<void> {
-  await ensureHydrated()
-  await setApiKey(key)
-  current = { ...current, apiKey: key }
-}
-
-export async function clearApiKeyAndCache(): Promise<void> {
-  await ensureHydrated()
-  await clearApiKey()
-  current = { ...current, apiKey: undefined }
-}
-
-export async function saveModel(model: string): Promise<void> {
-  await ensureHydrated()
-  await setModel(model)
-  current = { ...current, model }
 }
 
 export async function saveSkipDeleteConfirm(value: boolean): Promise<void> {

@@ -30,15 +30,15 @@ const COLOR: Source = { type: 'color', value: '#34596e', extracted: ['#34596e'] 
 
 describe('keyless re-run variety', () => {
   it('opening round (variation 0) is unchanged regardless of source type', async () => {
-    const [img] = await engine.compose(NARROW_IMAGE, undefined, undefined, 0)
-    const again = (await engine.compose(NARROW_IMAGE, undefined, undefined, 0))[0]
+    const [img] = await engine.compose(NARROW_IMAGE, undefined, 0)
+    const again = (await engine.compose(NARROW_IMAGE, undefined, 0))[0]
     expect(accentHue(img)).toBeCloseTo(accentHue(again), 5)
   })
 
   it('image re-runs rotate into clearly different hue families', async () => {
     const hues = await Promise.all(
       [0, 1, 2, 3].map(async (v) =>
-        accentHue((await engine.compose(NARROW_IMAGE, undefined, undefined, v))[0]),
+        accentHue((await engine.compose(NARROW_IMAGE, undefined, v))[0]),
       ),
     )
     // The first re-run leaves the opening's family, and every re-run is a big
@@ -52,14 +52,14 @@ describe('keyless re-run variety', () => {
   })
 
   it('color-seed re-runs explore harmonic relationships to the seed', async () => {
-    const base = accentHue((await engine.compose(COLOR, undefined, undefined, 0))[0])
+    const base = accentHue((await engine.compose(COLOR, undefined, 0))[0])
     // Round 1 is the complementary scheme (~180° off the seed); every re-run is
     // a big move, not the old "stay close" wobble. (±25° absorbs the recipe
     // jitter and rounding.)
-    const v1 = accentHue((await engine.compose(COLOR, undefined, undefined, 1))[0])
+    const v1 = accentHue((await engine.compose(COLOR, undefined, 1))[0])
     expect(hueGap(v1, (base + 180) % 360)).toBeLessThan(25)
     for (const v of [1, 2, 3]) {
-      const h = accentHue((await engine.compose(COLOR, undefined, undefined, v))[0])
+      const h = accentHue((await engine.compose(COLOR, undefined, v))[0])
       expect(hueGap(h, base)).toBeGreaterThan(60)
     }
   })

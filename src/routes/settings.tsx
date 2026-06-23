@@ -1,7 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 
 import { Backdrop } from '#/components/journey/backdrop'
-import { KeyEntry } from '#/components/settings/key-entry'
 import { Preferences } from '#/components/settings/preferences'
 
 export const Route = createFileRoute('/settings')({ component: SettingsPage })
@@ -27,7 +26,6 @@ function SettingsPage() {
           Back
         </button>
       </header>
-      <KeyEntry />
       <Preferences />
     </main>
   )

@@ -9,7 +9,6 @@ import { createSamplePalettes } from '#/features/palette/samples'
 import {
   chooseVariation,
   hydrateJourney,
-  refineJourney,
   rerunJourney,
   resetJourney,
   setSourceColor,
@@ -97,14 +96,11 @@ function Home() {
   const [open, setOpen] = useState<Palette | null>(null)
   const [confirming, setConfirming] = useState<Palette | null>(null)
   const [seeding, setSeeding] = useState(false)
-  const [hasKey, setHasKey] = useState(false)
   const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false)
   const [editingColor, setEditingColor] = useState(false)
 
   const active = !!journey.source
   const savedKey = journey.saved.join(',')
-  // Refine (the natural-language steer) is a key-gated feature; without a key
-  // the working area is surprise + re-run only.
   const running = journey.rounds.at(-1)?.phase === 'running'
 
   async function refresh() {
@@ -117,13 +113,12 @@ function Home() {
     void hydrateJourney(ACTIVE)
   }, [])
 
-  // Mirror persisted prefs: BYO-key presence (gates refine) and the
-  // skip-delete-confirm setting (whether deleting a favorite needs the popup).
+  // Mirror the skip-delete-confirm pref (whether deleting a favorite needs the
+  // confirm popup).
   useEffect(() => {
     let alive = true
     void ensureHydrated().then(() => {
       if (!alive) return
-      setHasKey(Boolean(getSettings().apiKey))
       setSkipDeleteConfirm(getSettings().skipDeleteConfirm)
     })
     return () => {
@@ -260,12 +255,8 @@ function Home() {
               rounds={journey.rounds}
               chosenId={journey.chosen?.id}
               savedIds={journey.saved}
-              canRefine={hasKey}
               onChoose={(palette) => chooseVariation(ACTIVE, palette)}
               onToggleSave={(palette) => toggleSaved(ACTIVE, palette)}
-              onRefine={(instruction) =>
-                void refineJourney(ACTIVE, instruction)
-              }
               onRegenerate={() => void rerunJourney(ACTIVE)}
             />
           </section>

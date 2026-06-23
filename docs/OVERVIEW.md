@@ -51,7 +51,7 @@ The intellectual backbone, and arguably the most credible thing the collection d
 
 ## The three utilities
 
-**palette-forge** — image or seed color in, refined light/dark palettes out. Verifier is _free and automatic_: WCAG contrast. The agent proposes, checks contrast itself, self-corrects, fans out variations; you refine to taste. The gentle flagship — cleanest data model, best later MCP story.
+**palette-forge** — image or seed color in, refined light/dark palettes out. Verifier is _free and automatic_: WCAG contrast. A deterministic engine composes four distinct characters, computes contrast itself and repairs until the policy passes, scores against the `/knowledge` rubric, and varies on re-run; you keep what's right. _Built and shipped first; in building it, the in-app LLM proved redundant against the deterministic engine, so palette-forge became the purest expression of the MCP thread below — **a deterministic capability an agent can call**, rather than an agent living inside the UI. (This makes it a deliberate exception to the "agent is the product" framing above — worth reconciling in the thesis as the collection matures.)_ Cleanest data model, best MCP story.
 
 **outpaint-studio** — image + target ratio in, seam-aware extension out (the "make this hero 21:9" case). Verifier is _vision_: generate, look at the seam, regenerate the bad region. Agent-first competence that stays invisible — it's just weirdly good. Best showcase of the knowledge-as-extension-surface idea.
 

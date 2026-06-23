@@ -8,7 +8,6 @@ import {
   loadFontByName,
 } from '#/features/typography/font-loader'
 import { ensureTypeHydrated, setPairing, usePairingId } from '#/lib/type-store'
-import { ModelControl } from '#/components/settings/model-control'
 
 /** Preload every preset's families so the dropdown can render each option in its
  *  own type. First open may briefly fall back then swap — acceptable per spec. */
@@ -138,7 +137,6 @@ export function GlobalNav() {
           </div>
         )}
         </div>
-        <ModelControl />
       </div>
     </nav>
   )

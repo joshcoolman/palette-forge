@@ -8,9 +8,8 @@ import type { Source } from '#/features/palette/types'
 
 // The store reaches the engine through get-engine and hydrates settings first;
 // mock both so the test drives compose outcomes without a key or IndexedDB.
-const { compose, refineFn } = vi.hoisted(() => ({
+const { compose } = vi.hoisted(() => ({
   compose: vi.fn(),
-  refineFn: vi.fn(),
 }))
 
 vi.mock('#/lib/settings', () => ({
@@ -20,7 +19,6 @@ vi.mock('#/lib/settings', () => ({
 vi.mock('#/features/agent/get-engine', () => ({
   getEngine: () => ({
     compose,
-    refine: refineFn,
   }),
 }))
 
