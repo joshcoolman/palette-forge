@@ -172,8 +172,16 @@ function varyRecipe(recipe: Recipe, variation: number): Recipe {
     ...recipe,
     baseHue: (recipe.baseHue + jolt(1) * 15 + 360) % 360,
     neutralSat: clamp(recipe.neutralSat + jolt(2) * 0.02, 0, 0.3),
-    accentSatLight: clamp(recipe.accentSatLight + jolt(3) * 0.08, 0.3, 1),
-    accentSatDark: clamp(recipe.accentSatDark + jolt(4) * 0.08, 0.3, 1),
+    accentSatLight: clamp(
+      recipe.accentSatLight + jolt(3) * 0.08,
+      0.3,
+      ACCENT_SAT_CEILING,
+    ),
+    accentSatDark: clamp(
+      recipe.accentSatDark + jolt(4) * 0.08,
+      0.3,
+      ACCENT_SAT_CEILING,
+    ),
     accentLightLight: clamp(recipe.accentLightLight + jolt(5) * 0.05, 0.28, 0.7),
     accentLightDark: clamp(recipe.accentLightDark + jolt(6) * 0.05, 0.4, 0.82),
   }
@@ -194,6 +202,9 @@ function recipeFor(comp: Composition, baseHue: number): Recipe {
 /** Never go pure white/gray — every neutral keeps at least this much tint. */
 const NEUTRAL_SAT_FLOOR = 0.055
 
+/** Never go near-pure color — the accent stays under this saturation. */
+const ACCENT_SAT_CEILING = 0.8
+
 /** A tinted neutral: the base hue at a fraction of the recipe's tint strength. */
 function tinted(hue: number, sat: number, light: number): string {
   return hslToHex({ h: hue, s: clamp(sat, 0, 1), l: clamp(light, 0, 1) })
@@ -205,16 +216,19 @@ function composeColors(recipe: Recipe): ColorRow[] {
   const floor = (sat: number): number => Math.max(sat, NEUTRAL_SAT_FLOOR)
   return [
     {
-      // Off-white in light; a warm/cool charcoal (not inverted white) in dark,
-      // carrying a touch more tint than light mode.
+      // Tinted paper in light — the page now sits where surface used to (clearly
+      // off-white, not near-white); a warm/cool charcoal (not inverted white) in
+      // dark, carrying a touch more tint than light mode.
       role: 'background',
-      light: tinted(baseHue, floor(t * 0.9), 0.965),
+      light: tinted(baseHue, floor(t * 1.6), 0.885),
       dark: tinted(baseHue, floor(t * 1.25), 0.13),
     },
     {
-      // A clear step in light; a small elevation lift in dark.
+      // Keys off the new (tinted) background: a gentle step darker + a touch more
+      // tint, so a raised panel reads as a quiet lift, not a hard jump. Small
+      // elevation lift in dark.
       role: 'surface',
-      light: tinted(baseHue, floor(t * 1.6), 0.885),
+      light: tinted(baseHue, floor(t * 1.95), 0.84),
       dark: tinted(baseHue, floor(t * 1.5), 0.185),
     },
     {
@@ -231,12 +245,12 @@ function composeColors(recipe: Recipe): ColorRow[] {
       role: 'accent',
       light: hslToHex({
         h: aHue,
-        s: recipe.accentSatLight,
+        s: Math.min(recipe.accentSatLight, ACCENT_SAT_CEILING),
         l: recipe.accentLightLight,
       }),
       dark: hslToHex({
         h: aHue,
-        s: recipe.accentSatDark,
+        s: Math.min(recipe.accentSatDark, ACCENT_SAT_CEILING),
         l: recipe.accentLightDark,
       }),
     },

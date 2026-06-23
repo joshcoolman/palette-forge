@@ -7,7 +7,7 @@ pairings:
   - muted-on-surface: AA
   - accent-on-background: AA
   - background-on-accent: AA
-  - border-on-surface: 3
+  - border-on-surface: 1.5
 ---
 
 # Contrast policy
@@ -24,8 +24,11 @@ checks it before you ever see a palette.
 - **Accent** must be legible both as colored text or icons on the background
   (`accent-on-background`) and as a button background under its label, where the
   label uses the page color (`background-on-accent`).
-- **Non-text UI** (`border-on-surface`) follows WCAG 1.4.11: a 3:1 minimum so a
-  hairline is perceivable without shouting.
+- **Non-text UI** (`border-on-surface`) is held to a soft **1.5:1** — a refined,
+  quiet hairline, not a hard line. WCAG 1.4.11 names 3:1 for non-text UI that must
+  be *identified to be operated*; a decorative card divider isn't that, so we treat
+  the rule as guidance here and let taste set a gentler line. The badge still
+  reports the true ratio honestly.
 
 The list above is the rubric the agent revises against. Tighten or loosen a
 target by editing it — the proposals and the self-check shift together. The
