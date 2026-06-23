@@ -1,6 +1,6 @@
 # palette-forge — working notes for Claude
 
-**Read first:** [`docs/SPEC.md`](docs/SPEC.md) (the detailed reference spec) and [`docs/OVERVIEW.md`](docs/OVERVIEW.md) (the umbrella vision). They define what this is and what it refuses to be.
+**Read first:** [`docs/SPEC.md`](docs/SPEC.md) (the detailed reference spec). It defines what this is and what it refuses to be. The original "agent-first portfolio" umbrella is archived ([`docs/archive/OVERVIEW.md`](docs/archive/OVERVIEW.md)) — superseded by the single-utility, human- + agent-friendly identity (see the `project-identity-pivot` memory).
 
 ## Hold the line
 

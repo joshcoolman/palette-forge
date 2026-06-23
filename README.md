@@ -1,22 +1,29 @@
 # palette-forge
 
-> An image or seed color in, refined and accessible light + dark palettes out. Fan out variations, switch between them, refine to taste.
+> An image or seed color in, refined and accessible light + dark palettes out. Four distinct takes, re-run for more, keep the ones you like.
 
-**Status: v1 shipped** — image or seed in; an agent that proposes, checks its own WCAG contrast, revises, and fans out; a journey you can branch and refine; a saved library; and Tailwind / CSS / hex export. Built in public — the full history from scaffold to v1 lives in [`log/`](log/).
+**Status: v1 shipped.** A focused, fully-local color-palette utility — no account, no API key, nothing sent anywhere. Built in public; the full history from scaffold to v1 lives in [`log/`](log/).
 
 ---
 
 ## What this is
 
-A focused, **agent-first**, BYO-key utility for building accessible color palettes. The agent proposes a palette (guided by a legible `/knowledge` folder), **checks WCAG contrast itself**, self-corrects until it passes, and fans out variations — and you are the final oracle for taste.
+A single-purpose, open-source tool for building accessible color palettes. Drop in an image or pick a seed color and it composes **four distinct, contrast-checked takes** — each a named character (Vivid, Composed, Nocturne, Hush) — in light and dark, with honest WCAG badges. **Re-run** for a fresh four; color seeds explore color-theory relationships to your seed (complementary, triadic, …), image seeds rotate around the wheel. Heart the ones you like; copy/export as JSON or CSS variables.
 
-The distinctive bet: **`/knowledge` is plain markdown you can read and rewrite.** It both guides what the agent proposes and is the rubric it judges against. Edit the markdown, change the output — no code required.
+It's **deterministic** — same input, same result — so it's instant and free to host. Generation runs entirely in your browser.
 
-Full brief: [`docs/SPEC.md`](docs/SPEC.md) · umbrella vision: [`docs/OVERVIEW.md`](docs/OVERVIEW.md).
+The design bet: **`/knowledge` is plain markdown you can read and rewrite.** It's the policy the engine generates from and the rubric it's scored against — edit the markdown, change what "good color" means, no code required.
 
-## Why an agent (honest about the loop)
+Full brief: [`docs/SPEC.md`](docs/SPEC.md).
 
-The agent earns its place because this domain has a **free, automatic verifier — contrast ratio.** Two verifiers stacked: contrast (automatic, non-negotiable) and you (taste, live). Delete the agent and it's just a color picker, so the agent is the product.
+## Two verifiers, no model
+
+What makes the output trustworthy isn't an LLM — it's two stacked verifiers:
+
+- **Free + automatic:** WCAG contrast. The engine computes it for every role-pairing in both modes and repairs until the policy passes; the badges stay honest.
+- **Live:** your taste. You're the final oracle — re-run, retune the seed, keep what's right.
+
+> **Built first as a vision-agent, BYO-key app — then the agent came out.** For color generation the deterministic engine proved better and the in-app LLM's latency made it nearly unusable, so it was removed (see [`docs/plan-remove-ai.md`](docs/plan-remove-ai.md)). The clean engine seam and addressable, stable-ID records stay — so the core can later be exposed as a **capability an agent calls** (MCP/API). The aim: good for humans, callable by agents. (Earlier umbrella vision, archived: [`docs/archive/OVERVIEW.md`](docs/archive/OVERVIEW.md).)
 
 ## Stack
 

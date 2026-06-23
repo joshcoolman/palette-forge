@@ -1,3 +1,14 @@
+> **⚠️ Superseded / archived (2026-06-23).** This was the original umbrella vision —
+> three "agent-first" tools whose agent is the product. palette-forge shipped, and
+> in building it the agent-first approach to color generation proved a net negative
+> (the deterministic engine is better; the LLM's latency made it nearly unusable),
+> so the in-app AI was removed. The project is now a **single-purpose, open-source,
+> human- AND agent-friendly utility** (good for humans, with a clean core a future
+> agent can call via MCP/API). The agent-first portfolio thesis is shelved. Kept
+> for history. Current docs: [`../SPEC.md`](../SPEC.md) and the repo `README`.
+
+---
+
 # Focused Agentic Utilities — Overview
 
 > Start here. This is the umbrella vision for three small, single-purpose creative tools — **palette-forge**, **outpaint-studio**, and **prompt-smith**. Read this first, then the individual specs.
