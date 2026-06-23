@@ -3,7 +3,6 @@ import { motion } from 'motion/react'
 
 import type { ScoredPalette } from '#/features/palette/types'
 import type { VariationRound } from '#/lib/journey-store'
-import { AgentNarration } from '#/components/journey/agent-narration'
 import { PaletteCard } from '#/components/journey/palette-card'
 import { RefineBar } from '#/components/forge/refine-bar'
 import { ExportModal } from '#/components/favorites/export-modal'
@@ -25,7 +24,7 @@ export function SceneVariations({
   rounds,
   chosenId,
   savedIds,
-  progress,
+  canRefine = false,
   onChoose,
   onToggleSave,
   onRefine,
@@ -34,7 +33,8 @@ export function SceneVariations({
   rounds: VariationRound[]
   chosenId?: string
   savedIds: string[]
-  progress?: string
+  /** Refine (the natural-language steer) is shown only with a key. */
+  canRefine?: boolean
   onChoose: (palette: ScoredPalette) => void
   onToggleSave: (palette: ScoredPalette) => void
   onRefine: (instruction: string) => void
@@ -43,8 +43,6 @@ export function SceneVariations({
   const [exporting, setExporting] = useState<ScoredPalette | null>(null)
   const latest = rounds.at(-1)
   const refining = latest?.phase === 'running'
-  const failed = latest?.phase === 'error'
-  const steered = Boolean(latest?.steer)
 
   return (
     <motion.section
@@ -52,30 +50,6 @@ export function SceneVariations({
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col gap-6"
     >
-      <div className="flex items-start justify-between gap-3">
-        <AgentNarration pending={refining}>
-          {refining
-            ? progress || 'Composing four takes and checking contrast on each…'
-            : failed
-              ? 'That run didn’t come together.'
-              : rounds.length === 1
-                ? 'Four takes, each its own character — surprise. Heart the keepers, refine, or re-run.'
-                : steered
-                  ? 'Steered. Heart the keepers, or keep refining.'
-                  : 'Another four — surprise. Heart the keepers, or keep going.'}
-        </AgentNarration>
-        {onRegenerate && !refining && (
-          <button
-            type="button"
-            onClick={onRegenerate}
-            className="shrink-0 text-xs underline"
-            style={{ color: 'var(--app-muted)' }}
-          >
-            Re-run
-          </button>
-        )}
-      </div>
-
       {rounds.map((round, roundIndex) => {
         const topId = recommendedId(round.variations)
         const running = round.phase === 'running'
@@ -137,7 +111,7 @@ export function SceneVariations({
         )
       })}
 
-      <RefineBar onRefine={onRefine} busy={refining} />
+      {canRefine && <RefineBar onRefine={onRefine} busy={refining} />}
 
       {exporting && (
         <ExportModal palette={exporting} onClose={() => setExporting(null)} />

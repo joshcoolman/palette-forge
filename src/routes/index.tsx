@@ -1,26 +1,292 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+import { useEffect, useRef, useState } from 'react'
+import { RefreshCw, X } from 'lucide-react'
 
-import type { Source } from '#/features/palette/types'
-import { makeId } from '#/lib/id'
-import { startJourney } from '#/lib/journey-store'
+import type { Palette, ScoredPalette, Source } from '#/features/palette/types'
+import { isValidHex, withLightness } from '#/features/color/color-utils'
+import { deletePalette, listPalettes } from '#/features/palette/palette-repo'
+import { createSamplePalettes } from '#/features/palette/samples'
+import {
+  chooseVariation,
+  hydrateJourney,
+  refineJourney,
+  rerunJourney,
+  resetJourney,
+  startJourney,
+  toggleSaved,
+  useJourney,
+} from '#/lib/journey-store'
+import { ensureHydrated, getSettings } from '#/lib/settings'
+import { IconButton } from '#/components/ui/icon-button'
 import { Backdrop } from '#/components/journey/backdrop'
-import { SceneSource } from '#/components/journey/scene-source'
+import { SceneVariations } from '#/components/journey/scene-variations'
+import { ExtractionPeek } from '#/components/journey/extraction-peek'
+import { SourcePopover } from '#/components/journey/source-popover'
+import { FavoriteCard } from '#/components/favorites/favorite-card'
+import { ExportModal } from '#/components/favorites/export-modal'
+import { DeleteConfirm } from '#/components/favorites/delete-confirm'
 
 export const Route = createFileRoute('/')({ component: Home })
 
+// One in-memory journey, keyed by a fixed id instead of a route param — the
+// whole app lives on this page now. Persist/rehydrate (IndexedDB) is unchanged;
+// it just points at this single key.
+const ACTIVE = 'active'
+
+function backdropColors(
+  chosen: ScoredPalette | null,
+  fallback: string[],
+): string[] {
+  // Before a take is picked the backdrop is tinted by the raw source/seed, which
+  // can be a bright curated color — pull its lightness way down so the gradient
+  // stays a calm dark canvas, not a glowing blob.
+  if (!chosen) {
+    return fallback.map((hex) =>
+      isValidHex(hex) ? withLightness(hex, 0.16) : hex,
+    )
+  }
+  const get = (role: string): string =>
+    chosen.colors.find((c) => c.role === role)?.dark ?? ''
+  return [get('accent'), get('surface'), get('background')].filter(Boolean)
+}
+
+function SourceThumb({ source }: { source: Source }) {
+  if (source.type === 'image') {
+    return (
+      <img
+        src={source.value}
+        alt=""
+        className="h-10 w-10 rounded-lg object-cover"
+        style={{ outline: '1px solid var(--app-border)' }}
+      />
+    )
+  }
+  return (
+    <span
+      className="h-10 w-10 rounded-lg"
+      style={{
+        background: source.value,
+        outline: '1px solid var(--app-border)',
+      }}
+    />
+  )
+}
+
 function Home() {
-  const navigate = useNavigate()
+  const journey = useJourney(ACTIVE)
+  const variationsRef = useRef<HTMLDivElement>(null)
+
+  const [palettes, setPalettes] = useState<Palette[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [open, setOpen] = useState<Palette | null>(null)
+  const [confirming, setConfirming] = useState<Palette | null>(null)
+  const [seeding, setSeeding] = useState(false)
+  const [hasKey, setHasKey] = useState(false)
+
+  const active = !!journey.source
+  const roundCount = journey.rounds.length
+  const savedKey = journey.saved.join(',')
+  // Refine (the natural-language steer) is a key-gated feature; without a key
+  // the working area is surprise + re-run only.
+  const running = journey.rounds.at(-1)?.phase === 'running'
+
+  async function refresh() {
+    setPalettes(await listPalettes())
+    setLoaded(true)
+  }
+
+  // Restore an in-progress set from IndexedDB on first load (no-op if live).
+  useEffect(() => {
+    void hydrateJourney(ACTIVE)
+  }, [])
+
+  // Mirror the BYO-key presence so the refine UI can be hidden without one.
+  useEffect(() => {
+    let alive = true
+    void ensureHydrated().then(() => {
+      if (alive) setHasKey(Boolean(getSettings().apiKey))
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  // The grid is keyed off palette-repo, but hearts flow through the journey
+  // store — re-list whenever the active set's saved ids change so the grid stays
+  // in sync with the working area above it.
+  useEffect(() => {
+    void refresh()
+  }, [savedKey])
+
+  // A new round appended — bring it (and the refine bar) into view.
+  useEffect(() => {
+    if (roundCount > 1) {
+      variationsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      })
+    }
+  }, [roundCount])
 
   function handleStart(source: Source) {
-    const id = makeId()
-    void startJourney(id, source)
-    void navigate({ to: '/forge/$sessionId', params: { sessionId: id } })
+    void startJourney(ACTIVE, source)
+  }
+
+  // Start over is the one explicit clear of the working area; favorites persist.
+  function startOver() {
+    resetJourney(ACTIVE)
+  }
+
+  async function remove(id: string) {
+    await deletePalette(id)
+    await refresh()
+  }
+
+  async function addSamples() {
+    setSeeding(true)
+    try {
+      await createSamplePalettes()
+      await refresh()
+    } finally {
+      setSeeding(false)
+    }
   }
 
   return (
-    <main className="relative mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-8 px-4 py-16">
-      <Backdrop colors={[]} />
-      <SceneSource onStart={handleStart} />
-    </main>
+    <>
+      <Backdrop
+        colors={backdropColors(
+          journey.chosen,
+          journey.source?.extracted ?? [],
+        )}
+      />
+      <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-4 py-12">
+        <header className="flex items-center justify-between gap-4">
+          <div>
+            <h1
+              className="pf-heading text-2xl font-semibold tracking-tight"
+              style={{ color: 'var(--app-text)' }}
+            >
+              Palette Forge
+            </h1>
+            <p className="mt-1 text-xs" style={{ color: 'var(--app-muted)' }}>
+              {loaded
+                ? `${palettes.length} saved ${palettes.length === 1 ? 'palette' : 'palettes'}`
+                : 'Loading…'}
+            </p>
+          </div>
+          <SourcePopover onStart={handleStart} />
+        </header>
+
+        {active && journey.source && (
+          <section
+            ref={variationsRef}
+            className="flex flex-col gap-8 rounded-2xl border p-5"
+            style={{
+              borderColor: 'var(--app-border)',
+              background: 'var(--app-surface)',
+            }}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <SourceThumb source={journey.source} />
+                <div>
+                  <p
+                    className="pf-heading text-sm font-medium"
+                    style={{ color: 'var(--app-text)' }}
+                  >
+                    Palettes
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{ color: 'var(--app-muted)' }}
+                  >
+                    {journey.source.type === 'image'
+                      ? 'From an image'
+                      : `From ${journey.source.value}`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {!running && (
+                  <IconButton
+                    label="Re-run"
+                    onClick={() => void rerunJourney(ACTIVE)}
+                  >
+                    <RefreshCw size={14} />
+                  </IconButton>
+                )}
+                <IconButton label="Start over" onClick={startOver}>
+                  <X size={14} />
+                </IconButton>
+              </div>
+            </div>
+
+            <ExtractionPeek source={journey.source} />
+
+            <SceneVariations
+              rounds={journey.rounds}
+              chosenId={journey.chosen?.id}
+              savedIds={journey.saved}
+              canRefine={hasKey}
+              onChoose={(palette) => chooseVariation(ACTIVE, palette)}
+              onToggleSave={(palette) => toggleSaved(ACTIVE, palette)}
+              onRefine={(instruction) =>
+                void refineJourney(ACTIVE, instruction)
+              }
+              onRegenerate={() => void rerunJourney(ACTIVE)}
+            />
+          </section>
+        )}
+
+        {loaded && palettes.length === 0 ? (
+          <div
+            className="flex flex-col items-center gap-4 rounded-2xl border p-10 text-center text-sm"
+            style={{
+              borderColor: 'var(--app-border)',
+              color: 'var(--app-muted)',
+            }}
+          >
+            <p>
+              No saved palettes yet. Tap{' '}
+              <span style={{ color: 'var(--app-text)' }}>+</span> to forge a set,
+              then keep the ones you like.
+            </p>
+            <button
+              type="button"
+              onClick={() => void addSamples()}
+              disabled={seeding}
+              className="rounded-full border px-4 py-1.5 text-xs font-medium transition hover:opacity-70 disabled:opacity-50"
+              style={{ borderColor: 'var(--app-text)', color: 'var(--app-text)' }}
+            >
+              {seeding ? 'Creating…' : 'Create sample palettes'}
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-5">
+            {palettes.map((p) => (
+              <FavoriteCard
+                key={p.id}
+                palette={p}
+                onOpen={() => setOpen(p)}
+                onDelete={() => setConfirming(p)}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      {open && <ExportModal palette={open} onClose={() => setOpen(null)} />}
+      {confirming && (
+        <DeleteConfirm
+          palette={confirming}
+          onCancel={() => setConfirming(null)}
+          onConfirm={() => {
+            void remove(confirming.id)
+            setConfirming(null)
+          }}
+        />
+      )}
+    </>
   )
 }

@@ -177,6 +177,8 @@ export class ClaudeEngine implements PaletteEngine {
     source: Source,
     steer?: string,
     onProgress?: ProgressFn,
+    // The model varies on its own each call — the round index isn't needed.
+    _variation?: number,
   ): Promise<ScoredPalette[]> {
     const image = await imageInputFor(source)
     const colors =

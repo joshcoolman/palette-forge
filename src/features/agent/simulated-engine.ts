@@ -107,19 +107,55 @@ function luminance(hex: string): number {
   return relativeLuminance(hexToRgb(hex))
 }
 
-function pickBaseHue(source: Source): number {
-  let hue = 220
-  let bestSat = -1
-  for (const hex of source.extracted.length > 0
-    ? source.extracted
-    : [source.value]) {
-    const hsl = hexToHsl(hex)
-    if (hsl.s > bestSat) {
-      bestSat = hsl.s
-      hue = hsl.h
-    }
+/** Candidate anchor hues from the source, most-saturated first. */
+function anchorHues(source: Source): number[] {
+  const hexes = source.extracted.length > 0 ? source.extracted : [source.value]
+  return hexes
+    .map((hex) => hexToHsl(hex))
+    .sort((a, b) => b.s - a.s)
+    .map((hsl) => hsl.h)
+}
+
+/**
+ * The base hue for a round. Variation 0 (the opening) anchors on the most
+ * saturated source color — unchanged. Re-runs (variation ≥ 1) walk to the next
+ * source color, so an image's other colors get their turn; a single-color seed
+ * has nowhere to walk, so it relies on the recipe jitter for variety.
+ */
+function pickBaseHue(source: Source, variation: number): number {
+  const hues = anchorHues(source)
+  if (hues.length === 0) return 220
+  return hues[variation % hues.length]
+}
+
+/**
+ * Deterministic hash in [0, 1) from an integer — the classic sin-fract trick.
+ * Drives id-seeded jitter so re-runs differ without any real randomness (the
+ * engine stays a pure function of its inputs; tests stay stable).
+ */
+function noise(n: number): number {
+  const x = Math.sin(n * 12.9898) * 43758.5453
+  return x - Math.floor(x)
+}
+
+/**
+ * Bounded per-round jitter so a keyless re-run yields a fresh four, not a repeat.
+ * No-op on the opening round. Same offsets across the round's four takes, so the
+ * round shifts cohesively while the characters stay distinct. Deliberately small
+ * — re-runs read as "the same seed, explored," not a different color entirely.
+ */
+function varyRecipe(recipe: Recipe, variation: number): Recipe {
+  if (variation <= 0) return recipe
+  const jolt = (salt: number): number => noise(variation * 7.13 + salt) * 2 - 1
+  return {
+    ...recipe,
+    baseHue: (recipe.baseHue + jolt(1) * 15 + 360) % 360,
+    neutralSat: clamp(recipe.neutralSat + jolt(2) * 0.02, 0, 0.3),
+    accentSatLight: clamp(recipe.accentSatLight + jolt(3) * 0.08, 0.3, 1),
+    accentSatDark: clamp(recipe.accentSatDark + jolt(4) * 0.08, 0.3, 1),
+    accentLightLight: clamp(recipe.accentLightLight + jolt(5) * 0.05, 0.28, 0.7),
+    accentLightDark: clamp(recipe.accentLightDark + jolt(6) * 0.05, 0.4, 0.82),
   }
-  return hue
 }
 
 function recipeFor(comp: Composition, baseHue: number): Recipe {
@@ -266,14 +302,15 @@ export class SimulatedEngine implements PaletteEngine {
     source: Source,
     steer?: string,
     onProgress?: ProgressFn,
+    variation = 0,
   ): Promise<ScoredPalette[]> {
     onProgress?.('Composing four takes…')
     const policy = loadContrastPolicy()
-    const baseHue = pickBaseHue(source)
+    const baseHue = pickBaseHue(source, variation)
     // Fold an optional source prompt (mood-board seam) into the steer.
     const merged = [source.prompt, steer].filter(Boolean).join(' ').trim()
     return COMPOSITIONS.map((comp) => {
-      let recipe = recipeFor(comp, baseHue)
+      let recipe = varyRecipe(recipeFor(comp, baseHue), variation)
       if (merged) recipe = applySteer(recipe, merged)
       const colors = repair(composeColors(recipe), policy)
       return finalizePalette({

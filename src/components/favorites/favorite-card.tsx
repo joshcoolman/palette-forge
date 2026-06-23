@@ -8,17 +8,18 @@ import { relativeLuminance } from '#/features/color/contrast'
 import { IconButton } from '#/components/ui/icon-button'
 
 // The proportional composition card — favorites is where you sit and
-// contemplate a saved palette, not scan it. Cells a–f run biggest to smallest;
-// a tuned template (not strict role proportion) leads with the accent so each
-// saved card is recognizable by its hero color, pairs it with the deep text,
-// and grounds the bottom row with the light neutrals.
+// contemplate a saved palette, not scan it. Cells a–f run biggest to smallest.
+// PROVISIONAL (review-time swap, may revert): leads with the *background* in the
+// hero cell — the large weight suits the ground — with surface/muted/border
+// grouped in the mids and accent + text anchoring the bottom row. The prior
+// order led with accent: ['accent','text','muted','border','background','surface'].
 const CELL_ROLES: Role[] = [
-  'accent',
-  'text',
-  'muted',
-  'border',
   'background',
   'surface',
+  'muted',
+  'border',
+  'accent',
+  'text',
 ]
 const CELL_AREAS = '"a a b b" "a a c d" "e e f f"'
 const CELL_SLOTS = ['a', 'b', 'c', 'd', 'e', 'f'] as const
@@ -166,10 +167,10 @@ export function FavoriteCard({
   const [mode, setMode] = useState<Mode>('light')
   const [flipped, setFlipped] = useState(false)
 
-  // The toggle floats bare over a different swatch on each face — the text role
-  // on the front, the background fill on the back — so tone it for contrast
-  // against whichever it currently sits on.
-  const toggleOver = cellColor(palette, flipped ? 'background' : 'text', mode)
+  // The toggle floats bare over a different swatch on each face — the surface
+  // cell (top-right) on the front, the background fill on the back — so tone it
+  // for contrast against whichever it currently sits on.
+  const toggleOver = cellColor(palette, flipped ? 'background' : 'surface', mode)
   const toggleFg = textTone(toggleOver, 0.92)
 
   const faceStyle = {

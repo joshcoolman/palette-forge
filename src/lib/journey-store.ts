@@ -167,7 +167,7 @@ export async function startJourney(id: string, source: Source): Promise<void> {
     hydrated: true,
     rounds: [{ id: roundId, variations: [], phase: 'running' }],
   })
-  await runSurprise(id, roundId, source)
+  await runSurprise(id, roundId, source, 0)
 }
 
 /**
@@ -207,25 +207,32 @@ export async function rerunJourney(id: string): Promise<void> {
   const state = getState(id)
   if (!state.source) return
   const roundId = makeId()
+  // The new round's index is the variation seed, so each re-run differs from
+  // the opening (and from prior re-runs) in the deterministic engine.
+  const variation = state.rounds.length
   patch(id, {
     rounds: [
       ...state.rounds,
       { id: roundId, variations: [], phase: 'running' },
     ],
   })
-  await runSurprise(id, roundId, state.source)
+  await runSurprise(id, roundId, state.source, variation)
 }
 
-/** Compose the opening round and resolve it to done / a visible error round. */
+/** Compose a round and resolve it to done / a visible error round. */
 async function runSurprise(
   id: string,
   roundId: string,
   source: Source,
+  variation: number,
 ): Promise<void> {
   try {
     await ensureHydrated()
-    const variations = await getEngine().compose(source, undefined, (m) =>
-      patch(id, { progress: m }),
+    const variations = await getEngine().compose(
+      source,
+      undefined,
+      (m) => patch(id, { progress: m }),
+      variation,
     )
     if (getState(id).source !== source) return
     if (variations.length === 0) {

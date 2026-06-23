@@ -61,9 +61,6 @@ export function GlobalNav() {
         >
           Palette Forge
         </Link>
-        <Link to="/favorites" style={{ color: 'var(--app-muted)' }}>
-          Favorites
-        </Link>
         <Link to="/settings" style={{ color: 'var(--app-muted)' }}>
           Settings
         </Link>

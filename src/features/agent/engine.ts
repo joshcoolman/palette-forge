@@ -32,12 +32,16 @@ export interface PaletteEngine {
   /**
    * The surprise: from a source, four genuinely distinct, contrast-checked,
    * UI-ready palettes — each its own character. `steer` re-surprises within a
-   * nudge (used by re-run / the simulated refine path).
+   * nudge (used by re-run / the simulated refine path). `variation` is the
+   * round index (0 = opening): re-runs pass 1, 2, … so the deterministic engine
+   * can produce a genuinely different four each time instead of repeating the
+   * opening. The Claude engine varies on its own and ignores it.
    */
   compose: (
     source: Source,
     steer?: string,
     onProgress?: ProgressFn,
+    variation?: number,
   ) => Promise<ScoredPalette[]>
   /** Steer: recompose from a kept palette + a natural-language instruction. */
   refine: (
