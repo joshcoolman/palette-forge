@@ -2,6 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { motion } from 'motion/react'
+import { Menu, X } from 'lucide-react'
+
+import { IconButton } from '#/components/ui/icon-button'
 
 // A standalone docs viewer — not linked from the nav; reach it at /docs. The
 // project's own markdown (README, spec, plans, build log, archive) rendered with
@@ -75,6 +79,53 @@ function buildDocs(): Doc[] {
   }))
 }
 
+type Section = { section: string; docs: Doc[] }
+
+// The shared list of doc links — rendered both in the desktop sidebar and the
+// mobile slide-out drawer, so the two never drift. `onSelect` lets the drawer
+// close itself on top of switching docs.
+function NavList({
+  sections,
+  activeId,
+  onSelect,
+}: {
+  sections: Section[]
+  activeId: string
+  onSelect: (id: string) => void
+}) {
+  return (
+    <>
+      {sections.map(({ section, docs: items }) => (
+        <div key={section} className="flex flex-col gap-1">
+          <p
+            className="pf-heading px-2 text-[11px] font-semibold uppercase tracking-wide"
+            style={{ color: 'var(--app-muted)' }}
+          >
+            {section}
+          </p>
+          {items.map((d) => {
+            const on = d.id === activeId
+            return (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => onSelect(d.id)}
+                className="rounded-md px-2 py-1 text-left text-sm transition"
+                style={{
+                  color: on ? 'var(--app-text)' : 'var(--app-muted)',
+                  background: on ? 'var(--app-surface)' : 'transparent',
+                }}
+              >
+                {d.title}
+              </button>
+            )
+          })}
+        </div>
+      ))}
+    </>
+  )
+}
+
 function DocsPage() {
   const docs = useMemo(buildDocs, [])
 
@@ -96,6 +147,7 @@ function DocsPage() {
 
   const defaultId = docs.find((d) => d.id === 'readme')?.id ?? docs[0].id
   const [activeId, setActiveId] = useState(defaultId)
+  const [navOpen, setNavOpen] = useState(false)
 
   // Deep-link / share via #hash, client-only so SSR stays deterministic.
   useEffect(() => {
@@ -103,8 +155,19 @@ function DocsPage() {
     if (fromHash && docs.some((d) => d.id === fromHash)) setActiveId(fromHash)
   }, [docs])
 
+  // Close the mobile drawer on Escape, mirroring the color-picker modal.
+  useEffect(() => {
+    if (!navOpen) return
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setNavOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navOpen])
+
   function select(id: string) {
     setActiveId(id)
+    setNavOpen(false)
     window.history.replaceState(null, '', `#${id}`)
     window.scrollTo({ top: 0 })
   }
@@ -115,41 +178,66 @@ function DocsPage() {
     <main className="mx-auto flex w-full max-w-6xl gap-10 px-4 py-10">
       <aside className="hidden w-56 shrink-0 sm:block">
         <nav className="sticky top-20 flex flex-col gap-5">
-          {sections.map(({ section, docs: items }) => (
-            <div key={section} className="flex flex-col gap-1">
-              <p
-                className="pf-heading px-2 text-[11px] font-semibold uppercase tracking-wide"
-                style={{ color: 'var(--app-muted)' }}
-              >
-                {section}
-              </p>
-              {items.map((d) => {
-                const on = d.id === active.id
-                return (
-                  <button
-                    key={d.id}
-                    type="button"
-                    onClick={() => select(d.id)}
-                    className="rounded-md px-2 py-1 text-left text-sm transition"
-                    style={{
-                      color: on ? 'var(--app-text)' : 'var(--app-muted)',
-                      background: on ? 'var(--app-surface)' : 'transparent',
-                    }}
-                  >
-                    {d.title}
-                  </button>
-                )
-              })}
-            </div>
-          ))}
+          <NavList sections={sections} activeId={active.id} onSelect={select} />
         </nav>
       </aside>
 
       <article className="docs-content min-w-0 max-w-3xl flex-1">
+        {/* Mobile-only menu trigger: the sidebar is hidden below `sm`, so this
+            is the only way to the doc list on a phone. Lives in the content
+            area, not the global nav. */}
+        <div className="mb-6 flex items-center gap-3 sm:hidden">
+          <IconButton label="Open docs menu" onClick={() => setNavOpen(true)}>
+            <Menu size={16} />
+          </IconButton>
+          <span
+            className="pf-heading text-sm font-medium"
+            style={{ color: 'var(--app-text)' }}
+          >
+            {active.title}
+          </span>
+        </div>
+
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {active.content}
         </ReactMarkdown>
       </article>
+
+      {/* Slide-out drawer — small screens only. */}
+      {navOpen && (
+        <div
+          className="fixed inset-0 z-[60] sm:hidden"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setNavOpen(false)}
+        >
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            transition={{ type: 'tween', duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
+            className="flex h-full w-72 max-w-[80%] flex-col gap-5 overflow-y-auto border-r p-5"
+            style={{
+              borderColor: 'var(--app-border)',
+              background: 'var(--app-surface)',
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className="pf-heading text-sm font-semibold"
+                style={{ color: 'var(--app-text)' }}
+              >
+                Docs
+              </span>
+              <IconButton label="Close docs menu" onClick={() => setNavOpen(false)}>
+                <X size={16} />
+              </IconButton>
+            </div>
+            <nav className="flex flex-col gap-5">
+              <NavList sections={sections} activeId={active.id} onSelect={select} />
+            </nav>
+          </motion.div>
+        </div>
+      )}
     </main>
   )
 }
