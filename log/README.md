@@ -1,33 +1,26 @@
-# log/ — a working record of how the build actually goes
+# log/ — the build trail
 
-**Purpose.** This project is built in public. `log/` is the trail from scaffold to shipped: the decisions, the reasoning, and the things tried and abandoned. It is a working record, not a publication — a separate site distills these into a public "follow along" narrative later. The job here is a faithful, detailed trail, not a polished story. Don't write for an audience; don't market; don't smooth over the messy parts — the mess is the most useful part.
+Built in public. `log/` records how the build actually went — what changed and,
+crucially, the **why** the git diff can't show.
 
-**Why it's worth the effort.** The git diff already captures what changed, line by line. It never captures _why_ — why this approach over another, what looked right but broke, what was learned. That "why" is the decision record that makes the code legible to future-me, to forkers, and to people following along. Spend words there.
+## Format
 
-## Where & format
+- **One file per date:** `log/YYYY-MM-DD.md`. Append the day's beats to it; don't
+  spawn a file per change-set.
+- **Each beat is recap-shaped:**
+  - **Changed:** a brief line — files touched, plus the commit SHA if there is one.
+  - A short recap: what landed and its state (green / committed / verified).
+  - **Why:** one line, but only when there was a real decision or reversal. Skip it
+    on routine work. This is the highest-value content — it's why the log exists.
+- Newest beat at the bottom.
 
-- One file per entry: `log/YYYY-MM-DD-short-slug.md` (multiple per day is fine).
-- Light frontmatter:
+## Voice
 
-```
----
-date: 2026-06-22
-title: short and factual (not a headline)
-phase: scaffolding   # scaffolding | agent-loop | knowledge | byok | shipped
----
-```
+Terse and factual. The diff already has the code; don't re-narrate it. Capture the
+outcome and the reasoning in as few lines as it takes — no essays, no marketing.
+The recap you'd give at the end of a turn is about the right size.
 
 ## When
 
-At natural beats, not every commit — finishing a unit of work, making or reversing a notable decision, changing phase, or hitting a wall. Several short entries beat one giant one.
-
-## What to capture (lean toward detail on the why)
-
-- **What I did** — briefly; the diff has the specifics, don't re-narrate the code.
-- **Why** — the problem, the reasoning, the tradeoff.
-- **Decisions & alternatives** — what was chosen, what was considered and rejected, and especially anything **reversed**: tried it, it didn't work, here's why. Flag these clearly — dead-ends are the highest-value entries.
-- **Learned / surprised** — friction, gotchas, anything you'd warn the next person about.
-- **Open / next** — what's unresolved.
-- Reference commits by short SHA where useful.
-
-**Voice.** Plain, factual, specific. Capture, don't perform.
+At natural beats (a unit of work, a notable/reversed decision, a phase change, a
+wall), not every commit. A few short entries beat one giant one.

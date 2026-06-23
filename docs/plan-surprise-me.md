@@ -112,11 +112,11 @@ a usable UI palette, not just a pretty swatch set.
   (dark-on-light / light-on-dark, picked by luminance). Geometric cards stack
   name over hex; the on-image treatment keeps name-left / hex-right. Same type
   across treatments — only the composition differs.
-- **Two treatments so far:** the proportional grid card (template
-  `"a a b b" / "a a c d" / "e e f f"`, rows `2.4fr 1fr 1fr`) and the palette laid
-  **over the source image** (swatch bars). Both render at matching sizes. It's a
-  growing gallery — more treatments to come (hero "contemplate" card, filmstrip,
-  poster).
+- **v1 display = the geometric grid card** (template `"a a b b" / "a a c d" /
+  "e e f f"`, rows `2.4fr 1fr 1fr`). Decided: that one card is the display for
+  now. The `/lab` route **stays** as the design surface. The palette-over-image
+  treatment and a multi-treatment gallery are **parked** (nice, not now) — stay
+  focused on the one card.
 
 ## Milestones (each ends green: lint / tsc / test / build)
 

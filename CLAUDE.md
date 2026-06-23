@@ -12,8 +12,10 @@
 
 ## Current state
 
-M0–M1 built (uncommitted as of 2026-06-22). The product is a vertical animated **journey**: source (image/seed) → typed direction cards → scored variations → final palette with light/dark mocks and honest WCAG badges. It runs on a deterministic **SimulatedEngine** behind a `PaletteEngine` seam (`src/features/agent/`) — no key, no tokens — with the real `ClaudeEngine` deferred to M4. Contrast math is locked in `src/features/color/contrast.ts`; contrast policy + taste live in `/knowledge/*.md`. Live journey state is a `useSyncExternalStore` store (`src/lib/journey-store.ts`); palettes persist to IndexedDB.
+v1 of the **journey** is shipped and committed: source (image/seed) → typed direction cards → scored variations → final palette, light/dark, honest WCAG badges. Both engines exist behind the `PaletteEngine` seam (`src/features/agent/`): a deterministic **SimulatedEngine** (no key) and the real **ClaudeEngine** (BYO key, vision-enabled — sends the 120px sampled image). Contrast math locked in `src/features/color/contrast.ts`; policy + taste in `/knowledge/*.md`; journey state in a `useSyncExternalStore` store (`src/lib/journey-store.ts`); palettes in IndexedDB.
+
+**Active work — read [`docs/plan-surprise-me.md`](docs/plan-surprise-me.md) first.** Reframing the journey's first half away from color-theory types toward **image → four distinct "surprise me" palettes** (characters, not wheel types) — a simplification, not an addition. The display is the **geometric grid card** prototyped in the `/lab` route (kept; type treatment locked there). Other display treatments (palette-over-image, multi-treatment gallery) are parked. Start at milestone R1 (reshape the engine seam to `compose(source)` → four palettes; drop `PaletteType`/`Direction`).
 
 ## Build log
 
-This repo keeps a working record of how the build actually goes in [`log/`](log/) — decisions, reasoning, and dead-ends the git diff can't capture. Write an entry at natural beats (a unit of work done, a notable or reversed decision, a phase change, a wall); see [`log/README.md`](log/README.md) for the convention and voice. Lean on the _why_.
+This repo keeps a working record of the build in [`log/`](log/) — **one file per date** (`log/YYYY-MM-DD.md`); append the day's beats. Each beat is recap-shaped: what changed (+ commit SHA), a short recap, and a one-line **why** only when there was a real decision or reversal. Terse — the recap you'd give at the end of a turn, not an essay. See [`log/README.md`](log/README.md).
