@@ -8,9 +8,7 @@
 import type {
   ColorRow,
   ContrastPolicy,
-  Direction,
   Palette,
-  PaletteType,
   Role,
   Score,
   ScoredPalette,
@@ -31,19 +29,17 @@ import { makeId } from '#/lib/id'
 export type ProgressFn = (message: string) => void
 
 export interface PaletteEngine {
-  /** Scene 1: from a source, the palette-type directions to choose between. */
-  proposeDirections: (
+  /**
+   * The surprise: from a source, four genuinely distinct, contrast-checked,
+   * UI-ready palettes — each its own character. `steer` re-surprises within a
+   * nudge (used by re-run / the simulated refine path).
+   */
+  compose: (
     source: Source,
-    onProgress?: ProgressFn,
-  ) => Promise<Direction[]>
-  /** Scene 2: within a chosen type, fan out scored, contrast-checked palettes. */
-  composeVariations: (
-    source: Source,
-    type: PaletteType,
     steer?: string,
     onProgress?: ProgressFn,
   ) => Promise<ScoredPalette[]>
-  /** Scene 2 steer: recompose from a kept palette + a natural-language instruction. */
+  /** Steer: recompose from a kept palette + a natural-language instruction. */
   refine: (
     base: Palette,
     instruction: string,
@@ -82,7 +78,6 @@ function temperatureWord(hue: number): string {
  */
 export function scorePalette(
   colors: ColorRow[],
-  type: PaletteType,
   policy: ContrastPolicy,
 ): Score {
   let passed = 0
@@ -135,7 +130,7 @@ export function scorePalette(
       : lead === 'harmony'
         ? 'a confident, distinct accent'
         : 'cohesive, quiet neutrals'
-  const rationale = `${capitalize(temperatureWord(accent.h))} ${type} — ${phrase}.`
+  const rationale = `${capitalize(temperatureWord(accent.h))} cast — ${phrase}.`
 
   return { overall, harmony, contrast, cohesion, rationale }
 }
@@ -144,12 +139,13 @@ export function scorePalette(
 export function finalizePalette(args: {
   seed: Seed
   name: string
-  type: PaletteType
+  character?: string
   colors: ColorRow[]
   policy: ContrastPolicy
   createdAt?: string
 }): ScoredPalette {
-  const { seed, name, type, colors, policy } = args
+  const { seed, name, character, colors, policy } = args
+  const score = scorePalette(colors, policy)
   return {
     id: makeId(),
     name,
@@ -157,7 +153,9 @@ export function finalizePalette(args: {
     colors,
     contrast: computeContrastChecks(colors, policy),
     createdAt: args.createdAt ?? new Date().toISOString(),
-    type,
-    score: scorePalette(colors, type, policy),
+    character,
+    // When the agent named a character for this take, it's the truer one-line
+    // read than the heuristic; fall back to the computed rationale otherwise.
+    score: character ? { ...score, rationale: character } : score,
   }
 }

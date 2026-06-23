@@ -30,17 +30,14 @@ function structured(obj: unknown) {
 function draft(name: string, colors: ColorRow[]) {
   return {
     name,
-    rationale: 'rationale',
+    character: 'a calm, cool take',
     colors: colors.map((c) => ({ role: c.role, light: c.light, dark: c.dark })),
   }
 }
 
 // A palette the SimulatedEngine repaired — guaranteed to pass the policy.
 async function passingColors(): Promise<ColorRow[]> {
-  const variations = await new SimulatedEngine().composeVariations(
-    SOURCE,
-    'analogous',
-  )
+  const variations = await new SimulatedEngine().compose(SOURCE)
   return variations[0].colors
 }
 
@@ -61,11 +58,13 @@ describe('ClaudeEngine self-check + revise loop', () => {
       .mockResolvedValueOnce(structured({ palettes: [draft('A', good)] }))
 
     const engine = new ClaudeEngine('test-key', 'claude-sonnet-4-6')
-    const result = await engine.composeVariations(SOURCE, 'analogous')
+    const result = await engine.compose(SOURCE)
 
     expect(createMock).toHaveBeenCalledTimes(2) // propose + one revise
     expect(policyFailures(result[0].colors, policy)).toHaveLength(0)
-    expect(result[0].score.rationale).toBe('rationale') // the agent's rationale is kept
+    // the agent's named character rides through onto the record and its rationale
+    expect(result[0].character).toBe('a calm, cool take')
+    expect(result[0].score.rationale).toBe('a calm, cool take')
   })
 
   it('stops at maxRevisions and returns an honest (still-failing) palette rather than looping', async () => {
@@ -76,7 +75,7 @@ describe('ClaudeEngine self-check + revise loop', () => {
     createMock.mockResolvedValue(structured({ palettes: [draft('A', bad)] }))
 
     const engine = new ClaudeEngine('test-key', 'claude-sonnet-4-6')
-    const result = await engine.composeVariations(SOURCE, 'analogous')
+    const result = await engine.compose(SOURCE)
 
     expect(createMock).toHaveBeenCalledTimes(3) // propose + MAX_REVISIONS (2)
     expect(policyFailures(result[0].colors, policy).length).toBeGreaterThan(0)
@@ -87,8 +86,6 @@ describe('ClaudeEngine self-check + revise loop', () => {
     createMock.mockResolvedValue({ stop_reason: 'refusal', content: [] })
 
     const engine = new ClaudeEngine('test-key', 'claude-sonnet-4-6')
-    await expect(
-      engine.composeVariations(SOURCE, 'analogous'),
-    ).rejects.toThrow()
+    await expect(engine.compose(SOURCE)).rejects.toThrow()
   })
 })

@@ -3,20 +3,18 @@
  * results are written in via actions; scenes subscribe with useSyncExternalStore.
  * Persisted palettes go through palette-repo, not this store.
  *
- * Variations are a *sequence of rounds*: the initial fan-out plus any refine
- * steers stacked beneath it, so the trail shows where you came from. Re-picking
- * a direction branches a fresh tail (rounds reset for the new type).
+ * Variations are a *sequence of rounds*: the opening "surprise me" four, plus any
+ * re-runs (fresh fours) and refine steers stacked beneath it, so the trail shows
+ * everything you've generated. A settled journey is mirrored to IndexedDB and
+ * rehydrated on reload — only Start over clears it.
  */
 
 import { useSyncExternalStore } from 'react'
 
-import type {
-  Direction,
-  PaletteType,
-  ScoredPalette,
-  Source,
-} from '#/features/palette/types'
+import type { ScoredPalette, Source } from '#/features/palette/types'
 import { getEngine } from '#/features/agent/get-engine'
+import { deletePalette, savePalette } from '#/features/palette/palette-repo'
+import { STORE_JOURNEYS, idbDelete, idbGet, idbPut } from '#/lib/db'
 import { ensureHydrated } from '#/lib/settings'
 import { makeId } from '#/lib/id'
 
@@ -32,22 +30,31 @@ export type VariationRound = {
 
 export type JourneyState = {
   source: Source | null
-  directions: Direction[]
-  directionsPhase: Phase
-  chosenType: PaletteType | null
   rounds: VariationRound[]
   chosen: ScoredPalette | null
+  /** Ids of takes the user has hearted into the library this session. */
+  saved: string[]
   progress: string
+  /** True once this tab has loaded (or confirmed empty) from IndexedDB. */
+  hydrated: boolean
 }
 
 const EMPTY: JourneyState = {
   source: null,
-  directions: [],
-  directionsPhase: 'idle',
-  chosenType: null,
   rounds: [],
   chosen: null,
+  saved: [],
   progress: '',
+  hydrated: false,
+}
+
+/** What's mirrored to IndexedDB — the live, non-transient state, keyed by id. */
+type PersistedJourney = {
+  id: string
+  source: Source
+  rounds: VariationRound[]
+  chosen: ScoredPalette | null
+  saved: string[]
 }
 
 let sessions: Record<string, JourneyState> = {}
@@ -71,6 +78,7 @@ function getState(id: string): JourneyState {
 function patch(id: string, next: Partial<JourneyState>): void {
   sessions = { ...sessions, [id]: { ...getState(id), ...next } }
   emit()
+  schedulePersist(id)
 }
 
 function patchRound(
@@ -82,6 +90,48 @@ function patchRound(
     r.id === roundId ? { ...r, ...next } : r,
   )
   patch(id, { rounds })
+}
+
+// Every take in a journey shares one seed (the source), so persist palettes with
+// the bulky image stripped and re-attach it from `source` on load — one image
+// copy per journey instead of one per take.
+function stripSeed(p: ScoredPalette): ScoredPalette {
+  return { ...p, seed: { ...p.seed, value: '' } }
+}
+
+function reinjectSeed(p: ScoredPalette, value: string): ScoredPalette {
+  return { ...p, seed: { ...p.seed, value } }
+}
+
+function settled(state: JourneyState): boolean {
+  return !!state.source && !state.rounds.some((r) => r.phase === 'running')
+}
+
+const persistTimers: Record<string, ReturnType<typeof setTimeout>> = {}
+
+/**
+ * Mirror a settled journey to IndexedDB (debounced). Never persists while a round
+ * is running, so a refresh can't rehydrate a row stuck mid-compose.
+ */
+function schedulePersist(id: string): void {
+  if (!settled(getState(id))) return
+  clearTimeout(persistTimers[id]) // no-op when absent
+  persistTimers[id] = setTimeout(() => {
+    delete persistTimers[id]
+    const s = getState(id)
+    if (!settled(s) || !s.source) return
+    const record: PersistedJourney = {
+      id,
+      source: s.source,
+      rounds: s.rounds.map((r) => ({
+        ...r,
+        variations: r.variations.map(stripSeed),
+      })),
+      chosen: s.chosen ? stripSeed(s.chosen) : null,
+      saved: s.saved,
+    }
+    void idbPut(STORE_JOURNEYS, record)
+  }, 400)
 }
 
 /** An empty fan-out is a failure, not a result — surface it like a thrown one. */
@@ -108,50 +158,82 @@ export function useJourney(id: string): JourneyState {
   )
 }
 
+/** Open the journey: compose the surprise — four distinct takes in one round. */
 export async function startJourney(id: string, source: Source): Promise<void> {
-  patch(id, { ...EMPTY, source, directionsPhase: 'running' })
+  const roundId = makeId()
+  patch(id, {
+    ...EMPTY,
+    source,
+    hydrated: true,
+    rounds: [{ id: roundId, variations: [], phase: 'running' }],
+  })
+  await runSurprise(id, roundId, source)
+}
+
+/**
+ * Restore a journey from IndexedDB on reload. No-op if this tab already holds a
+ * live session (navigated in from home). Marks the session hydrated either way so
+ * the route can tell "still loading" from "genuinely empty — start over."
+ */
+export async function hydrateJourney(id: string): Promise<void> {
+  if (id in sessions) return
+  let stored: PersistedJourney | undefined
   try {
-    await ensureHydrated()
-    const directions = await getEngine().proposeDirections(source, (m) =>
-      patch(id, { progress: m }),
-    )
-    if (getState(id).source === source) {
-      patch(id, { directions, directionsPhase: 'done', progress: '' })
-    }
+    stored = await idbGet<PersistedJourney>(STORE_JOURNEYS, id)
   } catch {
-    patch(id, { directionsPhase: 'error', progress: '' })
+    stored = undefined
+  }
+  if (id in sessions) return
+  if (stored?.source) {
+    const value = stored.source.value
+    patch(id, {
+      source: stored.source,
+      rounds: stored.rounds.map((r) => ({
+        ...r,
+        variations: r.variations.map((v) => reinjectSeed(v, value)),
+      })),
+      chosen: stored.chosen ? reinjectSeed(stored.chosen, value) : null,
+      saved: stored.saved,
+      progress: '',
+      hydrated: true,
+    })
+  } else {
+    patch(id, { hydrated: true })
   }
 }
 
-/** Pick a path — branches a fresh tail (rounds reset) for this type. */
-export async function chooseDirection(
-  id: string,
-  type: PaletteType,
-): Promise<void> {
+/** Re-run: append another fresh four — keep everything already generated. */
+export async function rerunJourney(id: string): Promise<void> {
   const state = getState(id)
   if (!state.source) return
   const roundId = makeId()
   patch(id, {
-    chosenType: type,
-    chosen: null,
-    rounds: [{ id: roundId, variations: [], phase: 'running' }],
+    rounds: [
+      ...state.rounds,
+      { id: roundId, variations: [], phase: 'running' },
+    ],
   })
+  await runSurprise(id, roundId, state.source)
+}
+
+/** Compose the opening round and resolve it to done / a visible error round. */
+async function runSurprise(
+  id: string,
+  roundId: string,
+  source: Source,
+): Promise<void> {
   try {
     await ensureHydrated()
-    const variations = await getEngine().composeVariations(
-      state.source,
-      type,
-      undefined,
-      (m) => patch(id, { progress: m }),
+    const variations = await getEngine().compose(source, undefined, (m) =>
+      patch(id, { progress: m }),
     )
-    if (getState(id).chosenType === type) {
-      if (variations.length === 0) {
-        patchRound(id, roundId, { phase: 'error', error: EMPTY_RESULT })
-      } else {
-        patchRound(id, roundId, { variations, phase: 'done' })
-      }
-      patch(id, { progress: '' })
+    if (getState(id).source !== source) return
+    if (variations.length === 0) {
+      patchRound(id, roundId, { phase: 'error', error: EMPTY_RESULT })
+    } else {
+      patchRound(id, roundId, { variations, phase: 'done' })
     }
+    patch(id, { progress: '' })
   } catch (e) {
     patchRound(id, roundId, { phase: 'error', error: messageFrom(e) })
     patch(id, { progress: '' })
@@ -162,13 +244,29 @@ export function chooseVariation(id: string, palette: ScoredPalette): void {
   patch(id, { chosen: palette })
 }
 
+/**
+ * Heart a take into the library, or un-heart it back out — the only save path
+ * now. Optimistic: flip the session's saved set immediately, persist in the
+ * background (IndexedDB writes are local and effectively always succeed).
+ */
+export function toggleSaved(id: string, palette: ScoredPalette): void {
+  const saved = getState(id).saved
+  if (saved.includes(palette.id)) {
+    patch(id, { saved: saved.filter((s) => s !== palette.id) })
+    void deletePalette(palette.id)
+  } else {
+    patch(id, { saved: [...saved, palette.id] })
+    void savePalette(palette)
+  }
+}
+
 /** Steer from the current pick (or the latest round's recommendation) — appends a round. */
 export async function refineJourney(
   id: string,
   instruction: string,
 ): Promise<void> {
   const state = getState(id)
-  if (!state.chosenType || state.rounds.length === 0) return
+  if (state.rounds.length === 0) return
   const latest = state.rounds[state.rounds.length - 1]
   const base = state.chosen ?? recommendedOf(latest.variations)
   if (!base) return
@@ -196,9 +294,13 @@ export async function refineJourney(
   }
 }
 
+/** Start over: forget the journey in memory and in IndexedDB. */
 export function resetJourney(id: string): void {
   const next = { ...sessions }
   delete next[id]
   sessions = next
+  clearTimeout(persistTimers[id]) // no-op when absent
+  delete persistTimers[id]
+  void idbDelete(STORE_JOURNEYS, id)
   emit()
 }

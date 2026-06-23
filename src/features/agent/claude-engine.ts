@@ -9,15 +9,13 @@ import type AnthropicClient from '@anthropic-ai/sdk'
 
 import type {
   ColorRow,
-  Direction,
   Palette,
-  PaletteType,
   Role,
   ScoredPalette,
   Seed,
   Source,
 } from '#/features/palette/types'
-import { PALETTE_TYPES, ROLES } from '#/features/palette/types'
+import { ROLES } from '#/features/palette/types'
 import { policyFailures } from '#/features/color/contrast'
 import { rasterizeSmall } from '#/features/color/dominant-color'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
@@ -42,34 +40,7 @@ const COLOR_ITEM = {
   },
 }
 
-const DIRECTIONS_SCHEMA: Record<string, unknown> = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['directions'],
-  properties: {
-    directions: {
-      type: 'array',
-      items: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['type', 'character', 'preview', 'recommended'],
-        properties: {
-          type: { type: 'string', enum: PALETTE_TYPES },
-          character: { type: 'string', description: 'one short line' },
-          preview: {
-            type: 'array',
-            description:
-              'six representative light-mode hexes: background, surface, muted, border, accent, text',
-            items: { type: 'string' },
-          },
-          recommended: { type: 'boolean' },
-        },
-      },
-    },
-  },
-}
-
-const VARIATIONS_SCHEMA: Record<string, unknown> = {
+const PALETTES_SCHEMA: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
   required: ['palettes'],
@@ -79,10 +50,13 @@ const VARIATIONS_SCHEMA: Record<string, unknown> = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['name', 'rationale', 'colors'],
+        required: ['name', 'character', 'colors'],
         properties: {
           name: { type: 'string' },
-          rationale: { type: 'string', description: 'one short line' },
+          character: {
+            type: 'string',
+            description: 'one short line — the mood/character of this take',
+          },
           colors: { type: 'array', items: COLOR_ITEM },
         },
       },
@@ -90,21 +64,10 @@ const VARIATIONS_SCHEMA: Record<string, unknown> = {
   },
 }
 
-type DirectionDraft = {
-  type: PaletteType
-  character: string
-  preview: string[]
-  recommended: boolean
-}
-
 type PaletteDraft = {
   name: string
-  rationale: string
+  character: string
   colors: { role: Role; light: string; dark: string }[]
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 function toSeed(source: Source): Seed {
@@ -210,47 +173,8 @@ export class ClaudeEngine implements PaletteEngine {
     }
   }
 
-  async proposeDirections(
+  async compose(
     source: Source,
-    onProgress?: ProgressFn,
-  ): Promise<Direction[]> {
-    onProgress?.('Reading your colors and sketching directions…')
-    const image = await imageInputFor(source)
-    const colors =
-      source.extracted.length > 0 ? source.extracted.join(', ') : source.value
-    const intro = image
-      ? `A 120px sample of the user's image is attached — read its color story directly. Dominant colors sampled from it (a hint, not a limit): ${colors}.`
-      : `Source color: ${colors}.`
-    const userText = [
-      intro,
-      `Propose one direction for each palette type: ${PALETTE_TYPES.join(', ')}.`,
-      'For each: a one-line character, six representative light-mode preview hexes (background, surface, muted, border, accent, text), and whether it is your single recommendation for this source.',
-      'Recommend exactly one.',
-    ].join('\n')
-
-    const data = await this.runStructured<{ directions: DirectionDraft[] }>(
-      userText,
-      DIRECTIONS_SCHEMA,
-      image,
-    )
-
-    let recommendedSeen = false
-    return data.directions.map((d) => {
-      const recommended = d.recommended && !recommendedSeen
-      if (recommended) recommendedSeen = true
-      return {
-        type: d.type,
-        label: capitalize(d.type),
-        character: d.character,
-        preview: d.preview,
-        recommended,
-      }
-    })
-  }
-
-  async composeVariations(
-    source: Source,
-    type: PaletteType,
     steer?: string,
     onProgress?: ProgressFn,
   ): Promise<ScoredPalette[]> {
@@ -258,18 +182,23 @@ export class ClaudeEngine implements PaletteEngine {
     const colors =
       source.extracted.length > 0 ? source.extracted.join(', ') : source.value
     const intro = image
-      ? `A 120px sample of the user's image is attached — draw from its full color story, not just the hints. Dominant colors sampled from it: ${colors}.`
+      ? `A 120px sample of the user's image is attached — read its full color story, not just the hints. Dominant colors sampled from it: ${colors}.`
       : `Source color: ${colors}.`
+    // The mood-board seam: an optional color-related prompt rides alongside.
+    const steers = [source.prompt, steer].filter(Boolean) as string[]
     const userText = [
       intro,
-      `Compose ${VARIATION_COUNT} distinct ${type} palettes from this source. Make them genuinely different from each other in temperature, value range, and mood — not minor tweaks of one idea.`,
-      steer ? `Apply this steer to all of them: ${steer}.` : '',
-      `Return exactly ${VARIATION_COUNT} palettes, each with all six roles (light and dark), a short name, and a one-line rationale.`,
+      `From this, produce ${VARIATION_COUNT} distinct UI color palettes — each a different character you read from the source (e.g. bright & punchy, muted & professional, dark & intense, soft & calm — whatever the source actually suggests). Surprise me.`,
+      `Make the ${VARIATION_COUNT} genuinely different in character and energy, not minor tweaks of one idea.`,
+      steers.length
+        ? `Honor this steer across all of them: ${steers.join('; ')}.`
+        : '',
+      `Return exactly ${VARIATION_COUNT} palettes, each with all six roles (light and dark), a short name, and a one-line character.`,
     ]
       .filter(Boolean)
       .join('\n')
 
-    return this.composeLoop(userText, type, toSeed(source), onProgress, image)
+    return this.composeLoop(userText, toSeed(source), onProgress, image)
   }
 
   async refine(
@@ -277,25 +206,23 @@ export class ClaudeEngine implements PaletteEngine {
     instruction: string,
     onProgress?: ProgressFn,
   ): Promise<ScoredPalette[]> {
-    const type = (base as Partial<ScoredPalette>).type ?? 'analogous'
     const image = await imageInputFor(base.seed)
     const userText = [
       image ? "A 120px sample of the user's source image is attached." : '',
-      `The user kept this ${type} palette:`,
+      'The user kept this palette:',
       colorsToText(base.colors),
       `Produce ${VARIATION_COUNT} refined variations of it, applying: ${instruction}.`,
-      'Keep its essential character; change only what the instruction asks. Each with all six roles (light and dark), a short name, and a one-line rationale.',
+      'Keep its essential character; change only what the instruction asks. Each with all six roles (light and dark), a short name, and a one-line character.',
     ]
       .filter(Boolean)
       .join('\n')
 
-    return this.composeLoop(userText, type, base.seed, onProgress, image)
+    return this.composeLoop(userText, base.seed, onProgress, image)
   }
 
   /** propose -> verify (code) -> revise the failing palettes -> finalize. */
   private async composeLoop(
     userText: string,
-    type: PaletteType,
     seed: Seed,
     onProgress?: ProgressFn,
     image?: ImageInput | null,
@@ -306,7 +233,7 @@ export class ClaudeEngine implements PaletteEngine {
       (
         await this.runStructured<{ palettes: PaletteDraft[] }>(
           userText,
-          VARIATIONS_SCHEMA,
+          PALETTES_SCHEMA,
           image,
         )
       ).palettes,
@@ -347,7 +274,7 @@ export class ClaudeEngine implements PaletteEngine {
         (
           await this.runStructured<{ palettes: PaletteDraft[] }>(
             reviseText,
-            VARIATIONS_SCHEMA,
+            PALETTES_SCHEMA,
           )
         ).palettes,
       )
@@ -357,21 +284,14 @@ export class ClaudeEngine implements PaletteEngine {
       })
     }
 
-    return drafts.map((draft) => {
-      const palette = finalizePalette({
+    return drafts.map((draft) =>
+      finalizePalette({
         seed,
         name: draft.name,
-        type,
+        character: draft.character,
         colors: draft.rows,
         policy,
-      })
-      return {
-        ...palette,
-        score: {
-          ...palette.score,
-          rationale: draft.rationale || palette.score.rationale,
-        },
-      }
-    })
+      }),
+    )
   }
 }

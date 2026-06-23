@@ -51,11 +51,20 @@ export type Seed = { type: 'image' | 'color'; value: string }
 /**
  * The live input to a journey: the seed plus the anchor colors extracted from
  * it (dominant colors for an image, a derived neighborhood for a seed color).
+ *
+ * `images` and `prompt` are forward-compat seams for the deferred mood-board
+ * step (N inspiration images + an optional color-related prompt). v1 ships
+ * single-image and leaves them unset; the engine reads them when present, so
+ * mood-board is additive — not a reshape of `Source` and every consumer.
  */
 export type Source = {
   type: 'image' | 'color'
   value: string
   extracted: string[]
+  /** Additional inspiration images (mood board). v1 unset; reserved. */
+  images?: string[]
+  /** Optional color-related steer (e.g. a brand-color hint). v1 unset. */
+  prompt?: string
 }
 
 /** The addressable palette record. Persisted in IndexedDB. */
@@ -68,31 +77,6 @@ export type Palette = {
   createdAt: string
 }
 
-/** Harmony families a palette can be taken toward. */
-export type PaletteType =
-  | 'monochrome'
-  | 'analogous'
-  | 'complementary'
-  | 'triadic'
-  | 'editorial'
-
-export const PALETTE_TYPES: readonly PaletteType[] = [
-  'monochrome',
-  'analogous',
-  'complementary',
-  'triadic',
-  'editorial',
-] as const
-
-/** A proposed direction shown in Scene 1 (one per palette type). */
-export type Direction = {
-  type: PaletteType
-  label: string
-  character: string
-  preview: string[]
-  recommended: boolean
-}
-
 /** The agent's judgment of a composed palette (0–100 per dimension). */
 export type Score = {
   overall: number
@@ -102,8 +86,11 @@ export type Score = {
   rationale: string
 }
 
-/** A composed palette carrying its type and the agent's score (Scene 2). */
-export type ScoredPalette = Palette & { type: PaletteType; score: Score }
+/**
+ * A composed palette carrying the agent's score and the free-form `character`
+ * it named for this take (e.g. "bright & punchy") — not a fixed taxonomy type.
+ */
+export type ScoredPalette = Palette & { character?: string; score: Score }
 
 /** One pairing the contrast policy requires, with its target. */
 export type PolicyPairing = { pairing: string; target: ContrastTarget }

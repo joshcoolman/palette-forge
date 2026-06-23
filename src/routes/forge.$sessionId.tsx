@@ -1,18 +1,19 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 
 import type { ScoredPalette, Source } from '#/features/palette/types'
 import {
-  chooseDirection,
   chooseVariation,
+  hydrateJourney,
   refineJourney,
+  rerunJourney,
+  resetJourney,
+  toggleSaved,
   useJourney,
 } from '#/lib/journey-store'
 import { Backdrop } from '#/components/journey/backdrop'
 import { ModelControl } from '#/components/settings/model-control'
-import { SceneDirections } from '#/components/journey/scene-directions'
 import { SceneVariations } from '#/components/journey/scene-variations'
-import { SelectedActions } from '#/components/forge/selected-actions'
 import { ExtractionPeek } from '#/components/journey/extraction-peek'
 
 export const Route = createFileRoute('/forge/$sessionId')({
@@ -54,23 +55,17 @@ function SourceThumb({ source }: { source: Source }) {
 function ForgePage() {
   const { sessionId } = Route.useParams()
   const journey = useJourney(sessionId)
+  const navigate = useNavigate()
   const variationsRef = useRef<HTMLDivElement>(null)
-  const paletteRef = useRef<HTMLDivElement>(null)
-  const hadChosen = useRef(false)
 
   const roundCount = journey.rounds.length
 
-  // Descend to the variations when a path is picked.
+  // Restore a reloaded journey from IndexedDB (no-op if already live in this tab).
   useEffect(() => {
-    if (journey.chosenType) {
-      variationsRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-    }
-  }, [journey.chosenType])
+    void hydrateJourney(sessionId)
+  }, [sessionId])
 
-  // A new refine round appended — bring it (and the refine bar) into view.
+  // A new round appended — bring it (and the refine bar) into view.
   useEffect(() => {
     if (roundCount > 1) {
       variationsRef.current?.scrollIntoView({
@@ -80,22 +75,31 @@ function ForgePage() {
     }
   }, [roundCount])
 
-  // Reveal the final palette only on the first selection, not on every re-pick.
-  useEffect(() => {
-    if (journey.chosen && !hadChosen.current) {
-      hadChosen.current = true
-      paletteRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-    if (!journey.chosen) hadChosen.current = false
-  }, [journey.chosen])
+  // Start over is the one explicit clear: forget this journey, then go home.
+  function startOver() {
+    resetJourney(sessionId)
+    void navigate({ to: '/' })
+  }
 
   if (!journey.source) {
+    if (!journey.hydrated) {
+      return (
+        <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-4 text-center">
+          <Backdrop colors={[]} />
+          <p
+            className="animate-pulse text-sm"
+            style={{ color: 'var(--app-muted)' }}
+          >
+            Loading your journey…
+          </p>
+        </main>
+      )
+    }
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
         <Backdrop colors={[]} />
         <p className="text-sm" style={{ color: 'var(--app-muted)' }}>
-          This journey has no source — it was probably reloaded. Start a new
-          one.
+          Nothing here yet — this journey was cleared. Start a new one.
         </p>
         <Link
           to="/"
@@ -140,49 +144,45 @@ function ForgePage() {
             >
               Library
             </Link>
-            <Link
-              to="/"
+            <button
+              type="button"
+              onClick={startOver}
               className="text-xs underline"
               style={{ color: 'var(--app-muted)' }}
             >
               Start over
-            </Link>
+            </button>
           </div>
         </header>
 
         <ExtractionPeek source={journey.source} />
 
-        <SceneDirections
-          directions={journey.directions}
-          phase={journey.directionsPhase}
-          activeType={journey.chosenType}
-          progress={journey.progress}
-          onChoose={(type) => void chooseDirection(sessionId, type)}
-        />
+        <div ref={variationsRef}>
+          <SceneVariations
+            rounds={journey.rounds}
+            chosenId={journey.chosen?.id}
+            savedIds={journey.saved}
+            progress={journey.progress}
+            onChoose={(palette) => chooseVariation(sessionId, palette)}
+            onToggleSave={(palette) => toggleSaved(sessionId, palette)}
+            onRefine={(instruction) =>
+              void refineJourney(sessionId, instruction)
+            }
+            onRegenerate={() => void rerunJourney(sessionId)}
+          />
+        </div>
 
-        {journey.chosenType && (
-          <div ref={variationsRef}>
-            <SceneVariations
-              rounds={journey.rounds}
-              chosenId={journey.chosen?.id}
-              progress={journey.progress}
-              onChoose={(palette) => chooseVariation(sessionId, palette)}
-              onRefine={(instruction) =>
-                void refineJourney(sessionId, instruction)
-              }
-              onRegenerate={() => {
-                if (journey.chosenType)
-                  void chooseDirection(sessionId, journey.chosenType)
-              }}
-            />
-          </div>
-        )}
-
-        {journey.chosen && (
-          <div ref={paletteRef}>
-            <SelectedActions key={journey.chosen.id} palette={journey.chosen} />
-          </div>
-        )}
+        <footer
+          className="flex items-center justify-center gap-5 pt-4 text-xs"
+          style={{ color: 'var(--app-muted)' }}
+        >
+          <Link to="/library" className="underline">
+            Library
+          </Link>
+          <button type="button" onClick={startOver} className="underline">
+            Start over
+          </button>
+        </footer>
       </main>
     </>
   )

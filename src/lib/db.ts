@@ -4,10 +4,11 @@
  */
 
 const DB_NAME = 'palette-forge'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 export const STORE_PALETTES = 'palettes'
 export const STORE_SETTINGS = 'settings'
+export const STORE_JOURNEYS = 'journeys'
 
 let dbPromise: Promise<IDBDatabase> | null = null
 
@@ -29,6 +30,9 @@ export function openDb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_SETTINGS)) {
         db.createObjectStore(STORE_SETTINGS, { keyPath: 'key' })
+      }
+      if (!db.objectStoreNames.contains(STORE_JOURNEYS)) {
+        db.createObjectStore(STORE_JOURNEYS, { keyPath: 'id' })
       }
     }
     request.onsuccess = () => resolve(request.result)

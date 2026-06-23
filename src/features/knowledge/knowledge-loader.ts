@@ -26,6 +26,6 @@ export function getKnowledge(name: string): string {
 export const KNOWLEDGE_ORDER = [
   'roles.md',
   'palettes.md',
-  'harmony.md',
+  'characters.md',
   'contrast.md',
 ] as const

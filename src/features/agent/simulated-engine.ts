@@ -1,24 +1,21 @@
 /**
- * Deterministic, zero-token PaletteEngine. Move 1 (extraction) is real; moves
- * 2/4 are composed by harmony rules, repaired against the contrast policy, and
- * scored by the shared heuristic. It responds to the user's actual source and
- * steers — the journey's feel is fully tunable here before Claude is wired in.
+ * Deterministic, zero-token PaletteEngine. Extraction is real; the four takes
+ * are composed by recipe, repaired against the contrast policy, and scored by
+ * the shared heuristic. It responds to the user's actual source and steers — the
+ * no-key demo's feel is fully tunable here before Claude is wired in.
  *
- * Composition gives neutrals a perceptible shared tint (per knowledge: "a faint
- * shared temperature, not dead gray") and rotates the whole hue across the four
- * variations so the takes read as genuinely different.
+ * The four are distinct by design: they rotate the accent hue, swing accent
+ * saturation and lightness, and vary the neutral tint, so the "surprise me"
+ * grid reads as four genuinely different moods, not minor tweaks of one idea.
  */
 
 import type {
   ColorRow,
-  Direction,
   Palette,
-  PaletteType,
   ScoredPalette,
   Seed,
   Source,
 } from '#/features/palette/types'
-import { PALETTE_TYPES } from '#/features/palette/types'
 import {
   clamp,
   hexToHsl,
@@ -34,23 +31,75 @@ import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
 import type { PaletteEngine, ProgressFn } from '#/features/agent/engine'
 import { finalizePalette } from '#/features/agent/engine'
 
-const CHARACTER: Record<PaletteType, string> = {
-  monochrome: 'One hue, varied in value. Calm and focused.',
-  analogous: 'Neighboring hues. Warm, cohesive, organic.',
-  complementary: 'Opposite hues. Punchy, clear figure and ground.',
-  triadic: 'Three balanced hues. Playful and brand-forward.',
-  editorial: 'Near-neutral grounds, one saturated accent. Confident.',
-}
-
 type Recipe = {
-  type: PaletteType
   baseHue: number
+  accentHueShift: number
   neutralSat: number
   accentSatLight: number
   accentSatDark: number
   accentLightLight: number
   accentLightDark: number
 }
+
+/** One of the four characters the no-key demo surprises with. */
+type Composition = {
+  name: string
+  character: string
+  accentHueShift: number
+  neutralSat: number
+  accentSatLight: number
+  accentSatDark: number
+  accentLightLight: number
+  accentLightDark: number
+}
+
+// Four deliberately distinct reads of the same source: a punchy lead, a
+// restrained professional, a dark complement, and a soft calm. They differ in
+// temperature (hue rotation), energy (accent saturation), and depth (accent
+// lightness + neutral tint) — the closest a deterministic engine gets to the
+// vision model's "surprise me."
+const COMPOSITIONS: Composition[] = [
+  {
+    name: 'Vivid',
+    character: 'Bright and confident — a saturated accent over crisp neutrals.',
+    accentHueShift: 0,
+    neutralSat: 0.07,
+    accentSatLight: 0.84,
+    accentSatDark: 0.6,
+    accentLightLight: 0.47,
+    accentLightDark: 0.66,
+  },
+  {
+    name: 'Composed',
+    character: 'Muted and professional — restrained color, quiet authority.',
+    accentHueShift: 20,
+    neutralSat: 0.05,
+    accentSatLight: 0.5,
+    accentSatDark: 0.4,
+    accentLightLight: 0.42,
+    accentLightDark: 0.62,
+  },
+  {
+    name: 'Nocturne',
+    character: 'Dark and intense — a deep, moody complement.',
+    accentHueShift: 180,
+    neutralSat: 0.13,
+    accentSatLight: 0.72,
+    accentSatDark: 0.52,
+    accentLightLight: 0.4,
+    accentLightDark: 0.64,
+  },
+  {
+    name: 'Hush',
+    character: 'Soft and calm — gentle, airy, low-contrast warmth.',
+    accentHueShift: 32,
+    neutralSat: 0.1,
+    accentSatLight: 0.48,
+    accentSatDark: 0.4,
+    accentLightLight: 0.52,
+    accentLightDark: 0.68,
+  },
+]
 
 const NEUTRAL_GROUND = new Set(['background', 'surface'])
 
@@ -73,70 +122,15 @@ function pickBaseHue(source: Source): number {
   return hue
 }
 
-function accentHueFor(type: PaletteType, baseHue: number): number {
-  switch (type) {
-    case 'analogous':
-      return (baseHue + 32) % 360
-    case 'complementary':
-      return (baseHue + 180) % 360
-    case 'triadic':
-      return (baseHue + 120) % 360
-    case 'monochrome':
-    case 'editorial':
-      return baseHue
-  }
-}
-
-function baseRecipe(type: PaletteType, baseHue: number): Recipe {
-  const common = { type, baseHue }
-  // Dark accents are deliberately less saturated than their light counterparts —
-  // a full-saturation accent vibrates/glows on a dark ground.
-  switch (type) {
-    case 'monochrome':
-      return {
-        ...common,
-        neutralSat: 0.16,
-        accentSatLight: 0.6,
-        accentSatDark: 0.46,
-        accentLightLight: 0.42,
-        accentLightDark: 0.66,
-      }
-    case 'analogous':
-      return {
-        ...common,
-        neutralSat: 0.12,
-        accentSatLight: 0.66,
-        accentSatDark: 0.5,
-        accentLightLight: 0.43,
-        accentLightDark: 0.66,
-      }
-    case 'complementary':
-      return {
-        ...common,
-        neutralSat: 0.1,
-        accentSatLight: 0.72,
-        accentSatDark: 0.54,
-        accentLightLight: 0.44,
-        accentLightDark: 0.64,
-      }
-    case 'triadic':
-      return {
-        ...common,
-        neutralSat: 0.1,
-        accentSatLight: 0.68,
-        accentSatDark: 0.52,
-        accentLightLight: 0.44,
-        accentLightDark: 0.65,
-      }
-    case 'editorial':
-      return {
-        ...common,
-        neutralSat: 0.05,
-        accentSatLight: 0.82,
-        accentSatDark: 0.6,
-        accentLightLight: 0.45,
-        accentLightDark: 0.66,
-      }
+function recipeFor(comp: Composition, baseHue: number): Recipe {
+  return {
+    baseHue,
+    accentHueShift: comp.accentHueShift,
+    neutralSat: comp.neutralSat,
+    accentSatLight: comp.accentSatLight,
+    accentSatDark: comp.accentSatDark,
+    accentLightLight: comp.accentLightLight,
+    accentLightDark: comp.accentLightDark,
   }
 }
 
@@ -149,8 +143,8 @@ function tinted(hue: number, sat: number, light: number): string {
 }
 
 function composeColors(recipe: Recipe): ColorRow[] {
-  const { type, baseHue, neutralSat: t } = recipe
-  const aHue = accentHueFor(type, baseHue)
+  const { baseHue, neutralSat: t } = recipe
+  const aHue = (baseHue + recipe.accentHueShift + 360) % 360
   const floor = (sat: number): number => Math.max(sat, NEUTRAL_SAT_FLOOR)
   return [
     {
@@ -230,33 +224,6 @@ function repair(
   return out
 }
 
-type Delta = {
-  label: string
-  hueShift: number
-  tint: number
-  light: number
-  accentSat: number
-}
-
-const VARIATION_DELTAS: Delta[] = [
-  { label: 'balanced', hueShift: 0, tint: 0, light: 0, accentSat: 0 },
-  { label: 'deeper', hueShift: -16, tint: 0.05, light: -0.05, accentSat: 0.04 },
-  { label: 'brighter', hueShift: 20, tint: -0.02, light: 0.05, accentSat: 0.1 },
-  { label: 'warm shift', hueShift: 36, tint: 0.03, light: 0, accentSat: -0.02 },
-]
-
-function applyDelta(recipe: Recipe, delta: Delta): Recipe {
-  return {
-    ...recipe,
-    baseHue: (recipe.baseHue + delta.hueShift + 360) % 360,
-    neutralSat: clamp(recipe.neutralSat + delta.tint, 0, 0.3),
-    accentSatLight: clamp(recipe.accentSatLight + delta.accentSat, 0.3, 1),
-    accentSatDark: clamp(recipe.accentSatDark + delta.accentSat, 0.3, 1),
-    accentLightLight: clamp(recipe.accentLightLight + delta.light, 0.28, 0.58),
-    accentLightDark: clamp(recipe.accentLightDark + delta.light, 0.5, 0.78),
-  }
-}
-
 /** Best-effort natural-language steer for the simulated refine path. */
 function applySteer(recipe: Recipe, instruction: string): Recipe {
   const text = instruction.toLowerCase()
@@ -284,25 +251,6 @@ function applySteer(recipe: Recipe, instruction: string): Recipe {
   return next
 }
 
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1)
-}
-
-const PREVIEW_ORDER = [
-  'background',
-  'surface',
-  'muted',
-  'border',
-  'accent',
-  'text',
-] as const
-
-function previewHexes(colors: ColorRow[]): string[] {
-  return PREVIEW_ORDER.map(
-    (role) => colors.find((c) => c.role === role)?.light ?? '#888888',
-  )
-}
-
 function toSeed(source: Source): Seed {
   return { type: source.type, value: source.value }
 }
@@ -314,53 +262,24 @@ function sourceFromPalette(base: Palette): Source {
 }
 
 export class SimulatedEngine implements PaletteEngine {
-  async proposeDirections(
+  async compose(
     source: Source,
-    onProgress?: ProgressFn,
-  ): Promise<Direction[]> {
-    onProgress?.('Reading your colors…')
-    const policy = loadContrastPolicy()
-    const baseHue = pickBaseHue(source)
-    const scored = PALETTE_TYPES.map((type) => {
-      const colors = repair(composeColors(baseRecipe(type, baseHue)), policy)
-      const palette = finalizePalette({
-        seed: toSeed(source),
-        name: capitalize(type),
-        type,
-        colors,
-        policy,
-      })
-      return { type, colors, overall: palette.score.overall }
-    })
-    const topType = scored.reduce((best, d) =>
-      d.overall > best.overall ? d : best,
-    ).type
-    return scored.map((d) => ({
-      type: d.type,
-      label: capitalize(d.type),
-      character: CHARACTER[d.type],
-      preview: previewHexes(d.colors),
-      recommended: d.type === topType,
-    }))
-  }
-
-  async composeVariations(
-    source: Source,
-    type: PaletteType,
     steer?: string,
     onProgress?: ProgressFn,
   ): Promise<ScoredPalette[]> {
-    onProgress?.('Composing palettes…')
+    onProgress?.('Composing four takes…')
     const policy = loadContrastPolicy()
-    const base = baseRecipe(type, pickBaseHue(source))
-    return VARIATION_DELTAS.map((delta) => {
-      let recipe = applyDelta(base, delta)
-      if (steer) recipe = applySteer(recipe, steer)
+    const baseHue = pickBaseHue(source)
+    // Fold an optional source prompt (mood-board seam) into the steer.
+    const merged = [source.prompt, steer].filter(Boolean).join(' ').trim()
+    return COMPOSITIONS.map((comp) => {
+      let recipe = recipeFor(comp, baseHue)
+      if (merged) recipe = applySteer(recipe, merged)
       const colors = repair(composeColors(recipe), policy)
       return finalizePalette({
         seed: toSeed(source),
-        name: `${capitalize(type)} · ${delta.label}`,
-        type,
+        name: comp.name,
+        character: comp.character,
         colors,
         policy,
       })
@@ -372,12 +291,6 @@ export class SimulatedEngine implements PaletteEngine {
     instruction: string,
     onProgress?: ProgressFn,
   ): Promise<ScoredPalette[]> {
-    const type = (base as Partial<ScoredPalette>).type ?? 'analogous'
-    return this.composeVariations(
-      sourceFromPalette(base),
-      type,
-      instruction,
-      onProgress,
-    )
+    return this.compose(sourceFromPalette(base), instruction, onProgress)
   }
 }

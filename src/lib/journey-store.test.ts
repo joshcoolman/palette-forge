@@ -1,4 +1,6 @@
 /* eslint-disable import/first -- vi.mock must hoist above the store import below */
+import 'fake-indexeddb/auto'
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 
@@ -6,9 +8,8 @@ import type { Source } from '#/features/palette/types'
 
 // The store reaches the engine through get-engine and hydrates settings first;
 // mock both so the test drives compose outcomes without a key or IndexedDB.
-const { compose, propose, refineFn } = vi.hoisted(() => ({
+const { compose, refineFn } = vi.hoisted(() => ({
   compose: vi.fn(),
-  propose: vi.fn(),
   refineFn: vi.fn(),
 }))
 
@@ -18,18 +19,12 @@ vi.mock('#/lib/settings', () => ({
 
 vi.mock('#/features/agent/get-engine', () => ({
   getEngine: () => ({
-    proposeDirections: propose,
-    composeVariations: compose,
+    compose,
     refine: refineFn,
   }),
 }))
 
-import {
-  chooseDirection,
-  resetJourney,
-  startJourney,
-  useJourney,
-} from '#/lib/journey-store'
+import { resetJourney, startJourney, useJourney } from '#/lib/journey-store'
 
 const SOURCE: Source = {
   type: 'color',
@@ -37,28 +32,20 @@ const SOURCE: Source = {
   extracted: ['#3d405b'],
 }
 
-async function seeded(id: string) {
-  propose.mockResolvedValue([])
-  const view = renderHook(() => useJourney(id))
-  await act(async () => {
-    await startJourney(id, SOURCE)
-  })
-  return view
-}
-
-// Regression: a failed or empty fan-out used to render as a silent blank grid
+// Regression: a failed or empty surprise used to render as a silent blank grid
 // (the 'error' phase was computed but never surfaced). It must be visible now.
+// The check moved from the old direction-pick to the opening compose, same intent.
 describe('journey-store surfaces compose failures', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('marks an empty fan-out as an error round, not a silent blank', async () => {
+  it('marks an empty surprise as an error round, not a silent blank', async () => {
     const id = 'empty'
-    const { result } = await seeded(id)
     compose.mockResolvedValueOnce([])
+    const { result } = renderHook(() => useJourney(id))
     await act(async () => {
-      await chooseDirection(id, 'editorial')
+      await startJourney(id, SOURCE)
     })
     const round = result.current.rounds.at(-1)
     expect(round?.phase).toBe('error')
@@ -69,10 +56,10 @@ describe('journey-store surfaces compose failures', () => {
 
   it('surfaces a thrown engine error message on the round', async () => {
     const id = 'throws'
-    const { result } = await seeded(id)
     compose.mockRejectedValueOnce(new Error('overloaded'))
+    const { result } = renderHook(() => useJourney(id))
     await act(async () => {
-      await chooseDirection(id, 'editorial')
+      await startJourney(id, SOURCE)
     })
     const round = result.current.rounds.at(-1)
     expect(round?.phase).toBe('error')
@@ -80,12 +67,12 @@ describe('journey-store surfaces compose failures', () => {
     resetJourney(id)
   })
 
-  it('resolves a non-empty fan-out to a done round', async () => {
+  it('resolves a non-empty surprise to a done round', async () => {
     const id = 'ok'
-    const { result } = await seeded(id)
     compose.mockResolvedValueOnce([{ id: 'p1', score: { overall: 82 } }])
+    const { result } = renderHook(() => useJourney(id))
     await act(async () => {
-      await chooseDirection(id, 'editorial')
+      await startJourney(id, SOURCE)
     })
     const round = result.current.rounds.at(-1)
     expect(round?.phase).toBe('done')

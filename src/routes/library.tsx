@@ -66,7 +66,7 @@ function LibraryPage() {
           here.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="flex flex-wrap gap-5">
           {palettes.map((p) => (
             <LibraryCard
               key={p.id}

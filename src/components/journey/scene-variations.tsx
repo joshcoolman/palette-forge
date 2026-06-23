@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'motion/react'
 
 import type { ScoredPalette } from '#/features/palette/types'
@@ -5,6 +6,7 @@ import type { VariationRound } from '#/lib/journey-store'
 import { AgentNarration } from '#/components/journey/agent-narration'
 import { PaletteCard } from '#/components/journey/palette-card'
 import { RefineBar } from '#/components/forge/refine-bar'
+import { ExportModal } from '#/components/library/export-modal'
 
 function recommendedId(variations: ScoredPalette[]): string {
   let best = ''
@@ -22,21 +24,27 @@ function recommendedId(variations: ScoredPalette[]): string {
 export function SceneVariations({
   rounds,
   chosenId,
+  savedIds,
   progress,
   onChoose,
+  onToggleSave,
   onRefine,
   onRegenerate,
 }: {
   rounds: VariationRound[]
   chosenId?: string
+  savedIds: string[]
   progress?: string
   onChoose: (palette: ScoredPalette) => void
+  onToggleSave: (palette: ScoredPalette) => void
   onRefine: (instruction: string) => void
   onRegenerate?: () => void
 }) {
+  const [exporting, setExporting] = useState<ScoredPalette | null>(null)
   const latest = rounds.at(-1)
   const refining = latest?.phase === 'running'
   const failed = latest?.phase === 'error'
+  const steered = Boolean(latest?.steer)
 
   return (
     <motion.section
@@ -47,12 +55,14 @@ export function SceneVariations({
       <div className="flex items-start justify-between gap-3">
         <AgentNarration pending={refining}>
           {refining
-            ? progress || 'Composing variations and checking contrast on each…'
+            ? progress || 'Composing four takes and checking contrast on each…'
             : failed
               ? 'That run didn’t come together.'
-              : rounds.length > 1
-                ? 'Steered. Pick from the new takes, or keep refining.'
-                : 'Here are the takes — start with the recommended one, or steer with a refine.'}
+              : rounds.length === 1
+                ? 'Four takes, each its own character — surprise. Heart the keepers, refine, or re-run.'
+                : steered
+                  ? 'Steered. Heart the keepers, or keep refining.'
+                  : 'Another four — surprise. Heart the keepers, or keep going.'}
         </AgentNarration>
         {onRegenerate && !refining && (
           <button
@@ -115,7 +125,10 @@ export function SceneVariations({
                         palette={palette}
                         recommended={palette.id === topId}
                         selected={palette.id === chosenId}
+                        saved={savedIds.includes(palette.id)}
                         onSelect={() => onChoose(palette)}
+                        onToggleSave={() => onToggleSave(palette)}
+                        onExport={() => setExporting(palette)}
                       />
                     ))}
               </div>
@@ -125,6 +138,10 @@ export function SceneVariations({
       })}
 
       <RefineBar onRefine={onRefine} busy={refining} />
+
+      {exporting && (
+        <ExportModal palette={exporting} onClose={() => setExporting(null)} />
+      )}
     </motion.section>
   )
 }
