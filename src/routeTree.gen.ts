@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as DocsRouteImport } from './routes/docs'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ForgeSessionIdRouteImport } from './routes/forge.$sessionId'
 
@@ -30,6 +31,11 @@ const FavoritesRoute = FavoritesRouteImport.update({
   path: '/favorites',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const ForgeSessionIdRoute = ForgeSessionIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/docs': typeof DocsRoute
   '/favorites': typeof FavoritesRoute
   '/lab': typeof LabRoute
   '/settings': typeof SettingsRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/docs': typeof DocsRoute
   '/favorites': typeof FavoritesRoute
   '/lab': typeof LabRoute
   '/settings': typeof SettingsRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/docs': typeof DocsRoute
   '/favorites': typeof FavoritesRoute
   '/lab': typeof LabRoute
   '/settings': typeof SettingsRoute
@@ -65,12 +74,19 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/favorites' | '/lab' | '/settings' | '/forge/$sessionId'
+  fullPaths:
+    | '/'
+    | '/docs'
+    | '/favorites'
+    | '/lab'
+    | '/settings'
+    | '/forge/$sessionId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/favorites' | '/lab' | '/settings' | '/forge/$sessionId'
+  to: '/' | '/docs' | '/favorites' | '/lab' | '/settings' | '/forge/$sessionId'
   id:
     | '__root__'
     | '/'
+    | '/docs'
     | '/favorites'
     | '/lab'
     | '/settings'
@@ -79,6 +95,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DocsRoute: typeof DocsRoute
   FavoritesRoute: typeof FavoritesRoute
   LabRoute: typeof LabRoute
   SettingsRoute: typeof SettingsRoute
@@ -108,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -127,6 +151,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DocsRoute: DocsRoute,
   FavoritesRoute: FavoritesRoute,
   LabRoute: LabRoute,
   SettingsRoute: SettingsRoute,

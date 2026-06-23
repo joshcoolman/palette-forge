@@ -94,3 +94,114 @@ body {
     transition: none;
   }
 }
+
+/* Rendered-markdown styling for the /docs viewer — a calm reading column in the
+   app's theme + fonts. Scoped so it never leaks into the app UI. */
+.docs-content {
+  color: var(--app-text);
+  font-family: var(--font-body);
+  line-height: 1.7;
+  font-size: 15px;
+}
+.docs-content > :first-child {
+  margin-top: 0;
+}
+.docs-content h1,
+.docs-content h2,
+.docs-content h3,
+.docs-content h4 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--app-text);
+  margin: 1.8em 0 0.6em;
+}
+.docs-content h1 {
+  font-size: 1.9em;
+}
+.docs-content h2 {
+  font-size: 1.4em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--app-border);
+}
+.docs-content h3 {
+  font-size: 1.15em;
+}
+.docs-content p,
+.docs-content ul,
+.docs-content ol,
+.docs-content blockquote,
+.docs-content pre,
+.docs-content table {
+  margin: 0.9em 0;
+}
+.docs-content a {
+  color: #8fb8ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.docs-content strong {
+  color: var(--app-text);
+  font-weight: 600;
+}
+.docs-content ul,
+.docs-content ol {
+  padding-left: 1.4em;
+}
+.docs-content li {
+  margin: 0.3em 0;
+}
+.docs-content li::marker {
+  color: var(--app-muted);
+}
+.docs-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.docs-content pre {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  padding: 0.9em 1.1em;
+  overflow-x: auto;
+}
+.docs-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82em;
+  color: var(--app-text);
+}
+.docs-content blockquote {
+  border-left: 3px solid var(--app-border);
+  padding-left: 1em;
+  color: var(--app-muted);
+}
+.docs-content hr {
+  border: none;
+  border-top: 1px solid var(--app-border);
+  margin: 2em 0;
+}
+.docs-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+}
+.docs-content th,
+.docs-content td {
+  border: 1px solid var(--app-border);
+  padding: 0.5em 0.7em;
+  text-align: left;
+}
+.docs-content th {
+  background: var(--app-surface);
+  font-weight: 600;
+}
+.docs-content img {
+  max-width: 100%;
+  border-radius: 8px;
+}
