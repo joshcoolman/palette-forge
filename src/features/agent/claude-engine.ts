@@ -19,6 +19,7 @@ import type {
 } from '#/features/palette/types'
 import { PALETTE_TYPES, ROLES } from '#/features/palette/types'
 import { policyFailures } from '#/features/color/contrast'
+import { rasterizeSmall } from '#/features/color/dominant-color'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
 import { makeClient } from '#/features/agent/client'
 import { assembleSystem } from '#/features/agent/prompts'
@@ -28,7 +29,7 @@ import type { PaletteEngine, ProgressFn } from '#/features/agent/engine'
 const SYSTEM = assembleSystem()
 const VARIATION_COUNT = 4
 const MAX_REVISIONS = 2
-const MAX_TOKENS = 4096
+const MAX_TOKENS = 8192
 
 const COLOR_ITEM = {
   type: 'object',
@@ -136,6 +137,24 @@ function withRows(palettes: PaletteDraft[]): ValidDraft[] {
     .filter((p): p is ValidDraft => p.rows !== null)
 }
 
+/**
+ * The 120px sampled bitmap as a base64 PNG — what the vision-capable agent
+ * actually looks at, so it works from the real image, not six quantized hexes.
+ * Null for seed-color sources (nothing to see) and outside the browser.
+ */
+type ImageInput = { media_type: 'image/png'; data: string }
+
+async function imageInputFor(source: {
+  type: string
+  value: string
+}): Promise<ImageInput | null> {
+  if (source.type !== 'image') return null
+  const canvas = await rasterizeSmall(source.value, 120)
+  if (!canvas) return null
+  const data = canvas.toDataURL('image/png').split(',').at(1) ?? ''
+  return data ? { media_type: 'image/png', data } : null
+}
+
 export class ClaudeEngine implements PaletteEngine {
   private readonly client: AnthropicClient
 
@@ -149,23 +168,46 @@ export class ClaudeEngine implements PaletteEngine {
   private async runStructured<T>(
     userText: string,
     schema: Record<string, unknown>,
+    image?: ImageInput | null,
   ): Promise<T> {
+    const content = image
+      ? [
+          {
+            type: 'image' as const,
+            source: {
+              type: 'base64' as const,
+              media_type: image.media_type,
+              data: image.data,
+            },
+          },
+          { type: 'text' as const, text: userText },
+        ]
+      : userText
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: MAX_TOKENS,
       system: [
         { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
       ],
-      messages: [{ role: 'user', content: userText }],
+      messages: [{ role: 'user', content }],
       output_config: { format: { type: 'json_schema', schema } },
     })
     if (response.stop_reason === 'refusal') {
-      throw new Error('The model declined this request.')
+      throw new Error(
+        'The model declined this request. Try a different source.',
+      )
+    }
+    if (response.stop_reason === 'max_tokens') {
+      throw new Error('The response ran past the length limit. Try again.')
     }
     const block = response.content.find((b) => b.type === 'text')
     const text = block && 'text' in block ? block.text : undefined
-    if (!text) throw new Error('No structured output was returned.')
-    return JSON.parse(text) as T
+    if (!text) throw new Error('The model returned no palettes. Try again.')
+    try {
+      return JSON.parse(text) as T
+    } catch {
+      throw new Error('The response was cut off or malformed. Try again.')
+    }
   }
 
   async proposeDirections(
@@ -173,10 +215,14 @@ export class ClaudeEngine implements PaletteEngine {
     onProgress?: ProgressFn,
   ): Promise<Direction[]> {
     onProgress?.('Reading your colors and sketching directions…')
+    const image = await imageInputFor(source)
     const colors =
       source.extracted.length > 0 ? source.extracted.join(', ') : source.value
+    const intro = image
+      ? `A 120px sample of the user's image is attached — read its color story directly. Dominant colors sampled from it (a hint, not a limit): ${colors}.`
+      : `Source color: ${colors}.`
     const userText = [
-      `Source colors extracted from the user's ${source.type}: ${colors}.`,
+      intro,
       `Propose one direction for each palette type: ${PALETTE_TYPES.join(', ')}.`,
       'For each: a one-line character, six representative light-mode preview hexes (background, surface, muted, border, accent, text), and whether it is your single recommendation for this source.',
       'Recommend exactly one.',
@@ -185,6 +231,7 @@ export class ClaudeEngine implements PaletteEngine {
     const data = await this.runStructured<{ directions: DirectionDraft[] }>(
       userText,
       DIRECTIONS_SCHEMA,
+      image,
     )
 
     let recommendedSeen = false
@@ -207,10 +254,14 @@ export class ClaudeEngine implements PaletteEngine {
     steer?: string,
     onProgress?: ProgressFn,
   ): Promise<ScoredPalette[]> {
+    const image = await imageInputFor(source)
     const colors =
       source.extracted.length > 0 ? source.extracted.join(', ') : source.value
+    const intro = image
+      ? `A 120px sample of the user's image is attached — draw from its full color story, not just the hints. Dominant colors sampled from it: ${colors}.`
+      : `Source color: ${colors}.`
     const userText = [
-      `Source colors: ${colors}.`,
+      intro,
       `Compose ${VARIATION_COUNT} distinct ${type} palettes from this source. Make them genuinely different from each other in temperature, value range, and mood — not minor tweaks of one idea.`,
       steer ? `Apply this steer to all of them: ${steer}.` : '',
       `Return exactly ${VARIATION_COUNT} palettes, each with all six roles (light and dark), a short name, and a one-line rationale.`,
@@ -218,7 +269,7 @@ export class ClaudeEngine implements PaletteEngine {
       .filter(Boolean)
       .join('\n')
 
-    return this.composeLoop(userText, type, toSeed(source), onProgress)
+    return this.composeLoop(userText, type, toSeed(source), onProgress, image)
   }
 
   async refine(
@@ -227,14 +278,18 @@ export class ClaudeEngine implements PaletteEngine {
     onProgress?: ProgressFn,
   ): Promise<ScoredPalette[]> {
     const type = (base as Partial<ScoredPalette>).type ?? 'analogous'
+    const image = await imageInputFor(base.seed)
     const userText = [
+      image ? "A 120px sample of the user's source image is attached." : '',
       `The user kept this ${type} palette:`,
       colorsToText(base.colors),
       `Produce ${VARIATION_COUNT} refined variations of it, applying: ${instruction}.`,
       'Keep its essential character; change only what the instruction asks. Each with all six roles (light and dark), a short name, and a one-line rationale.',
-    ].join('\n')
+    ]
+      .filter(Boolean)
+      .join('\n')
 
-    return this.composeLoop(userText, type, base.seed, onProgress)
+    return this.composeLoop(userText, type, base.seed, onProgress, image)
   }
 
   /** propose -> verify (code) -> revise the failing palettes -> finalize. */
@@ -243,6 +298,7 @@ export class ClaudeEngine implements PaletteEngine {
     type: PaletteType,
     seed: Seed,
     onProgress?: ProgressFn,
+    image?: ImageInput | null,
   ): Promise<ScoredPalette[]> {
     const policy = loadContrastPolicy()
     onProgress?.('Composing four takes…')
@@ -251,6 +307,7 @@ export class ClaudeEngine implements PaletteEngine {
         await this.runStructured<{ palettes: PaletteDraft[] }>(
           userText,
           VARIATIONS_SCHEMA,
+          image,
         )
       ).palettes,
     )

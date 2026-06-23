@@ -1,13 +1,27 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 
-import type { Palette } from '#/features/palette/types'
-import { ROLES } from '#/features/palette/types'
+import type { Mode, Palette, Role } from '#/features/palette/types'
 import { EXPORT_FORMATS, buildExport } from '#/features/palette/export'
 import type { ExportFormatId, TailwindVersion } from '#/features/palette/export'
 
-/** Click-a-card detail + pasteable code: role-band detail (fontpair look) over
- *  copy-able formats, with a v3/v4 toggle for the Tailwind export. */
+const BAND_ORDER: Role[] = [
+  'background',
+  'surface',
+  'muted',
+  'border',
+  'accent',
+  'text',
+]
+
+function band(palette: Palette, mode: Mode): string[] {
+  return BAND_ORDER.map(
+    (role) => palette.colors.find((c) => c.role === role)?.[mode] ?? '#888888',
+  )
+}
+
+/** A compact visual swatch band (the library-card look) over copy-able formats,
+ *  with a v3/v4 toggle for the Tailwind export. The name lives in the header. */
 export function ExportModal({
   palette,
   onClose,
@@ -28,14 +42,6 @@ export function ExportModal({
   }, [onClose])
 
   const code = buildExport(palette, formatId, tailwindVersion)
-  const rows = ROLES.map((role) => {
-    const row = palette.colors.find((c) => c.role === role)
-    return {
-      role,
-      light: row?.light ?? '#000000',
-      dark: row?.dark ?? '#000000',
-    }
-  })
 
   async function copy() {
     try {
@@ -57,13 +63,13 @@ export function ExportModal({
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full max-w-lg flex-col gap-4 overflow-auto rounded-2xl border p-5"
+        className="flex h-[600px] max-h-[85vh] w-full max-w-lg flex-col gap-4 rounded-2xl border p-5"
         style={{
           borderColor: 'var(--app-border)',
           background: 'var(--app-surface)',
         }}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between">
           <h2
             className="text-base font-semibold"
             style={{ color: 'var(--app-text)' }}
@@ -80,80 +86,77 @@ export function ExportModal({
           </button>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          {rows.map((r) => (
-            <div
-              key={r.role}
-              className="flex items-center gap-3 rounded-lg border px-3 py-2"
-              style={{ borderColor: 'var(--app-border)' }}
-            >
-              <span className="flex overflow-hidden rounded">
-                <span className="h-5 w-5" style={{ background: r.light }} />
-                <span className="h-5 w-5" style={{ background: r.dark }} />
-              </span>
+        <div
+          className="shrink-0 overflow-hidden rounded-xl border"
+          style={{ borderColor: 'var(--app-border)' }}
+        >
+          <div className="flex h-20">
+            {band(palette, 'light').map((hex, i) => (
               <span
-                className="flex-1 text-sm"
-                style={{ color: 'var(--app-text)' }}
-              >
-                {r.role}
-              </span>
+                key={`l-${i}`}
+                className="flex-1"
+                style={{ background: hex }}
+              />
+            ))}
+          </div>
+          <div className="flex h-5">
+            {band(palette, 'dark').map((hex, i) => (
               <span
-                className="font-mono text-xs"
-                style={{ color: 'var(--app-muted)' }}
-              >
-                {r.light} / {r.dark}
-              </span>
-            </div>
-          ))}
+                key={`d-${i}`}
+                className="flex-1"
+                style={{ background: hex }}
+              />
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
-          {EXPORT_FORMATS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFormatId(f.id)}
-              className="rounded-full border px-3 py-1 text-xs"
-              style={{
-                borderColor:
-                  f.id === formatId ? 'var(--app-text)' : 'var(--app-border)',
-                color: 'var(--app-text)',
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {formatId === 'tailwind' && (
-          <div
-            className="flex items-center gap-1.5 text-xs"
-            style={{ color: 'var(--app-muted)' }}
-          >
-            <span>Version</span>
-            {(['v4', 'v3'] as TailwindVersion[]).map((v) => (
+        <div className="flex shrink-0 items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-1.5">
+            {EXPORT_FORMATS.map((f) => (
               <button
-                key={v}
+                key={f.id}
                 type="button"
-                onClick={() => setTailwindVersion(v)}
-                className="rounded-md border px-2 py-0.5"
+                onClick={() => setFormatId(f.id)}
+                className="rounded-full border px-3 py-1 text-xs"
                 style={{
                   borderColor:
-                    v === tailwindVersion
-                      ? 'var(--app-text)'
-                      : 'var(--app-border)',
+                    f.id === formatId ? 'var(--app-text)' : 'var(--app-border)',
                   color: 'var(--app-text)',
                 }}
               >
-                {v}
+                {f.label}
               </button>
             ))}
           </div>
-        )}
+          {formatId === 'tailwind' && (
+            <div
+              className="flex items-center gap-1.5 text-xs"
+              style={{ color: 'var(--app-muted)' }}
+            >
+              {(['v4', 'v3'] as TailwindVersion[]).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setTailwindVersion(v)}
+                  className="rounded-md border px-2 py-0.5"
+                  style={{
+                    borderColor:
+                      v === tailwindVersion
+                        ? 'var(--app-text)'
+                        : 'var(--app-border)',
+                    color: 'var(--app-text)',
+                  }}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-        <div className="relative">
+        <div className="relative min-h-0 flex-1">
           <pre
-            className="overflow-auto rounded-lg border p-3 text-xs leading-relaxed"
+            className="h-full overflow-auto rounded-lg border p-3 text-xs leading-relaxed"
             style={{
               borderColor: 'var(--app-border)',
               background: 'var(--app-bg)',

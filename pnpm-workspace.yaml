@@ -1,5 +1,9 @@
 # pnpm 11 reads build-script approvals from here (no longer from package.json).
 # esbuild + lightningcss ship native binaries that must be built on install.
+# unrs-resolver (the oxc-backed resolver behind eslint-plugin-import) likewise
+# builds a native addon on install — without this, Vercel's non-interactive
+# `pnpm install` exits 1 instead of merely warning.
 onlyBuiltDependencies:
   - esbuild
   - lightningcss
+  - unrs-resolver

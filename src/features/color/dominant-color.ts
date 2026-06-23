@@ -99,14 +99,16 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
-/** Browser-only: rasterize a data URL to a small canvas and extract colors. */
-export async function extractDominantColors(
+/**
+ * Browser-only: rasterize an image (data URL) down to a small canvas — the exact
+ * bitmap the extractor samples. Shared so a UI peek can show the same pixels.
+ */
+export async function rasterizeSmall(
   src: string,
-  count = 6,
-): Promise<string[]> {
-  if (typeof document === 'undefined') return []
+  maxDim = 120,
+): Promise<HTMLCanvasElement | null> {
+  if (typeof document === 'undefined') return null
   const img = await loadImage(src)
-  const maxDim = 120
   const scale = Math.min(1, maxDim / Math.max(img.width, img.height, 1))
   const w = Math.max(1, Math.round(img.width * scale))
   const h = Math.max(1, Math.round(img.height * scale))
@@ -114,8 +116,20 @@ export async function extractDominantColors(
   canvas.width = w
   canvas.height = h
   const ctx = canvas.getContext('2d')
-  if (!ctx) return []
+  if (!ctx) return null
   ctx.drawImage(img, 0, 0, w, h)
-  const { data } = ctx.getImageData(0, 0, w, h)
+  return canvas
+}
+
+/** Browser-only: rasterize a data URL to a small canvas and extract colors. */
+export async function extractDominantColors(
+  src: string,
+  count = 6,
+): Promise<string[]> {
+  const canvas = await rasterizeSmall(src)
+  if (!canvas) return []
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return []
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height)
   return extractFromImageData(data, count, 1)
 }

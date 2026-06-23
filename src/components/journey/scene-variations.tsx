@@ -36,6 +36,7 @@ export function SceneVariations({
 }) {
   const latest = rounds.at(-1)
   const refining = latest?.phase === 'running'
+  const failed = latest?.phase === 'error'
 
   return (
     <motion.section
@@ -47,9 +48,11 @@ export function SceneVariations({
         <AgentNarration pending={refining}>
           {refining
             ? progress || 'Composing variations and checking contrast on each…'
-            : rounds.length > 1
-              ? 'Steered. Pick from the new takes, or keep refining.'
-              : 'Here are the takes — start with the recommended one, or steer with a refine.'}
+            : failed
+              ? 'That run didn’t come together.'
+              : rounds.length > 1
+                ? 'Steered. Pick from the new takes, or keep refining.'
+                : 'Here are the takes — start with the recommended one, or steer with a refine.'}
         </AgentNarration>
         {onRegenerate && !refining && (
           <button
@@ -63,9 +66,10 @@ export function SceneVariations({
         )}
       </div>
 
-      {rounds.map((round) => {
+      {rounds.map((round, roundIndex) => {
         const topId = recommendedId(round.variations)
         const running = round.phase === 'running'
+        const errored = round.phase === 'error'
         return (
           <div key={round.id} className="flex flex-col gap-3">
             {round.steer && (
@@ -73,25 +77,49 @@ export function SceneVariations({
                 Refined · {round.steer}
               </p>
             )}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {running && round.variations.length === 0
-                ? Array.from({ length: 4 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-40 animate-pulse rounded-2xl"
-                      style={{ background: 'var(--app-surface)' }}
-                    />
-                  ))
-                : round.variations.map((palette) => (
-                    <PaletteCard
-                      key={palette.id}
-                      palette={palette}
-                      recommended={palette.id === topId}
-                      selected={palette.id === chosenId}
-                      onSelect={() => onChoose(palette)}
-                    />
-                  ))}
-            </div>
+            {errored ? (
+              <div
+                className="flex flex-col items-start gap-3 rounded-2xl border border-dashed p-5"
+                style={{ borderColor: 'var(--app-border)' }}
+              >
+                <p className="text-sm" style={{ color: 'var(--app-text)' }}>
+                  {round.error ?? 'That run failed.'}
+                </p>
+                {roundIndex === 0 && onRegenerate && (
+                  <button
+                    type="button"
+                    onClick={onRegenerate}
+                    className="rounded-md px-3 py-1.5 text-sm font-medium"
+                    style={{
+                      background: 'var(--app-text)',
+                      color: 'var(--app-bg)',
+                    }}
+                  >
+                    Try again
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {running && round.variations.length === 0
+                  ? Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-40 animate-pulse rounded-2xl"
+                        style={{ background: 'var(--app-surface)' }}
+                      />
+                    ))
+                  : round.variations.map((palette) => (
+                      <PaletteCard
+                        key={palette.id}
+                        palette={palette}
+                        recommended={palette.id === topId}
+                        selected={palette.id === chosenId}
+                        onSelect={() => onChoose(palette)}
+                      />
+                    ))}
+              </div>
+            )}
           </div>
         )
       })}

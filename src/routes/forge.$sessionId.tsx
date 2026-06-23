@@ -12,7 +12,8 @@ import { Backdrop } from '#/components/journey/backdrop'
 import { ModelControl } from '#/components/settings/model-control'
 import { SceneDirections } from '#/components/journey/scene-directions'
 import { SceneVariations } from '#/components/journey/scene-variations'
-import { ScenePalette } from '#/components/journey/scene-palette'
+import { SelectedActions } from '#/components/forge/selected-actions'
+import { ExtractionPeek } from '#/components/journey/extraction-peek'
 
 export const Route = createFileRoute('/forge/$sessionId')({
   component: ForgePage,
@@ -149,6 +150,8 @@ function ForgePage() {
           </div>
         </header>
 
+        <ExtractionPeek source={journey.source} />
+
         <SceneDirections
           directions={journey.directions}
           phase={journey.directionsPhase}
@@ -177,7 +180,7 @@ function ForgePage() {
 
         {journey.chosen && (
           <div ref={paletteRef}>
-            <ScenePalette palette={journey.chosen} />
+            <SelectedActions key={journey.chosen.id} palette={journey.chosen} />
           </div>
         )}
       </main>

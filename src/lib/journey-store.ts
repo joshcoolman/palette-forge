@@ -27,6 +27,7 @@ export type VariationRound = {
   steer?: string
   variations: ScoredPalette[]
   phase: Phase
+  error?: string
 }
 
 export type JourneyState = {
@@ -83,6 +84,14 @@ function patchRound(
   patch(id, { rounds })
 }
 
+/** An empty fan-out is a failure, not a result — surface it like a thrown one. */
+const EMPTY_RESULT = 'The composer returned no usable palettes. Try again.'
+
+function messageFrom(e: unknown): string {
+  if (e instanceof Error && e.message) return e.message
+  return 'The composer hit an error. Try again.'
+}
+
 function recommendedOf(variations: ScoredPalette[]): ScoredPalette | null {
   let best: ScoredPalette | null = null
   for (const palette of variations) {
@@ -136,11 +145,15 @@ export async function chooseDirection(
       (m) => patch(id, { progress: m }),
     )
     if (getState(id).chosenType === type) {
-      patchRound(id, roundId, { variations, phase: 'done' })
+      if (variations.length === 0) {
+        patchRound(id, roundId, { phase: 'error', error: EMPTY_RESULT })
+      } else {
+        patchRound(id, roundId, { variations, phase: 'done' })
+      }
       patch(id, { progress: '' })
     }
-  } catch {
-    patchRound(id, roundId, { phase: 'error' })
+  } catch (e) {
+    patchRound(id, roundId, { phase: 'error', error: messageFrom(e) })
     patch(id, { progress: '' })
   }
 }
@@ -171,10 +184,14 @@ export async function refineJourney(
     const variations = await getEngine().refine(base, instruction, (m) =>
       patch(id, { progress: m }),
     )
-    patchRound(id, roundId, { variations, phase: 'done' })
+    if (variations.length === 0) {
+      patchRound(id, roundId, { phase: 'error', error: EMPTY_RESULT })
+    } else {
+      patchRound(id, roundId, { variations, phase: 'done' })
+    }
     patch(id, { progress: '' })
-  } catch {
-    patchRound(id, roundId, { phase: 'error' })
+  } catch (e) {
+    patchRound(id, roundId, { phase: 'error', error: messageFrom(e) })
     patch(id, { progress: '' })
   }
 }
