@@ -3,6 +3,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import { appMeta } from '#/app-meta'
+import { GlobalNav } from '#/components/nav/global-nav'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -24,6 +25,22 @@ export const Route = createRootRoute({
         rel: 'stylesheet',
         href: appCss,
       },
+      // Default pairing (Fraunces + Inter), server-loaded so the app opens in it
+      // with no font flash. Other presets load on demand via the type-store.
+      { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossOrigin: 'anonymous',
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&display=swap',
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap',
+      },
     ],
   }),
   shellComponent: RootDocument,
@@ -36,6 +53,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <GlobalNav />
         {children}
         <TanStackDevtools
           config={{

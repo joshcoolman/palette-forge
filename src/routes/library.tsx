@@ -1,11 +1,13 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 
 import type { Palette } from '#/features/palette/types'
 import { deletePalette, listPalettes } from '#/features/palette/palette-repo'
 import { Backdrop } from '#/components/journey/backdrop'
 import { LibraryCard } from '#/components/library/library-card'
 import { ExportModal } from '#/components/library/export-modal'
+import { DeleteConfirm } from '#/components/library/delete-confirm'
 
 export const Route = createFileRoute('/library')({ component: LibraryPage })
 
@@ -13,6 +15,7 @@ function LibraryPage() {
   const [palettes, setPalettes] = useState<Palette[]>([])
   const [loaded, setLoaded] = useState(false)
   const [open, setOpen] = useState<Palette | null>(null)
+  const [confirming, setConfirming] = useState<Palette | null>(null)
 
   async function refresh() {
     setPalettes(await listPalettes())
@@ -34,7 +37,7 @@ function LibraryPage() {
       <header className="flex items-center justify-between">
         <div>
           <h1
-            className="text-2xl font-semibold tracking-tight"
+            className="pf-heading text-2xl font-semibold tracking-tight"
             style={{ color: 'var(--app-text)' }}
           >
             Library
@@ -47,10 +50,11 @@ function LibraryPage() {
         </div>
         <Link
           to="/"
-          className="text-xs underline"
-          style={{ color: 'var(--app-muted)' }}
+          aria-label="New palette"
+          className="flex h-8 w-8 items-center justify-center rounded-full border transition hover:opacity-70"
+          style={{ borderColor: '#ffffff', color: '#ffffff' }}
         >
-          New palette
+          <Plus size={16} />
         </Link>
       </header>
 
@@ -62,7 +66,7 @@ function LibraryPage() {
             color: 'var(--app-muted)',
           }}
         >
-          No saved palettes yet. Keep one from a journey and it will show up
+          No saved palettes yet. Keep one while generating and it will show up
           here.
         </div>
       ) : (
@@ -72,13 +76,23 @@ function LibraryPage() {
               key={p.id}
               palette={p}
               onOpen={() => setOpen(p)}
-              onDelete={() => void remove(p.id)}
+              onDelete={() => setConfirming(p)}
             />
           ))}
         </div>
       )}
 
       {open && <ExportModal palette={open} onClose={() => setOpen(null)} />}
+      {confirming && (
+        <DeleteConfirm
+          palette={confirming}
+          onCancel={() => setConfirming(null)}
+          onConfirm={() => {
+            void remove(confirming.id)
+            setConfirming(null)
+          }}
+        />
+      )}
     </main>
   )
 }

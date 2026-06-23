@@ -31,18 +31,6 @@ function Home() {
           Library
         </Link>
       </div>
-      <div className="text-center">
-        <h1
-          className="text-4xl font-semibold tracking-tight"
-          style={{ color: 'var(--app-text)' }}
-        >
-          palette-forge
-        </h1>
-        <p className="mt-2 text-sm" style={{ color: 'var(--app-muted)' }}>
-          An image or a seed color in — refined, accessible light and dark
-          palettes out.
-        </p>
-      </div>
       <SceneSource onStart={handleStart} />
     </main>
   )

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
+import { Clipboard, ClipboardCheck, X } from 'lucide-react'
 
 import type { Mode, Palette, Role } from '#/features/palette/types'
 import { EXPORT_FORMATS, buildExport } from '#/features/palette/export'
 import type { ExportFormatId, TailwindVersion } from '#/features/palette/export'
+import { IconButton } from '#/components/ui/icon-button'
 
 const BAND_ORDER: Role[] = [
   'background',
@@ -76,14 +78,9 @@ export function ExportModal({
           >
             {palette.name}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-sm"
-            style={{ color: 'var(--app-muted)' }}
-          >
-            Close
-          </button>
+          <IconButton label="Close" onClick={onClose}>
+            <X size={14} />
+          </IconButton>
         </div>
 
         <div
@@ -156,23 +153,25 @@ export function ExportModal({
 
         <div className="relative min-h-0 flex-1">
           <pre
-            className="h-full overflow-auto rounded-lg border p-3 text-xs leading-relaxed"
+            className="h-full overflow-auto rounded-lg border py-3 pl-3 pr-12 text-xs leading-relaxed"
             style={{
               borderColor: 'var(--app-border)',
               background: 'var(--app-bg)',
               color: 'var(--app-text)',
+              scrollbarGutter: 'stable',
             }}
           >
             <code>{code}</code>
           </pre>
-          <button
-            type="button"
+          <IconButton
+            label={copied ? 'Copied' : 'Copy code'}
             onClick={() => void copy()}
-            className="absolute right-2 top-2 rounded-md px-2.5 py-1 text-xs font-medium"
-            style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}
+            className="absolute right-3 top-3"
+            foreground="var(--app-text)"
+            background="var(--app-surface)"
           >
-            {copied ? 'Copied' : 'Copy'}
-          </button>
+            {copied ? <ClipboardCheck size={14} /> : <Clipboard size={14} />}
+          </IconButton>
         </div>
       </motion.div>
     </div>

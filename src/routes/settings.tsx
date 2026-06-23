@@ -12,7 +12,7 @@ function SettingsPage() {
       <Backdrop colors={[]} />
       <header className="flex items-center justify-between">
         <h1
-          className="text-2xl font-semibold tracking-tight"
+          className="pf-heading text-2xl font-semibold tracking-tight"
           style={{ color: 'var(--app-text)' }}
         >
           Settings

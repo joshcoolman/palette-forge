@@ -72,7 +72,7 @@ export function KeyEntry() {
         </h2>
         <p className="text-sm" style={{ color: 'var(--app-muted)' }}>
           {hasKey
-            ? 'A key is saved in this browser. palette-forge is using the real Claude engine.'
+            ? 'A key is saved in this browser. Palette Forge is using the real Claude engine.'
             : 'No key yet — you are on the built-in demo engine. Add a key to generate with Claude.'}
         </p>
       </div>

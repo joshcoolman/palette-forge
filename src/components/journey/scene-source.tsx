@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion } from 'motion/react'
+import { ImageUp, Pipette } from 'lucide-react'
 
 import { extractDominantColors } from '#/features/color/dominant-color'
-import { isValidHex, normalizeHex } from '#/features/color/color-utils'
+import { normalizeHex } from '#/features/color/color-utils'
 import type { Source } from '#/features/palette/types'
 
 function readAsDataURL(file: File): Promise<string> {
@@ -14,13 +15,33 @@ function readAsDataURL(file: File): Promise<string> {
   })
 }
 
-/** Scene 0 — the source: drop an image, or start from a seed color. */
+// A curated, characterful starting set lifted from a Pantone fashion card —
+// warm/cool/neutral/deep, each seed with a personality rather than a coordinate.
+// Hex approximated from the reference. The eyedropper cell (last) opens the
+// native picker for an exact color.
+const CURATED = [
+  '#363842', // Polar Night
+  '#8d8d8f', // Chiseled Stone
+  '#e7cda4', // Autumn Blonde
+  '#a6afa0', // Loden Frost
+  '#e76f2c', // Orange Tiger
+  '#2c6e4f', // Amazon
+  '#9fd7dc', // Waterspout
+  '#34596e', // Midnight
+  '#6f6b49', // Martini Olive
+  '#c24d8e', // Rose Violet
+  '#e4bdcc', // Nosegay
+  '#8a5733', // Caramel Café
+  '#f3c95c', // Samoan Sun
+  '#9e3b2d', // Lava Falls
+]
+
+/** Scene 0 — the source: upload an image, or start from a spectrum swatch. */
 export function SceneSource({
   onStart,
 }: {
   onStart: (source: Source) => void
 }) {
-  const [seed, setSeed] = useState('#3d405b')
   const [busy, setBusy] = useState(false)
 
   async function startFromFile(file: File) {
@@ -32,15 +53,15 @@ export function SceneSource({
       onStart({
         type: 'image',
         value: dataUrl,
-        extracted: extracted.length > 0 ? extracted : [seed],
+        extracted: extracted.length > 0 ? extracted : ['#3d5c49'],
       })
     } finally {
       setBusy(false)
     }
   }
 
-  function startFromColor() {
-    const norm = normalizeHex(seed) ?? '#3d405b'
+  function startFromColor(hex: string) {
+    const norm = normalizeHex(hex) ?? '#3d5c49'
     onStart({ type: 'color', value: norm, extracted: [norm] })
   }
 
@@ -57,20 +78,18 @@ export function SceneSource({
           const file = e.dataTransfer.files.item(0)
           if (file) void startFromFile(file)
         }}
-        className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-10 text-center"
+        className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed p-12 text-center"
         style={{
           borderColor: 'var(--app-border)',
           background: 'var(--app-surface)',
         }}
       >
+        <ImageUp size={28} style={{ color: 'var(--app-muted)' }} />
         <span
           className="text-sm font-medium"
           style={{ color: 'var(--app-text)' }}
         >
-          {busy ? 'Reading image…' : 'Drop an image, or click to upload'}
-        </span>
-        <span className="text-xs" style={{ color: 'var(--app-muted)' }}>
-          PNG or JPG — colors are extracted in your browser
+          {busy ? 'Reading image…' : 'Upload Image'}
         </span>
         <input
           type="file"
@@ -99,36 +118,34 @@ export function SceneSource({
         />
       </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          type="color"
-          aria-label="Seed color"
-          value={normalizeHex(seed) ?? '#3d405b'}
-          onChange={(e) => setSeed(e.target.value)}
-          className="h-10 w-12 cursor-pointer rounded-md border bg-transparent"
-          style={{ borderColor: 'var(--app-border)' }}
-        />
-        <input
-          type="text"
-          value={seed}
-          spellCheck={false}
-          onChange={(e) => setSeed(e.target.value)}
-          className="flex-1 rounded-md border px-3 py-2 text-sm outline-none"
+      <div className="flex gap-2">
+        {CURATED.map((hex) => (
+          <button
+            key={hex}
+            type="button"
+            onClick={() => startFromColor(hex)}
+            aria-label={`Start from ${hex}`}
+            className="aspect-square flex-1 rounded-lg border transition-transform hover:-translate-y-1"
+            style={{ background: hex, borderColor: 'var(--app-border)' }}
+          />
+        ))}
+        <label
+          aria-label="Pick a custom color"
+          className="flex aspect-square flex-1 cursor-pointer items-center justify-center rounded-lg border transition-transform hover:-translate-y-1"
           style={{
             borderColor: 'var(--app-border)',
             background: 'var(--app-surface)',
-            color: 'var(--app-text)',
+            color: 'var(--app-muted)',
           }}
-        />
-        <button
-          type="button"
-          onClick={startFromColor}
-          disabled={!isValidHex(seed)}
-          className="rounded-md px-4 py-2 text-sm font-medium disabled:opacity-40"
-          style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}
         >
-          Forge
-        </button>
+          <Pipette size={16} />
+          <input
+            type="color"
+            defaultValue="#3d5c49"
+            className="hidden"
+            onChange={(e) => startFromColor(e.target.value)}
+          />
+        </label>
       </div>
     </motion.div>
   )

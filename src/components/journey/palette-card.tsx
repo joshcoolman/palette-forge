@@ -82,7 +82,7 @@ export function PaletteCard({
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center justify-between gap-2">
             <span
-              className="truncate text-xs font-medium"
+              className="pf-heading truncate text-xs font-medium"
               style={{ color: 'var(--app-text)' }}
             >
               {palette.name}
@@ -96,7 +96,7 @@ export function PaletteCard({
           </div>
           {palette.character && (
             <span
-              className="text-[11px] leading-snug"
+              className="pf-body text-[11px] leading-snug"
               style={{ color: 'var(--app-muted)' }}
             >
               {palette.character}

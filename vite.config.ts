@@ -11,6 +11,8 @@ import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 const config = defineConfig({
+  // Honor a PORT env var (preview/CI assign one) and fall back to 3000.
+  server: { port: process.env.PORT ? Number(process.env.PORT) : 3000 },
   resolve: { tsconfigPaths: true },
   plugins: [devtools(), tailwindcss(), tanstackStart(), nitro(), viteReact()],
 })

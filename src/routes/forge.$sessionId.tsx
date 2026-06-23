@@ -90,7 +90,7 @@ function ForgePage() {
             className="animate-pulse text-sm"
             style={{ color: 'var(--app-muted)' }}
           >
-            Loading your journey…
+            Loading…
           </p>
         </main>
       )
@@ -99,7 +99,7 @@ function ForgePage() {
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
         <Backdrop colors={[]} />
         <p className="text-sm" style={{ color: 'var(--app-muted)' }}>
-          Nothing here yet — this journey was cleared. Start a new one.
+          Nothing here yet — this was cleared. Start a new one.
         </p>
         <Link
           to="/"
@@ -123,10 +123,10 @@ function ForgePage() {
             <SourceThumb source={journey.source} />
             <div>
               <p
-                className="text-sm font-medium"
+                className="pf-heading text-sm font-medium"
                 style={{ color: 'var(--app-text)' }}
               >
-                Your journey
+                Palettes
               </p>
               <p className="text-xs" style={{ color: 'var(--app-muted)' }}>
                 {journey.source.type === 'image'
