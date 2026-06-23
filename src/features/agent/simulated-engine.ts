@@ -28,6 +28,7 @@ import {
 } from '#/features/color/contrast'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
 import { nameFor } from '#/features/palette/namer'
+import { TUNING } from '#/features/palette/tuning'
 import type { PaletteEngine, ProgressFn } from '#/features/agent/engine'
 import { finalizePalette } from '#/features/agent/engine'
 
@@ -199,11 +200,10 @@ function recipeFor(comp: Composition, baseHue: number): Recipe {
   }
 }
 
-/** Never go pure white/gray — every neutral keeps at least this much tint. */
-const NEUTRAL_SAT_FLOOR = 0.055
-
-/** Never go near-pure color — the accent stays under this saturation. */
-const ACCENT_SAT_CEILING = 0.8
+// Taste knobs live in `features/palette/tuning.ts` — edit there to retune the
+// whole app (every take, re-run, and sample card). Aliased here for brevity.
+const NEUTRAL_SAT_FLOOR = TUNING.comfortBand.neutralSatFloor
+const ACCENT_SAT_CEILING = TUNING.comfortBand.accentSatCeiling
 
 /** A tinted neutral: the base hue at a fraction of the recipe's tint strength. */
 function tinted(hue: number, sat: number, light: number): string {
@@ -214,32 +214,35 @@ function composeColors(recipe: Recipe): ColorRow[] {
   const { baseHue, neutralSat: t } = recipe
   const aHue = (baseHue + recipe.accentHueShift + 360) % 360
   const floor = (sat: number): number => Math.max(sat, NEUTRAL_SAT_FLOOR)
+  const N = TUNING.neutrals
   return [
     {
-      // Tinted paper in light — the page now sits where surface used to (clearly
+      // Tinted paper in light — the page sits where surface used to (clearly
       // off-white, not near-white); a warm/cool charcoal (not inverted white) in
       // dark, carrying a touch more tint than light mode.
       role: 'background',
-      light: tinted(baseHue, floor(t * 1.6), 0.885),
-      dark: tinted(baseHue, floor(t * 1.25), 0.13),
+      light: tinted(baseHue, floor(t * N.background.tintLight), N.background.light),
+      dark: tinted(baseHue, floor(t * N.background.tintDark), N.background.dark),
     },
     {
-      // Keys off the new (tinted) background: a gentle step darker + a touch more
+      // Keys off the (tinted) background: a gentle step darker + a touch more
       // tint, so a raised panel reads as a quiet lift, not a hard jump. Small
       // elevation lift in dark.
       role: 'surface',
-      light: tinted(baseHue, floor(t * 1.95), 0.84),
-      dark: tinted(baseHue, floor(t * 1.5), 0.185),
+      light: tinted(baseHue, floor(t * N.surface.tintLight), N.surface.light),
+      dark: tinted(baseHue, floor(t * N.surface.tintDark), N.surface.dark),
     },
     {
+      // Note: text is deliberately not floored — at very low tint it just reads
+      // as near-neutral ink, which is fine for the most-read color.
       role: 'text',
-      light: tinted(baseHue, t * 1.2, 0.17),
-      dark: tinted(baseHue, t * 0.7, 0.93),
+      light: tinted(baseHue, t * N.text.tintLight, N.text.light),
+      dark: tinted(baseHue, t * N.text.tintDark, N.text.dark),
     },
     {
       role: 'muted',
-      light: tinted(baseHue, floor(t * 1.1), 0.46),
-      dark: tinted(baseHue, floor(t * 0.9), 0.66),
+      light: tinted(baseHue, floor(t * N.muted.tintLight), N.muted.light),
+      dark: tinted(baseHue, floor(t * N.muted.tintDark), N.muted.dark),
     },
     {
       role: 'accent',
@@ -256,8 +259,8 @@ function composeColors(recipe: Recipe): ColorRow[] {
     },
     {
       role: 'border',
-      light: tinted(baseHue, floor(t), 0.82),
-      dark: tinted(baseHue, floor(t * 1.1), 0.3),
+      light: tinted(baseHue, floor(t * N.border.tintLight), N.border.light),
+      dark: tinted(baseHue, floor(t * N.border.tintDark), N.border.dark),
     },
   ]
 }
