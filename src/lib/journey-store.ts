@@ -252,6 +252,18 @@ export function chooseVariation(id: string, palette: ScoredPalette): void {
 }
 
 /**
+ * Retune the active set's source color in place — for the editable swatch. Only
+ * updates the source (and its anchor), never composes; the existing rounds stay
+ * put and the user hits Re-run when they want a fresh four from the new color.
+ * Color sources only (an image's hue isn't a single editable value).
+ */
+export function setSourceColor(id: string, hex: string): void {
+  const state = getState(id)
+  if (!state.source || state.source.type !== 'color') return
+  patch(id, { source: { ...state.source, value: hex, extracted: [hex] } })
+}
+
+/**
  * Heart a take into favorites, or un-heart it back out — the only save path
  * now. Optimistic: flip the session's saved set immediately, persist in the
  * background (IndexedDB writes are local and effectively always succeed).

@@ -50,7 +50,10 @@ export function SceneVariations({
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col gap-6"
     >
-      {rounds.map((round, roundIndex) => {
+      {rounds
+        .map((round, roundIndex) => ({ round, roundIndex }))
+        .reverse()
+        .map(({ round, roundIndex }) => {
         const topId = recommendedId(round.variations)
         const running = round.phase === 'running'
         const errored = round.phase === 'error'

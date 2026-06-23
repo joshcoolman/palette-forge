@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { RefreshCw, X } from 'lucide-react'
 
 import type { Palette, ScoredPalette, Source } from '#/features/palette/types'
@@ -12,6 +12,7 @@ import {
   refineJourney,
   rerunJourney,
   resetJourney,
+  setSourceColor,
   startJourney,
   toggleSaved,
   useJourney,
@@ -20,7 +21,6 @@ import { ensureHydrated, getSettings } from '#/lib/settings'
 import { IconButton } from '#/components/ui/icon-button'
 import { Backdrop } from '#/components/journey/backdrop'
 import { SceneVariations } from '#/components/journey/scene-variations'
-import { ExtractionPeek } from '#/components/journey/extraction-peek'
 import { SourcePopover } from '#/components/journey/source-popover'
 import { FavoriteCard } from '#/components/favorites/favorite-card'
 import { ExportModal } from '#/components/favorites/export-modal'
@@ -50,7 +50,13 @@ function backdropColors(
   return [get('accent'), get('surface'), get('background')].filter(Boolean)
 }
 
-function SourceThumb({ source }: { source: Source }) {
+function SourceThumb({
+  source,
+  onPickColor,
+}: {
+  source: Source
+  onPickColor?: (hex: string) => void
+}) {
   if (source.type === 'image') {
     return (
       <img
@@ -61,20 +67,30 @@ function SourceThumb({ source }: { source: Source }) {
       />
     )
   }
+  // A color source is editable: click the swatch to retune the hue (native
+  // picker). It only updates the source — Re-run regenerates when you're ready.
   return (
-    <span
-      className="h-10 w-10 rounded-lg"
+    <label
+      aria-label="Change source color"
+      title="Change source color"
+      className="relative block h-10 w-10 cursor-pointer rounded-lg transition hover:ring-2 hover:ring-white/40"
       style={{
         background: source.value,
         outline: '1px solid var(--app-border)',
       }}
-    />
+    >
+      <input
+        type="color"
+        value={source.value}
+        onChange={(e) => onPickColor?.(e.target.value)}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      />
+    </label>
   )
 }
 
 function Home() {
   const journey = useJourney(ACTIVE)
-  const variationsRef = useRef<HTMLDivElement>(null)
 
   const [palettes, setPalettes] = useState<Palette[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -84,7 +100,6 @@ function Home() {
   const [hasKey, setHasKey] = useState(false)
 
   const active = !!journey.source
-  const roundCount = journey.rounds.length
   const savedKey = journey.saved.join(',')
   // Refine (the natural-language steer) is a key-gated feature; without a key
   // the working area is surprise + re-run only.
@@ -118,15 +133,9 @@ function Home() {
     void refresh()
   }, [savedKey])
 
-  // A new round appended — bring it (and the refine bar) into view.
-  useEffect(() => {
-    if (roundCount > 1) {
-      variationsRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-      })
-    }
-  }, [roundCount])
+  // No auto-scroll on a new round: re-runs render newest-first, so the fresh
+  // four lands right under the header where the Re-run button is — the page
+  // shouldn't jump.
 
   function handleStart(source: Source) {
     void startJourney(ACTIVE, source)
@@ -180,7 +189,6 @@ function Home() {
 
         {active && journey.source && (
           <section
-            ref={variationsRef}
             className="flex flex-col gap-8 rounded-2xl border p-5"
             style={{
               borderColor: 'var(--app-border)',
@@ -189,7 +197,10 @@ function Home() {
           >
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <SourceThumb source={journey.source} />
+                <SourceThumb
+                  source={journey.source}
+                  onPickColor={(hex) => setSourceColor(ACTIVE, hex)}
+                />
                 <div>
                   <p
                     className="pf-heading text-sm font-medium"
@@ -221,8 +232,6 @@ function Home() {
                 </IconButton>
               </div>
             </div>
-
-            <ExtractionPeek source={journey.source} />
 
             <SceneVariations
               rounds={journey.rounds}
