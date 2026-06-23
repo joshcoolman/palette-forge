@@ -2,6 +2,7 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 
 import type { ScoredPalette, Source } from '#/features/palette/types'
+import { isValidHex, withLightness } from '#/features/color/color-utils'
 import {
   chooseVariation,
   hydrateJourney,
@@ -12,7 +13,6 @@ import {
   useJourney,
 } from '#/lib/journey-store'
 import { Backdrop } from '#/components/journey/backdrop'
-import { ModelControl } from '#/components/settings/model-control'
 import { SceneVariations } from '#/components/journey/scene-variations'
 import { ExtractionPeek } from '#/components/journey/extraction-peek'
 
@@ -24,7 +24,14 @@ function backdropColors(
   chosen: ScoredPalette | null,
   fallback: string[],
 ): string[] {
-  if (!chosen) return fallback
+  // Before a take is picked the backdrop is tinted by the raw source/seed, which
+  // can be a bright curated color — pull its lightness way down so the gradient
+  // stays a calm dark canvas, not a glowing blob.
+  if (!chosen) {
+    return fallback.map((hex) =>
+      isValidHex(hex) ? withLightness(hex, 0.16) : hex,
+    )
+  }
   const get = (role: string): string =>
     chosen.colors.find((c) => c.role === role)?.dark ?? ''
   return [get('accent'), get('surface'), get('background')].filter(Boolean)
@@ -135,24 +142,14 @@ function ForgePage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <ModelControl />
-            <Link
-              to="/library"
-              className="text-xs underline"
-              style={{ color: 'var(--app-muted)' }}
-            >
-              Library
-            </Link>
-            <button
-              type="button"
-              onClick={startOver}
-              className="text-xs underline"
-              style={{ color: 'var(--app-muted)' }}
-            >
-              Start over
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={startOver}
+            className="text-xs underline"
+            style={{ color: 'var(--app-muted)' }}
+          >
+            Start over
+          </button>
         </header>
 
         <ExtractionPeek source={journey.source} />
@@ -176,9 +173,6 @@ function ForgePage() {
           className="flex items-center justify-center gap-5 pt-4 text-xs"
           style={{ color: 'var(--app-muted)' }}
         >
-          <Link to="/library" className="underline">
-            Library
-          </Link>
           <button type="button" onClick={startOver} className="underline">
             Start over
           </button>

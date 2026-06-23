@@ -32,7 +32,7 @@ export type JourneyState = {
   source: Source | null
   rounds: VariationRound[]
   chosen: ScoredPalette | null
-  /** Ids of takes the user has hearted into the library this session. */
+  /** Ids of takes the user has hearted into favorites this session. */
   saved: string[]
   progress: string
   /** True once this tab has loaded (or confirmed empty) from IndexedDB. */
@@ -245,7 +245,7 @@ export function chooseVariation(id: string, palette: ScoredPalette): void {
 }
 
 /**
- * Heart a take into the library, or un-heart it back out — the only save path
+ * Heart a take into favorites, or un-heart it back out — the only save path
  * now. Optimistic: flip the session's saved set immediately, persist in the
  * background (IndexedDB writes are local and effectively always succeed).
  */

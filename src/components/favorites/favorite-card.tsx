@@ -7,7 +7,7 @@ import { hexToRgb } from '#/features/color/color-utils'
 import { relativeLuminance } from '#/features/color/contrast'
 import { IconButton } from '#/components/ui/icon-button'
 
-// The proportional composition card — the library is where you sit and
+// The proportional composition card — favorites is where you sit and
 // contemplate a saved palette, not scan it. Cells a–f run biggest to smallest;
 // a tuned template (not strict role proportion) leads with the accent so each
 // saved card is recognizable by its hero color, pairs it with the deep text,
@@ -154,7 +154,7 @@ function TextSpecimen({ palette, mode }: { palette: Palette; mode: Mode }) {
  *  top-right corner *outside* the flipping layer, so it holds the exact same
  *  spot on both faces and drives whichever side is showing. Below: name, a
  *  delete (on hover), and a `</>` button that opens the code/export popup. */
-export function LibraryCard({
+export function FavoriteCard({
   palette,
   onOpen,
   onDelete,

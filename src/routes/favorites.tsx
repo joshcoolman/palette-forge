@@ -5,13 +5,13 @@ import { Plus } from 'lucide-react'
 import type { Palette } from '#/features/palette/types'
 import { deletePalette, listPalettes } from '#/features/palette/palette-repo'
 import { Backdrop } from '#/components/journey/backdrop'
-import { LibraryCard } from '#/components/library/library-card'
-import { ExportModal } from '#/components/library/export-modal'
-import { DeleteConfirm } from '#/components/library/delete-confirm'
+import { FavoriteCard } from '#/components/favorites/favorite-card'
+import { ExportModal } from '#/components/favorites/export-modal'
+import { DeleteConfirm } from '#/components/favorites/delete-confirm'
 
-export const Route = createFileRoute('/library')({ component: LibraryPage })
+export const Route = createFileRoute('/favorites')({ component: FavoritesPage })
 
-function LibraryPage() {
+function FavoritesPage() {
   const [palettes, setPalettes] = useState<Palette[]>([])
   const [loaded, setLoaded] = useState(false)
   const [open, setOpen] = useState<Palette | null>(null)
@@ -40,7 +40,7 @@ function LibraryPage() {
             className="pf-heading text-2xl font-semibold tracking-tight"
             style={{ color: 'var(--app-text)' }}
           >
-            Library
+            Favorites
           </h1>
           <p className="mt-1 text-xs" style={{ color: 'var(--app-muted)' }}>
             {loaded
@@ -72,7 +72,7 @@ function LibraryPage() {
       ) : (
         <div className="flex flex-wrap gap-5">
           {palettes.map((p) => (
-            <LibraryCard
+            <FavoriteCard
               key={p.id}
               palette={p}
               onOpen={() => setOpen(p)}

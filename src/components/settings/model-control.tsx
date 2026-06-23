@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { ChevronDown } from 'lucide-react'
 
 import { ensureHydrated, getSettings, saveModel } from '#/lib/settings'
+import { pairingById } from '#/features/typography/pairings'
+import { fontStackByName } from '#/features/typography/font-loader'
+import { usePairingId } from '#/lib/type-store'
 
 const MODELS = [
   { id: 'claude-sonnet-4-6', label: 'Sonnet 4.6' },
@@ -9,11 +12,17 @@ const MODELS = [
   { id: 'claude-haiku-4-5', label: 'Haiku 4.5' },
 ]
 
-/** Header control: with a key, a compact model switcher (changes apply on the
- *  next run); without one, the "add key" link to settings. */
+/** Nav control, styled to match the font-pairing dropdown beside it (same pill,
+ *  same pairing font): a compact model switcher (applies on the next run) that
+ *  only appears when a key is set. No key → nothing; set one in Settings to
+ *  reveal it. */
 export function ModelControl() {
   const [hasKey, setHasKey] = useState(false)
   const [model, setModel] = useState('claude-sonnet-4-6')
+  const pairing = pairingById(usePairingId())
+  const fontFamily = pairing.heading
+    ? fontStackByName(pairing.heading)
+    : undefined
 
   useEffect(() => {
     let active = true
@@ -28,24 +37,10 @@ export function ModelControl() {
     }
   }, [])
 
-  if (!hasKey) {
-    return (
-      <Link
-        to="/settings"
-        className="text-xs underline"
-        style={{ color: 'var(--app-muted)' }}
-      >
-        Demo engine · add key
-      </Link>
-    )
-  }
+  if (!hasKey) return null
 
   return (
-    <div
-      className="flex items-center gap-2 text-xs"
-      style={{ color: 'var(--app-muted)' }}
-    >
-      <span>Claude</span>
+    <div className="relative">
       <select
         aria-label="Model"
         value={model}
@@ -53,11 +48,12 @@ export function ModelControl() {
           setModel(e.target.value)
           void saveModel(e.target.value)
         }}
-        className="rounded-md border px-2 py-1 text-xs outline-none"
+        className="appearance-none rounded-lg border py-1.5 pl-3 pr-8 text-xs outline-none"
         style={{
           borderColor: 'var(--app-border)',
-          background: 'var(--app-surface)',
+          background: 'transparent',
           color: 'var(--app-text)',
+          fontFamily,
         }}
       >
         {MODELS.map((m) => (
@@ -66,13 +62,11 @@ export function ModelControl() {
           </option>
         ))}
       </select>
-      <Link
-        to="/settings"
-        className="underline"
+      <ChevronDown
+        size={13}
+        className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2"
         style={{ color: 'var(--app-muted)' }}
-      >
-        Settings
-      </Link>
+      />
     </div>
   )
 }

@@ -8,6 +8,7 @@ import {
   loadFontByName,
 } from '#/features/typography/font-loader'
 import { ensureTypeHydrated, setPairing, usePairingId } from '#/lib/type-store'
+import { ModelControl } from '#/components/settings/model-control'
 
 /** Preload every preset's families so the dropdown can render each option in its
  *  own type. First open may briefly fall back then swap — acceptable per spec. */
@@ -19,7 +20,7 @@ function preloadPairingFonts(): void {
 }
 
 /**
- * The one persistent chrome element: home / Library / Settings plus the global,
+ * The one persistent chrome element: home / Favorites / Settings plus the global,
  * fixed font-pairing dropdown. The pairing is site-wide and preview-only — it
  * never touches the palette records or exports. Each menu row previews in its own
  * fonts. Lives in __root above every route's own page header.
@@ -60,15 +61,16 @@ export function GlobalNav() {
         >
           Palette Forge
         </Link>
-        <Link to="/library" style={{ color: 'var(--app-muted)' }}>
-          Library
+        <Link to="/favorites" style={{ color: 'var(--app-muted)' }}>
+          Favorites
         </Link>
         <Link to="/settings" style={{ color: 'var(--app-muted)' }}>
           Settings
         </Link>
       </div>
 
-      <div ref={ref} className="relative">
+      <div className="flex items-center gap-2">
+        <div ref={ref} className="relative">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -138,6 +140,8 @@ export function GlobalNav() {
             })}
           </div>
         )}
+        </div>
+        <ModelControl />
       </div>
     </nav>
   )

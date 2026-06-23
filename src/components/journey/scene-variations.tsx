@@ -6,7 +6,7 @@ import type { VariationRound } from '#/lib/journey-store'
 import { AgentNarration } from '#/components/journey/agent-narration'
 import { PaletteCard } from '#/components/journey/palette-card'
 import { RefineBar } from '#/components/forge/refine-bar'
-import { ExportModal } from '#/components/library/export-modal'
+import { ExportModal } from '#/components/favorites/export-modal'
 
 function recommendedId(variations: ScoredPalette[]): string {
   let best = ''

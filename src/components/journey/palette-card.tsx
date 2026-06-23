@@ -21,7 +21,7 @@ function band(colors: ColorRow[], mode: Mode): string[] {
 /**
  * A take in the surprise grid. Clicking the body selects it (the refine anchor);
  * the corner controls act on this take directly — heart toggles it in and out of
- * the library, the braces button exports it. No bottom panel: the card is the
+ * favorites, the braces button exports it. No bottom panel: the card is the
  * whole interface for a take.
  */
 export function PaletteCard({
@@ -134,8 +134,8 @@ export function PaletteCard({
           }}
           aria-label={
             saved
-              ? `Remove ${palette.name} from library`
-              : `Save ${palette.name} to library`
+              ? `Remove ${palette.name} from favorites`
+              : `Save ${palette.name} to favorites`
           }
           aria-pressed={saved}
           className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 transition hover:bg-black/60"

@@ -77,7 +77,7 @@ export function DeleteConfirm({
             Delete “{palette.name}”?
           </h2>
           <p className="text-sm" style={{ color: 'var(--app-muted)' }}>
-            This removes the palette from your library. This can’t be undone.
+            This removes the palette from your favorites. This can’t be undone.
           </p>
         </div>
 

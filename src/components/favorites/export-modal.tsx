@@ -22,7 +22,7 @@ function band(palette: Palette, mode: Mode): string[] {
   )
 }
 
-/** A compact visual swatch band (the library-card look) over copy-able formats,
+/** A compact visual swatch band (the favorite-card look) over copy-able formats,
  *  with a v3/v4 toggle for the Tailwind export. The name lives in the header. */
 export function ExportModal({
   palette,
