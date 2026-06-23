@@ -83,6 +83,41 @@ and an optional prompt — so the mood-board step is additive, not a refactor of
 `Source` and every consumer (extraction, store, engine, seed, persistence). The
 UI stays single-image; only the data model looks ahead.
 
+## Presentation language (the color chips) — R3 and beyond
+
+The app should feel like a place to sit and contemplate color, not read a spec
+sheet. Every palette-display surface (the four takes, the selected view, library,
+export preview) renders as a **proportional named composition**, not six equal
+bars — which is what every other palette site does, and it's boring.
+
+- **Weighted subdivision (treemap).** Each color gets an area by weight; the
+  rectangle splits into nested near-squares — the "smaller and smaller squares,
+  perfect grid" look. Weight by a tuned role template (always lands composed) or
+  by the color's dominance in the source image (ties it back to the photo).
+  Probably a template with gentle variation.
+- **Named + labeled on-swatch.** Each color carries an evocative name + hex,
+  drawn on the block. The label color (dark-on-light / light-on-dark) is chosen
+  by the contrast the app already computes — the verifier is what makes it look
+  professional, and it's not cheap for others to copy.
+- **Gallery → contemplate.** Four compact composition-cards across; click one to
+  expand into a large editorial card you can sit with.
+
+Presentation only — roles + contrast + light/dark stay underneath, so it remains
+a usable UI palette, not just a pretty swatch set.
+
+**Locked in the `/lab` prototype** (`src/routes/lab.tsx`, scratch route):
+
+- **Type treatment (locked).** One small size for everything; the color **name
+  bold**, the **hex regular** (no "HEX" word), in the muted, contrast-aware tone
+  (dark-on-light / light-on-dark, picked by luminance). Geometric cards stack
+  name over hex; the on-image treatment keeps name-left / hex-right. Same type
+  across treatments — only the composition differs.
+- **Two treatments so far:** the proportional grid card (template
+  `"a a b b" / "a a c d" / "e e f f"`, rows `2.4fr 1fr 1fr`) and the palette laid
+  **over the source image** (swatch bars). Both render at matching sizes. It's a
+  growing gallery — more treatments to come (hero "contemplate" card, filmstrip,
+  poster).
+
 ## Milestones (each ends green: lint / tsc / test / build)
 
 - **R0 — De-risk (no app changes).** Run `harmony-baseline.mjs` on a few real
