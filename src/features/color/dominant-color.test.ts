@@ -56,7 +56,7 @@ describe('dominant-color extraction', () => {
     const hsls = hexes.map(hexToHsl)
 
     // The vivid red is the most "prominent" (area x vibrancy) → leads the order.
-    expect(hexToHsl(hexes[0]).s).toBeGreaterThan(0.6)
+    expect(hexToHsl(hexes[0]!).s).toBeGreaterThan(0.6)
     // Dark + light anchors are present for the composer's ground/text.
     expect(hsls.some((c) => c.l < 0.22)).toBe(true)
     expect(hsls.some((c) => c.l > 0.85)).toBe(true)

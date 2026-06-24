@@ -67,7 +67,7 @@ function pickBaseHue(source: Source, variation: number): number {
   const base = anchorHues(source)[0] ?? 220
   if (variation <= 0) return base
   if (source.type === 'image') return (base + variation * GOLDEN_ANGLE) % 360
-  return (base + HARMONICS[variation % HARMONICS.length]) % 360
+  return (base + HARMONICS[variation % HARMONICS.length]!) % 360
 }
 
 /**
@@ -161,7 +161,8 @@ function classify(extracted: string[]): {
   const anchors = (extracted.length > 0 ? extracted : ['#888888']).map(hexToHsl)
   const vivids = anchors.filter((a) => a.s >= VIVID_S) // keeps prominence order
   const byL = [...anchors].sort((a, b) => a.l - b.l)
-  return { vivids, dark: byL[0], light: byL[byL.length - 1] }
+  // anchors is non-empty (falls back to ['#888888']), so byL has a first and last.
+  return { vivids, dark: byL[0]!, light: byL[byL.length - 1]! }
 }
 
 /**
@@ -273,8 +274,9 @@ export class SimulatedEngine implements PaletteEngine {
         light: rotateAnchor(base.light, rot),
       }
       return ARCHETYPES.map((arch, take) => {
-        const accent = cls.vivids[take % cls.vivids.length]
-        let secondary = cls.vivids[(take + 1) % cls.vivids.length]
+        // Guarded by vivids.length >= 2 above, so both modulo indices are in bounds.
+        const accent = cls.vivids[take % cls.vivids.length]!
+        let secondary = cls.vivids[(take + 1) % cls.vivids.length]!
         // Two near-identical vivids would merge accent into secondary — split the
         // secondary off to an analogous hue so the 60-30-10 stays legible.
         if (hueGap(accent.h, secondary.h) < 25) {

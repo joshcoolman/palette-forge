@@ -70,5 +70,5 @@ export const PAIRINGS: Pairing[] = [
 export const DEFAULT_PAIRING_ID = 'space-grotesk-inter'
 
 export function pairingById(id: string): Pairing {
-  return PAIRINGS.find((p) => p.id === id) ?? PAIRINGS[0]
+  return PAIRINGS.find((p) => p.id === id) ?? PAIRINGS[0]! // PAIRINGS is non-empty
 }

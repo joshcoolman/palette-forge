@@ -30,6 +30,6 @@ export async function createSamplePalettes(): Promise<void> {
   for (const sample of SAMPLES) {
     // compose returns one take per archetype (6), so take 0/2/5 are present.
     const takes = await engine.compose(colorSource(sample.seed))
-    await savePalette({ ...takes[sample.take], name: sample.name })
+    await savePalette({ ...takes[sample.take]!, name: sample.name })
   }
 }

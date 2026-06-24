@@ -88,7 +88,7 @@ export function SquareCard({
    *  the 4×N cell grid keeps equal rows either way. */
   fill?: boolean
 }) {
-  const layout = LAYOUTS[swatches.length] ?? LAYOUTS[7]
+  const layout = LAYOUTS[swatches.length] ?? LAYOUTS[7]! // 7 is the defined fallback
   return (
     <div
       className={`grid w-full overflow-hidden rounded-[var(--app-radius)] ${fill ? 'h-full' : ''}`}

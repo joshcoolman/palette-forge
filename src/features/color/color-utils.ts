@@ -23,9 +23,9 @@ export function isValidHex(hex: string): boolean {
 export function normalizeHex(hex: string): string | null {
   const match = HEX_RE.exec(hex.trim())
   if (!match) return null
-  let body = match[1].toLowerCase()
+  let body = match[1]!.toLowerCase() // group 1 is always present on a match
   if (body.length === 3) {
-    body = body[0] + body[0] + body[1] + body[1] + body[2] + body[2]
+    body = body.replace(/(.)/g, '$1$1') // expand shorthand: abc → aabbcc
   }
   return `#${body}`
 }

@@ -148,18 +148,23 @@ function Home() {
   // still shows its manual "Create sample palettes" button; only a fresh load
   // re-seeds. Hydrate first so a returning session isn't started over.
   useEffect(() => {
+    // Effect-local mounted flag (not a useRef — that wouldn't reset on a
+    // strict-mode remount). Read through isMounted() so each check is a fresh
+    // boolean: a bare flag gets narrowed to a constant by control-flow analysis
+    // after the first guard, which the linter then flags as a dead condition.
     let alive = true
+    const isMounted = (): boolean => alive
     async function bootstrap() {
       await hydrateJourney(ACTIVE)
       await ensureHydrated()
-      if (!alive) return
+      if (!isMounted()) return
       const s = getSettings()
       setSkipDeleteConfirm(s.skipDeleteConfirm)
       setDefaultMode(s.defaultPaletteMode)
       setViewMode(s.savedView)
       setAiEnabled(hasKey())
       const existing = await listPalettes()
-      if (!alive || existing.length > 0) return
+      if (!isMounted() || existing.length > 0) return
       setSeeding(true)
       try {
         await createSamplePalettes()
@@ -172,7 +177,7 @@ function Home() {
           })
         }
       } finally {
-        if (alive) setSeeding(false)
+        if (isMounted()) setSeeding(false)
       }
     }
     void bootstrap()

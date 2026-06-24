@@ -43,7 +43,7 @@ export function percentile(values: number[], p: number): number {
     sorted.length - 1,
     Math.max(0, Math.round(p * (sorted.length - 1))),
   )
-  return sorted[idx]
+  return sorted[idx]! // idx is clamped in-bounds and the list is non-empty
 }
 
 /** Median of a numeric list. */
@@ -65,7 +65,7 @@ export function circularMeanHue(hues: number[]): number {
     x += Math.cos(r)
     y += Math.sin(r)
   }
-  if (x === 0 && y === 0) return hues[0]
+  if (x === 0 && y === 0) return hues[0]! // non-empty: guarded at the top
   const deg = (Math.atan2(y, x) * 180) / Math.PI
   return (deg + 360) % 360
 }
@@ -108,7 +108,7 @@ export function quantize(pixels: RGB[], count: number): Swatch[] {
       }
     })
     if (targetIndex === -1) break
-    const bucket = buckets[targetIndex]
+    const bucket = buckets[targetIndex]! // targetIndex came from a valid forEach index
     bucket.sort((a, b) => a[targetChannel] - b[targetChannel])
     const mid = Math.floor(bucket.length / 2)
     buckets = [
@@ -143,8 +143,8 @@ export function extractFromImageData(
   const pixels: RGB[] = []
   const stride = 4 * Math.max(1, sampleStep)
   for (let i = 0; i < data.length; i += stride) {
-    if (data[i + 3] < 125) continue // skip near-transparent
-    pixels.push({ r: data[i], g: data[i + 1], b: data[i + 2] })
+    if (data[i + 3]! < 125) continue // skip near-transparent (RGBA: i+3 in bounds)
+    pixels.push({ r: data[i]!, g: data[i + 1]!, b: data[i + 2]! })
   }
   const total = pixels.length
   if (total === 0) return []

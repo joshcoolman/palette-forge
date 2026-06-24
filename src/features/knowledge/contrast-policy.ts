@@ -46,8 +46,8 @@ export function parseContrastPolicy(markdown: string): ContrastPolicy {
   const pairings: PolicyPairing[] = []
   const lineRe = /^\s*-\s*([a-z][a-z-]*):\s*(AAA|AA|\d+(?:\.\d+)?)\s*$/gim
   for (const match of fm.matchAll(lineRe)) {
-    const target = parseTarget(match[2])
-    if (target !== null) pairings.push({ pairing: match[1], target })
+    const target = parseTarget(match[2]!) // groups 1 and 2 are present on a match
+    if (target !== null) pairings.push({ pairing: match[1]!, target })
   }
 
   if (pairings.length === 0) return BASELINE

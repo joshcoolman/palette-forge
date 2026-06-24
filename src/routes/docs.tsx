@@ -145,7 +145,7 @@ function DocsPage() {
     }))
   }, [docs])
 
-  const defaultId = docs.find((d) => d.id === 'readme')?.id ?? docs[0].id
+  const defaultId = docs.find((d) => d.id === 'readme')?.id ?? docs[0]!.id
   const [activeId, setActiveId] = useState(defaultId)
   const [navOpen, setNavOpen] = useState(false)
 
@@ -172,7 +172,7 @@ function DocsPage() {
     window.scrollTo({ top: 0 })
   }
 
-  const active: Doc = docs.find((d) => d.id === activeId) ?? docs[0]
+  const active: Doc = docs.find((d) => d.id === activeId) ?? docs[0]!
 
   return (
     <main className="mx-auto flex w-full max-w-6xl gap-10 px-4 py-10">

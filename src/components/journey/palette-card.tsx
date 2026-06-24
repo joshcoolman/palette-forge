@@ -22,7 +22,7 @@ function heartInk(palette: ScoredPalette): string {
   const secondary = roleHex(palette, 'secondary', 'dark')
   if (contrastRatio(secondary, accent) >= MIN_HEART_CONTRAST) return secondary
   return [roleHex(palette, 'background', 'dark'), roleHex(palette, 'text', 'dark')]
-    .sort((a, b) => contrastRatio(b, accent) - contrastRatio(a, accent))[0]
+    .sort((a, b) => contrastRatio(b, accent) - contrastRatio(a, accent))[0]! // two fixed entries
 }
 
 /**

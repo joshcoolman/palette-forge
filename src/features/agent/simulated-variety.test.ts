@@ -64,13 +64,13 @@ describe('image-native composition', () => {
     // Not just the accent selection — a vivid role (secondary) shifts hue, i.e.
     // the colorway rotated, and each re-run is a distinct move from the last.
     const sec = (t: ScoredPalette) => roleHsl(t, 'secondary', 'dark').h
-    expect(hueGap(sec(r0[0]), sec(r1[0]))).toBeGreaterThan(30)
-    expect(hueGap(sec(r1[0]), sec(r2[0]))).toBeGreaterThan(30)
-    expect(hueGap(sec(r0[0]), sec(r2[0]))).toBeGreaterThan(30)
+    expect(hueGap(sec(r0[0]!), sec(r1[0]!))).toBeGreaterThan(30)
+    expect(hueGap(sec(r1[0]!), sec(r2[0]!))).toBeGreaterThan(30)
+    expect(hueGap(sec(r0[0]!), sec(r2[0]!))).toBeGreaterThan(30)
   })
 
   it('light and dark are genuine inversions', async () => {
-    const [take] = await engine.compose(VIVID_IMAGE)
+    const take = (await engine.compose(VIVID_IMAGE))[0]!
     expect(roleHsl(take, 'background', 'dark').l).toBeLessThan(0.3)
     expect(roleHsl(take, 'background', 'light').l).toBeGreaterThan(0.8)
     expect(roleHsl(take, 'text', 'dark').l).toBeGreaterThan(0.7)
@@ -99,26 +99,26 @@ describe('image-native composition', () => {
     const r0 = await engine.compose(GREY_IMAGE, undefined, 0)
     const r1 = await engine.compose(GREY_IMAGE, undefined, 1)
     expect(r0).toHaveLength(6)
-    expect(hueGap(accentHue(r0[0]), accentHue(r1[0]))).toBeGreaterThan(30)
+    expect(hueGap(accentHue(r0[0]!), accentHue(r1[0]!))).toBeGreaterThan(30)
   })
 })
 
 describe('color-seed re-run variety', () => {
   it('opening round (variation 0) is unchanged on re-compose', async () => {
-    const a = (await engine.compose(COLOR, undefined, 0))[0]
-    const b = (await engine.compose(COLOR, undefined, 0))[0]
+    const a = (await engine.compose(COLOR, undefined, 0))[0]!
+    const b = (await engine.compose(COLOR, undefined, 0))[0]!
     expect(accentHue(a)).toBeCloseTo(accentHue(b), 5)
   })
 
   it('color-seed re-runs explore harmonic relationships to the seed', async () => {
-    const base = accentHue((await engine.compose(COLOR, undefined, 0))[0])
+    const base = accentHue((await engine.compose(COLOR, undefined, 0))[0]!)
     // Round 1 is the complementary scheme (~180° off the seed); every re-run is
     // a big move, not the old "stay close" wobble. (±25° absorbs the recipe
     // jitter and rounding.)
-    const v1 = accentHue((await engine.compose(COLOR, undefined, 1))[0])
+    const v1 = accentHue((await engine.compose(COLOR, undefined, 1))[0]!)
     expect(hueGap(v1, (base + 180) % 360)).toBeLessThan(25)
     for (const v of [1, 2, 3]) {
-      const h = accentHue((await engine.compose(COLOR, undefined, v))[0])
+      const h = accentHue((await engine.compose(COLOR, undefined, v))[0]!)
       expect(hueGap(h, base)).toBeGreaterThan(60)
     }
   })
