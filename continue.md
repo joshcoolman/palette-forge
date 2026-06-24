@@ -1,45 +1,95 @@
 # Continue — Palette Forge
 
-## Where we are (committed)
+## Where we are
 
-Two big pieces landed this session, both committed to `main`:
+On branch **`feat/prompt-to-palette`** (open, **not merged** — deliberate, mid tuning
+soak). Everything committed + pushed; working tree clean except this file. Gate green on
+every commit (`tsc`, `eslint`, 73 tests, `pnpm build`). **`main`** only has a cherry-picked
+border tweak (`cf18369`) — none of the AI/eval work below.
 
-### 1. Generation reworked to hero-ground archetypes
-- `src/features/palette/tuning.ts` — `ARCHETYPES` (Jewel/Twilight/Sand/Paper/Meadow/Signal):
-  hue-free treatment templates filled with hues **from the seed**. Hero saturated
-  grounds, cross-hue accents.
-- `src/features/agent/simulated-engine.ts` — composes from archetypes; **light/dark
-  are genuine inversions** (ground↔text swap), not a darken pass.
-- **Removed:** the numeric score (`scorePalette`, `Score` type, the card number) and
-  the WCAG `repair()` enforcement loop. `computeContrastChecks` still records ratios
-  but they're unenforced/unshown. Knowledge + SPEC + CLAUDE rewritten to match.
+This session shipped two big arcs on the branch: **(1) model-direct palettes** and **(2) a
+full local eval/observability setup**.
 
-### 2. Official 7-color square swatch card (in `/lab` only so far)
-- `src/components/square-card.tsx` — **`SquareCard`**, the locked official design.
-  Standalone/presentational, takes `SquareSwatch[]` (label+hex), `showHex` prop,
-  adapts to 5/6/7 colors. 4-col × 5-row square grid: background banner (top 3 rows) ·
-  neutral row · secondary band + accent corner; bottom-left UPPERCASE labels with a
-  tiny ~7px Pantone-style hex flourish.
-- `src/routes/lab.tsx` — lean reference: `Card lab` → 7/6/5 cards (light+dark) on the
-  **three official palettes** (Set 1 teal+gold / Set 2 blue+red / Set 3 green+red,
-  exact hexes hardcoded) → `Together` (original chip cards).
-- The 7th role **`secondary`** = the 30% of 60-30-10, derived analogously (~+35° off
-  the background hue). **Derived in the lab only — NOT in the engine/types/app yet.**
+## Arc 1 — Model-direct palettes (the prompt flow is now model-authored)
 
-## NEXT TASK
+The seed-only prompt path (model picks one hex, deterministic engine builds the rest)
+couldn't honor palette-wide intent ("nothing girly" → pink accent every time) and gave a
+refine loop nothing to act on. So **for the prompt flow, the model now authors the whole
+palette** — it computes color there, deliberately reversing the old "AI never computes
+color" line *for that path only*. Seed/image stay deterministic.
 
-Build the app's real card as "v2" from `SquareCard`:
-1. Add the **light/dark swap** to the real card.
-2. Promote **`secondary`** into `tuning.ts` / `types.ts` / the engine / the saved card
-   (`favorite-card.tsx` SwatchFace, the flip card) / export (CSS vars + JSON).
-3. **Replace** the current 6-role card with this 7-color square design.
+- **Two generators behind one seam** (`src/features/agent/get-engine.ts` → `RoutingEngine`):
+  `source.type === 'prompt'` → `ModelEngine` (`model-engine.ts`), else `SimulatedEngine`.
+  `compose()` now returns `ComposeResult { palettes, message? }` (the model's friendly note).
+- **Contract is prose, not tool-use:** `knowledge/color-theorist.md` IS the system prompt,
+  sent **verbatim** (`generationSystemPrompt()` in `src/features/agent/prompt-palettes.ts`).
+  Model returns `{ message, palettes }` JSON; `parseModelResponse`/`toModelPalette` validate
+  + drop malformed; transport error → visible error round (no silent grey).
+- **`Source` gained `'prompt'`** (value = the brief). The Chat-with-AI overlay
+  (`prompt-dialog.tsx`) starts a prompt journey; `index.tsx` shows the quoted brief + a
+  Sparkles marker.
+- **Instant re-runs:** the model is paid once (opening round); re-runs are free algorithmic
+  variations of that output — `src/features/agent/derive.ts` `deriveRound()` rotates the
+  whole colorway by a harmonic offset (reuses `rotateHue` + `finalizePalette`). Preserves
+  the beloved "smash regen → wall of color" without a model call each time. `rerunJourney`
+  branches prompt→derive / color·image→deterministic.
+- **Finished-feel:** visible "Designing…" loading state (was invisible skeletons), the
+  model's friendly `message` above the round, palette `character`/rationale exposed (strip
+  hover-title + saved-card subtitle), refresh recovery (source persists eagerly; interrupted
+  → "Generate again"). Favorite cards now wear their own `border` role color.
+- **Docs reconciled** to "two generators": `CLAUDE.md`, `docs/SPEC.md`, `README.md`,
+  `docs/plan-ai-model-direct.md`, and memories (`model-direct-palettes` is the canonical record).
 
-Josh is committed to the new direction (secondary included). He said "treat as v2 so we
-could go back" — my recommendation: do it as a clean replacement, use git for rollback,
-don't maintain a parallel v2 long-term. He's open to either; confirm before deleting the
-old card.
+## Arc 2 — Local eval / observability (rolled our own, dev-only)
 
-## Verify pattern
-`agent-browser` with `AGENT_BROWSER_EXECUTABLE_PATH` = Chrome (per global notes); dev on
-:3000 (falls back to :3001 if busy). `tsc` / `pnpm test` (vitest, 37) / `vite build` —
-all green at session end. `/lab` is the design reference.
+The point: tune the model prompt with evidence, not vibes. All dev-only, zero prod surface.
+
+- **Capture (tracing):** `vite/eval-capture.ts` — Vite plugin `apply: 'serve'` (dev only).
+  `POST /__eval/run` appends every generation `{ at, model, brief, raw }` to
+  **`eval/runs.jsonl`** (+ pretty `eval/latest.json`); client half `src/lib/eval-capture.ts`
+  `captureRun()` (DEV-gated) fires from `promptToPalettes`. Run files git-ignored.
+- **Eval runner (dev UI):** `src/components/dev/eval-runner.tsx` — a **burnt-orange** banner
+  (`#b5491f`) above the app header, content-width, **gated on `import.meta.env.DEV &&
+  aiEnabled`** (hidden without a key). A wide dropdown of briefs + **Run** + **+ New**
+  (label+brief form → `POST /__eval/prompts` appends to `prompts.md` + runs). `GET
+  /__eval/prompts` parses the briefs from `eval/prompts.md` server-side. Tree-shaken from prod.
+- **The golden set:** `eval/prompts.md` — briefs with intent + must-nots (lawn-care,
+  racing-brand, wellness-yoga, battery-question). The how is `eval/README.md`; the **why** is
+  the new conceptual doc **`docs/poor-mans-evals.md`** (spec/contract/observability/evals/
+  guardrails + a concept→codebase table; cross-linked from README + eval/README).
+
+## Key decisions
+
+- **Pay for AI once, explore free:** opening round = model; re-runs = algorithmic variations
+  of it. (Re-run hue-rotation can drift off intent — round 0 honors it, re-runs are the
+  playground. One-line swap to lightness/saturation-only if intent-locked re-runs wanted.)
+- **`prompts.md` is the curated golden set; `runs.jsonl` is the firehose.** Deliberately did
+  NOT pull run-history into the picker (would mix curation with noise); `+ New` is the
+  deliberate bridge that promotes a brief into the set.
+- **Steer with principles/ranges, not example palettes** (examples muzzle the model).
+- Eval tooling stays ~tiny, dev-only, single-project, no abstraction — "this is how LangChain
+  starts; we stop here." (We're in evals/observability territory, not orchestration.)
+
+## Outstanding / next steps (tomorrow)
+
+The tooling is done; now **use it** — this is the prompt-tuning the eval loop was built for:
+
+1. **Mono-hue neutrals (relax it).** `color-theorist.md` currently says neutrals share one
+   hue family — that's why each Minecraft take was single-hued. One-line relax to let the
+   model build cohering multi-hue palettes ("muted pink + cyan + muted purple"). The user is
+   keen to see this.
+2. **Ground-lightness range.** `wellness-yoga` brief returned grounds too dark (~`#191419`,
+   near-black) for a professional site. Add a "deep but breathing, ~L 12–20%, not near-black"
+   guideline to `color-theorist.md`. (`wellness-yoga` is the tagged test case.)
+3. **Workflow:** with a real key, use the EVAL bar — pick a brief → Run → read
+   `eval/runs.jsonl`/`latest.json` → tweak `color-theorist.md` → Run again → compare.
+4. **Deferred:** scope/refusal eval (the `battery-question` "pass" = graceful decline — needs
+   a guardrail in the prompt + a way to judge it); automated scorers (codify a must-not like
+   "no magenta-band hue"); epic phases 3–4 (thinking feed, conversational refine).
+
+## Git state
+
+`feat/prompt-to-palette`, clean, fully pushed (HEAD `f481fff`). Open for the tuning soak —
+no PR yet. `main` is untouched by this work except the border cherry-pick (`cf18369`).
+Needs a **real Anthropic key** to exercise the AI happy path (only fake-key/error paths
+verified live this session; everything else unit-tested + browser-verified).
