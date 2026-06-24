@@ -6,31 +6,7 @@ import type { Mode, Palette, Role } from '#/features/palette/types'
 import { hexToRgb } from '#/features/color/color-utils'
 import { relativeLuminance } from '#/features/color/contrast'
 import { IconButton } from '#/components/ui/icon-button'
-
-// The proportional composition card — favorites is where you sit and
-// contemplate a saved palette, not scan it. Cells a–f run biggest to smallest.
-// PROVISIONAL (review-time swap, may revert): leads with the *background* in the
-// hero cell — the large weight suits the ground — with surface/muted/border
-// grouped in the mids and accent + text anchoring the bottom row. The prior
-// order led with accent: ['accent','text','muted','border','background','surface'].
-const CELL_ROLES: Role[] = [
-  'background',
-  'surface',
-  'muted',
-  'border',
-  'accent',
-  'text',
-]
-const CELL_AREAS = '"a a b b" "a a c d" "e e f f"'
-const CELL_SLOTS = ['a', 'b', 'c', 'd', 'e', 'f'] as const
-const ROLE_LABEL: Record<Role, string> = {
-  background: 'Background',
-  surface: 'Surface',
-  text: 'Text',
-  muted: 'Muted',
-  accent: 'Accent',
-  border: 'Border',
-}
+import { SquareCard, toSquareSwatches } from '#/components/square-card'
 
 /** On-swatch text tone at a given alpha, dark-or-light by the swatch's luminance
  *  — the contrast engine in miniature, legible on light and dark swatches. The
@@ -45,44 +21,11 @@ function cellColor(palette: Palette, role: Role, mode: Mode): string {
   return palette.colors.find((c) => c.role === role)?.[mode] ?? '#888888'
 }
 
-/** The swatch face (front): each role gets an area by weight, its name (bold) and
- *  hex (watermark) drawn top-left on the swatch — left-aligned so the card's
- *  top-right corner stays clear for the floating light/dark toggle. */
+/** The swatch face (front): the locked seven-color SquareCard, filling the
+ *  flip-card face. Labels + a tiny hex flourish sit bottom-left on each swatch;
+ *  the top-right corner stays clear for the floating light/dark toggle. */
 function SwatchFace({ palette, mode }: { palette: Palette; mode: Mode }) {
-  return (
-    <div
-      className="grid h-full w-full"
-      style={{
-        gridTemplateAreas: CELL_AREAS,
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gridTemplateRows: '2.4fr 1fr 1fr',
-      }}
-    >
-      {CELL_ROLES.map((role, i) => {
-        const hex = cellColor(palette, role, mode)
-        return (
-          <div
-            key={role}
-            className="flex flex-col gap-0.5 p-3 text-left"
-            style={{ gridArea: CELL_SLOTS[i], background: hex }}
-          >
-            <span
-              className="text-[9px] font-bold leading-tight"
-              style={{ color: textTone(hex, 0.64) }}
-            >
-              {ROLE_LABEL[role]}
-            </span>
-            <span
-              className="text-[9px] leading-tight tabular-nums"
-              style={{ color: textTone(hex, 0.22) }}
-            >
-              {hex.toUpperCase()}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
+  return <SquareCard swatches={toSquareSwatches(palette.colors, mode)} fill />
 }
 
 /** The text-specimen face (back): the six roles applied to a real UI fragment
@@ -164,13 +107,13 @@ export function FavoriteCard({
   onOpen: () => void
   onDelete: () => void
 }) {
-  const [mode, setMode] = useState<Mode>('light')
+  const [mode, setMode] = useState<Mode>('dark')
   const [flipped, setFlipped] = useState(false)
 
-  // The toggle floats bare over a different swatch on each face — the surface
-  // cell (top-right) on the front, the background fill on the back — so tone it
-  // for contrast against whichever it currently sits on.
-  const toggleOver = cellColor(palette, flipped ? 'background' : 'surface', mode)
+  // The toggle floats bare over the background on both faces — the SquareCard's
+  // top-right is the background banner, and the specimen back is a background
+  // fill — so tone it for contrast against the background.
+  const toggleOver = cellColor(palette, 'background', mode)
   const toggleFg = textTone(toggleOver, 0.92)
 
   const faceStyle = {

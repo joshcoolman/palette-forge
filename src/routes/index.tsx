@@ -253,10 +253,14 @@ function Home() {
 
             <SceneVariations
               rounds={journey.rounds}
-              chosenId={journey.chosen?.id}
               savedIds={journey.saved}
-              onChoose={(palette) => chooseVariation(ACTIVE, palette)}
-              onToggleSave={(palette) => toggleSaved(ACTIVE, palette)}
+              onToggleSave={(palette) => {
+                const wasSaved = journey.saved.includes(palette.id)
+                toggleSaved(ACTIVE, palette)
+                // Hearting re-themes the page to this palette (the backdrop keys
+                // off `chosen`); un-hearting leaves the current theme as-is.
+                if (!wasSaved) chooseVariation(ACTIVE, palette)
+              }}
               onRegenerate={() => void rerunJourney(ACTIVE)}
             />
           </section>

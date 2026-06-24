@@ -1,34 +1,31 @@
-import { useState } from 'react'
 import { motion } from 'motion/react'
 
 import type { ScoredPalette } from '#/features/palette/types'
 import type { VariationRound } from '#/lib/journey-store'
 import { PaletteCard } from '#/components/journey/palette-card'
-import { ExportModal } from '#/components/favorites/export-modal'
 
-/** Scene 2 — composed treatment takes as a stack of rounds (newest first). */
+/**
+ * Scene 2 — composed treatment takes as a stack of rounds (newest first). Every
+ * round is one grid row of takes; the section gap matches the grid gap so the
+ * rows are evenly spaced whether they sit inside a round or across the boundary
+ * between two re-runs (no alternating wide/narrow gap).
+ */
 export function SceneVariations({
   rounds,
-  chosenId,
   savedIds,
-  onChoose,
   onToggleSave,
   onRegenerate,
 }: {
   rounds: VariationRound[]
-  chosenId?: string
   savedIds: string[]
-  onChoose: (palette: ScoredPalette) => void
   onToggleSave: (palette: ScoredPalette) => void
   onRegenerate?: () => void
 }) {
-  const [exporting, setExporting] = useState<ScoredPalette | null>(null)
-
   return (
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-3"
     >
       {rounds
         .map((round, roundIndex) => ({ round, roundIndex }))
@@ -61,12 +58,12 @@ export function SceneVariations({
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-3 gap-3">
                 {running && round.variations.length === 0
-                  ? Array.from({ length: 4 }).map((_, i) => (
+                  ? Array.from({ length: 6 }).map((_, i) => (
                       <div
                         key={i}
-                        className="h-40 animate-pulse rounded-[var(--app-radius)]"
+                        className="aspect-[7/1] animate-pulse rounded-[var(--app-radius)]"
                         style={{ background: 'var(--app-surface)' }}
                       />
                     ))
@@ -74,11 +71,8 @@ export function SceneVariations({
                       <PaletteCard
                         key={palette.id}
                         palette={palette}
-                        selected={palette.id === chosenId}
                         saved={savedIds.includes(palette.id)}
-                        onSelect={() => onChoose(palette)}
                         onToggleSave={() => onToggleSave(palette)}
-                        onExport={() => setExporting(palette)}
                       />
                     ))}
               </div>
@@ -86,10 +80,6 @@ export function SceneVariations({
           </div>
         )
       })}
-
-      {exporting && (
-        <ExportModal palette={exporting} onClose={() => setExporting(null)} />
-      )}
     </motion.section>
   )
 }

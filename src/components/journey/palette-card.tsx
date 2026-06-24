@@ -1,131 +1,60 @@
 import { motion } from 'motion/react'
-import { Code, Heart } from 'lucide-react'
+import { Heart } from 'lucide-react'
 
-import type { ColorRow, Mode, ScoredPalette } from '#/features/palette/types'
+import type { Mode, Role, ScoredPalette } from '#/features/palette/types'
+import { ROW_ROLES, SwatchRow } from '#/components/swatch-row'
 
-const BAND_ORDER = [
-  'background',
-  'surface',
-  'muted',
-  'border',
-  'accent',
-  'text',
-] as const
-
-function band(colors: ColorRow[], mode: Mode): string[] {
-  return BAND_ORDER.map(
-    (role) => colors.find((c) => c.role === role)?.[mode] ?? '#888888',
-  )
+function roleHex(palette: ScoredPalette, role: Role, mode: Mode): string {
+  return palette.colors.find((c) => c.role === role)?.[mode] ?? '#888888'
 }
 
 /**
- * A take in the surprise grid. Clicking the body selects it (the refine anchor);
- * the corner controls act on this take directly — heart toggles it in and out of
- * favorites, the braces button exports it. No bottom panel: the card is the
- * whole interface for a take.
+ * A take in the surprise grid, stripped to its colors: one row of dark-mode
+ * swatches. The whole card is a single toggle — click anywhere to heart it (and
+ * re-theme the page to this palette) or un-heart it. The heart sits centered in
+ * the accent swatch (the last cell), drawn in the palette's own *secondary* color
+ * (its neighbor, the second-to-last cell) so it reads as a contrasting mark — it
+ * fills when saved, with a small bounce. When saved, the card's border picks up
+ * the palette's own *muted* color as a soft self-colored highlight.
  */
 export function PaletteCard({
   palette,
-  selected = false,
   saved = false,
-  onSelect,
   onToggleSave,
-  onExport,
 }: {
   palette: ScoredPalette
-  selected?: boolean
   saved?: boolean
-  onSelect: () => void
   onToggleSave: () => void
-  onExport: () => void
 }) {
+  const heartInk = roleHex(palette, 'secondary', 'dark')
   return (
-    <motion.div
+    <motion.button
       layout
-      className="group relative flex flex-col rounded-[var(--app-radius)] border"
+      type="button"
+      onClick={onToggleSave}
+      aria-label={
+        saved
+          ? `Remove ${palette.name} from favorites`
+          : `Save ${palette.name} to favorites`
+      }
+      aria-pressed={saved}
+      className="relative block w-full overflow-hidden rounded-[var(--app-radius)] border"
       style={{
-        borderColor: selected ? 'var(--app-text)' : 'var(--app-border)',
-        background: 'var(--app-surface)',
+        borderColor: saved
+          ? roleHex(palette, 'muted', 'dark')
+          : 'var(--app-border)',
       }}
     >
-      <button
-        type="button"
-        onClick={onSelect}
-        className="flex flex-col gap-2.5 rounded-[var(--app-radius)] p-3 text-left"
-      >
-        <div
-          className="overflow-hidden rounded-[var(--app-radius-sm)] border"
-          style={{ borderColor: 'var(--app-border)' }}
-        >
-          <div className="flex h-20">
-            {band(palette.colors, 'light').map((hex, i) => (
-              <span
-                key={`l-${i}`}
-                className="flex-1"
-                style={{ background: hex }}
-              />
-            ))}
-          </div>
-          <div className="flex h-5">
-            {band(palette.colors, 'dark').map((hex, i) => (
-              <span
-                key={`d-${i}`}
-                className="flex-1"
-                style={{ background: hex }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center justify-between gap-2">
-            <span
-              className="pf-heading truncate text-xs font-medium"
-              style={{ color: 'var(--app-text)' }}
-            >
-              {palette.name}
-            </span>
-          </div>
-          {palette.character && (
-            <span
-              className="pf-body text-[11px] leading-snug"
-              style={{ color: 'var(--app-muted)' }}
-            >
-              {palette.character}
-            </span>
-          )}
-        </div>
-      </button>
+      <SwatchRow colors={palette.colors} rounded={false} />
 
-      <div className="absolute right-2 top-2 z-10 flex items-center gap-1.5">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onExport()
-          }}
-          aria-label={`Export ${palette.name}`}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white/90 transition hover:bg-black/60"
-        >
-          <Code size={14} />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onToggleSave()
-          }}
-          aria-label={
-            saved
-              ? `Remove ${palette.name} from favorites`
-              : `Save ${palette.name} to favorites`
-          }
-          aria-pressed={saved}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 transition hover:bg-black/60"
-          style={{ color: saved ? '#fb7185' : 'rgba(255,255,255,0.9)' }}
-        >
-          <Heart size={14} fill={saved ? 'currentColor' : 'none'} />
-        </button>
-      </div>
-    </motion.div>
+      <motion.span
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center"
+        style={{ width: `${100 / ROW_ROLES.length}%`, color: heartInk }}
+        animate={{ scale: saved ? [1, 1.4, 1] : 1 }}
+        transition={{ duration: 0.32, ease: 'easeOut' }}
+      >
+        <Heart size={16} strokeWidth={2.25} fill={saved ? 'currentColor' : 'none'} />
+      </motion.span>
+    </motion.button>
   )
 }

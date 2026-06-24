@@ -19,6 +19,7 @@ const palette: Palette = {
     { role: 'muted', light: '#767676', dark: '#9a9a9a' },
     { role: 'accent', light: '#0a66c2', dark: '#5aa9e6' },
     { role: 'border', light: '#cccccc', dark: '#3a3a3a' },
+    { role: 'secondary', light: '#5c7a4a', dark: '#7fa05c' },
   ],
   contrast: [],
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -31,6 +32,7 @@ describe('palette export', () => {
     expect(css).toContain('.dark')
     expect(css).toContain('--background: #ffffff;')
     expect(css).toContain('--accent: #5aa9e6;')
+    expect(css).toContain('--secondary: #5c7a4a;')
   })
 
   it('Tailwind v4 emits a @theme block; v3 emits a config + darkMode', () => {
@@ -46,6 +48,7 @@ describe('palette export', () => {
     const hex = toHexList(palette)
     expect(hex).toContain('#ffffff')
     expect(hex).toContain('#5aa9e6')
-    expect(hex.split('\n')).toHaveLength(6)
+    expect(hex).toContain('#7fa05c')
+    expect(hex.split('\n')).toHaveLength(7)
   })
 })

@@ -11,6 +11,7 @@ export type Role =
   | 'muted'
   | 'accent'
   | 'border'
+  | 'secondary'
 
 export const ROLES: readonly Role[] = [
   'background',
@@ -19,6 +20,7 @@ export const ROLES: readonly Role[] = [
   'muted',
   'accent',
   'border',
+  'secondary',
 ] as const
 
 export type Mode = 'light' | 'dark'

@@ -271,7 +271,10 @@ export function toggleSaved(id: string, palette: ScoredPalette): void {
     void deletePalette(palette.id)
   } else {
     patch(id, { saved: [...saved, palette.id] })
-    void savePalette(palette)
+    // Stamp the save moment so the grid (sorted newest-first) shows the take you
+    // just hearted as the very first card — even when it came from an older
+    // round. createdAt is otherwise the compose time.
+    void savePalette({ ...palette, createdAt: new Date().toISOString() })
   }
 }
 

@@ -2,28 +2,14 @@ import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { Clipboard, ClipboardCheck, X } from 'lucide-react'
 
-import type { Mode, Palette, Role } from '#/features/palette/types'
+import type { Palette } from '#/features/palette/types'
 import { EXPORT_FORMATS, buildExport } from '#/features/palette/export'
 import type { ExportFormatId, TailwindVersion } from '#/features/palette/export'
 import { IconButton } from '#/components/ui/icon-button'
+import { SwatchRow } from '#/components/swatch-row'
 
-const BAND_ORDER: Role[] = [
-  'background',
-  'surface',
-  'muted',
-  'border',
-  'accent',
-  'text',
-]
-
-function band(palette: Palette, mode: Mode): string[] {
-  return BAND_ORDER.map(
-    (role) => palette.colors.find((c) => c.role === role)?.[mode] ?? '#888888',
-  )
-}
-
-/** A compact visual swatch band (the favorite-card look) over copy-able formats,
- *  with a v3/v4 toggle for the Tailwind export. The name lives in the header. */
+/** A simple swatch row (the take-card look) over copy-able formats, with a v3/v4
+ *  toggle for the Tailwind export. The name lives in the header. */
 export function ExportModal({
   palette,
   onClose,
@@ -83,28 +69,8 @@ export function ExportModal({
           </IconButton>
         </div>
 
-        <div
-          className="shrink-0 overflow-hidden rounded-[var(--app-radius-sm)] border"
-          style={{ borderColor: 'var(--app-border)' }}
-        >
-          <div className="flex h-20">
-            {band(palette, 'light').map((hex, i) => (
-              <span
-                key={`l-${i}`}
-                className="flex-1"
-                style={{ background: hex }}
-              />
-            ))}
-          </div>
-          <div className="flex h-5">
-            {band(palette, 'dark').map((hex, i) => (
-              <span
-                key={`d-${i}`}
-                className="flex-1"
-                style={{ background: hex }}
-              />
-            ))}
-          </div>
+        <div className="shrink-0">
+          <SwatchRow colors={palette.colors} />
         </div>
 
         <div className="flex shrink-0 items-center justify-between gap-3">

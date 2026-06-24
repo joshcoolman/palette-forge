@@ -18,9 +18,38 @@
  *   7: bg banner · [surface border muted text] · secondary band + accent corner
  */
 
+import type { ColorRow, Mode } from '#/features/palette/types'
+import { secondaryFor } from '#/features/palette/secondary'
+
 export type SquareSwatch = { label: string; hex: string }
 
 const SLOTS = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+
+/**
+ * The seven-color swatch order the locked layout expects: background banner ·
+ * [surface border muted text] neutral row · secondary band + accent corner. The
+ * single source of truth that maps a palette's role colors to the SquareCard, so
+ * the journey take card and the saved card stay identical. `secondary` is read
+ * from the palette when present, else derived from the background hue (older
+ * saves predate the role) — see `secondaryFor`.
+ */
+export function toSquareSwatches(
+  colors: ColorRow[],
+  mode: Mode,
+): SquareSwatch[] {
+  const get = (role: string): string | undefined =>
+    colors.find((c) => c.role === role)?.[mode]
+  const bg = get('background') ?? '#888888'
+  return [
+    { label: 'Background', hex: bg },
+    { label: 'Surface', hex: get('surface') ?? bg },
+    { label: 'Border', hex: get('border') ?? bg },
+    { label: 'Muted', hex: get('muted') ?? bg },
+    { label: 'Text', hex: get('text') ?? bg },
+    { label: 'Secondary', hex: get('secondary') ?? secondaryFor(bg, mode) },
+    { label: 'Accent', hex: get('accent') ?? bg },
+  ]
+}
 
 /** Grid keyed by swatch count. Slots fill in order a, b, c, …; `rows` sets the
  *  square aspect (4 cols / N rows). Background owns the top 3 rows. */
@@ -43,20 +72,25 @@ function luminance(hex: string): number {
 export function SquareCard({
   swatches,
   showHex = true,
+  fill = false,
 }: {
   swatches: SquareSwatch[]
   /** Show the hex under each label — a small Pantone-style flourish. */
   showHex?: boolean
+  /** Stretch to the parent's height instead of imposing the square aspect.
+   *  Use when the card lives inside a fixed-aspect container (e.g. a flip card);
+   *  the 4×N cell grid keeps equal rows either way. */
+  fill?: boolean
 }) {
   const layout = LAYOUTS[swatches.length] ?? LAYOUTS[7]
   return (
     <div
-      className="grid w-full overflow-hidden rounded-[var(--app-radius)]"
+      className={`grid w-full overflow-hidden rounded-[var(--app-radius)] ${fill ? 'h-full' : ''}`}
       style={{
         gridTemplateAreas: layout.areas,
         gridTemplateColumns: 'repeat(4, 1fr)',
         gridTemplateRows: `repeat(${layout.rows}, 1fr)`,
-        aspectRatio: `4 / ${layout.rows}`,
+        ...(fill ? {} : { aspectRatio: `4 / ${layout.rows}` }),
       }}
     >
       {swatches.map((s, i) => {
@@ -67,7 +101,7 @@ export function SquareCard({
         return (
           <div
             key={s.label + i}
-            className="flex flex-col justify-end p-3"
+            className="flex flex-col justify-end p-3 text-left"
             style={{ gridArea: SLOTS[i], background: s.hex }}
           >
             <div

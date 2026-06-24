@@ -1,24 +1,10 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 
-import type { Mode, Palette, Role } from '#/features/palette/types'
+import type { Palette } from '#/features/palette/types'
+import { SwatchRow } from '#/components/swatch-row'
 
-const BAND_ORDER: Role[] = [
-  'background',
-  'surface',
-  'muted',
-  'border',
-  'accent',
-  'text',
-]
-
-function band(palette: Palette, mode: Mode): string[] {
-  return BAND_ORDER.map(
-    (role) => palette.colors.find((c) => c.role === role)?.[mode] ?? '#888888',
-  )
-}
-
-/** Delete confirmation — mirrors the export popup (swatch band + a short
+/** Delete confirmation — mirrors the export popup (a swatch row + a short
  *  message), so removing a saved palette is a deliberate, previewed action. */
 export function DeleteConfirm({
   palette,
@@ -56,21 +42,7 @@ export function DeleteConfirm({
           background: 'var(--app-surface)',
         }}
       >
-        <div
-          className="overflow-hidden rounded-[var(--app-radius-sm)] border"
-          style={{ borderColor: 'var(--app-border)' }}
-        >
-          <div className="flex h-16">
-            {band(palette, 'light').map((hex, i) => (
-              <span key={`l-${i}`} className="flex-1" style={{ background: hex }} />
-            ))}
-          </div>
-          <div className="flex h-4">
-            {band(palette, 'dark').map((hex, i) => (
-              <span key={`d-${i}`} className="flex-1" style={{ background: hex }} />
-            ))}
-          </div>
-        </div>
+        <SwatchRow colors={palette.colors} />
 
         <div className="flex flex-col gap-1">
           <h2

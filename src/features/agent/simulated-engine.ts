@@ -104,6 +104,11 @@ function roleHexes(
       s: g.s * d.borderSatFactor,
       l: clamp(g.l + d.borderLightStep, 0, 1),
     }),
+    secondary: hslToHex({
+      h: (baseHue + d.secondary.shift) % 360,
+      s: d.secondary.s,
+      l: d.secondary.l,
+    }),
   }
 }
 

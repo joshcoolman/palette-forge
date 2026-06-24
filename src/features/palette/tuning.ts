@@ -45,7 +45,7 @@ export type Archetype = {
 }
 
 /**
- * The set a single round surprises with. They share the seed's hue family (so
+ * The six a single round surprises with. They share the seed's hue family (so
  * the grid stays coherent with the user's input) but read as genuinely
  * different treatments, varying by accent relationship and ground richness.
  * Five are light-in-light-mode / dark-in-dark-mode pairs; Signal is one bold
@@ -112,6 +112,10 @@ export const ARCHETYPES: readonly Archetype[] = [
  * text a deep *color-carrying* ink (so light mode is rich, not flat black).
  * `dark` (dark mode): cream text on the hero dark ground — surface a step
  * lighter. Tuned so muted always stays dimmer than text in both modes.
+ *
+ * `secondary` is the 30% of 60-30-10: an analogous relative of the ground hue
+ * (`shift`° off it), held at a mid lightness/saturation so it supports the
+ * background without competing with the 10% accent.
  */
 export const DERIVATION = {
   light: {
@@ -120,6 +124,7 @@ export const DERIVATION = {
     text: { l: 0.2, s: 0.32 },
     muted: { l: 0.46, satFactor: 0.7 },
     borderSatFactor: 0.7,
+    secondary: { shift: 35, l: 0.4, s: 0.5 },
   },
   dark: {
     surfaceLightStep: 0.07,
@@ -127,5 +132,6 @@ export const DERIVATION = {
     text: { l: 0.92, s: 0.12 },
     muted: { l: 0.66, satFactor: 0.6 },
     borderSatFactor: 0.8,
+    secondary: { shift: 35, l: 0.56, s: 0.5 },
   },
 } as const

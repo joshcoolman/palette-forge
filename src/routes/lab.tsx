@@ -112,15 +112,15 @@ type CardPalette = { id: string; name: string; colors: ColorRow[] }
 function makePalette(
   id: string,
   name: string,
-  roles: Record<Role, { light: string; dark: string }>,
+  roles: Partial<Record<Role, { light: string; dark: string }>>,
 ): CardPalette {
   return {
     id,
     name,
     colors: (Object.keys(roles) as Role[]).map((role) => ({
       role,
-      light: roles[role].light,
-      dark: roles[role].dark,
+      light: roles[role]!.light,
+      dark: roles[role]!.dark,
     })),
   }
 }
