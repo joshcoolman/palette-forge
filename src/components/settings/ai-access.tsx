@@ -55,36 +55,57 @@ export function AiAccess() {
   const hasKey = apiKey.trim().length > 0
 
   return (
-    <div
-      className="flex flex-col gap-5 rounded-[var(--app-radius)] border p-6"
-      style={{
-        borderColor: 'var(--app-border)',
-        background: 'var(--app-surface)',
-      }}
-    >
-      <div className="flex flex-col gap-1">
-        <h2 className="text-base font-semibold" style={{ color: 'var(--app-text)' }}>
-          AI touches
-        </h2>
-        <p className="text-xs" style={{ color: 'var(--app-muted)' }}>
-          Optional enrichments on top of the deterministic engine. Off until you add
-          a key.
-        </p>
+    <div className="flex flex-col gap-2">
+      <div
+        className="flex flex-col gap-5 rounded-[var(--app-radius)] border p-6"
+        style={{
+          borderColor: 'var(--app-border)',
+          background: 'var(--app-surface)',
+        }}
+      >
+        <div className="flex flex-col gap-1">
+          <h2
+            className="text-base font-semibold"
+            style={{ color: 'var(--app-text)' }}
+          >
+            AI touches
+          </h2>
+          <p className="text-xs" style={{ color: 'var(--app-muted)' }}>
+            Optional enrichments on top of the deterministic engine. Off until you
+            add a key.
+          </p>
+        </div>
+
+        <KeyEntry
+          value={apiKey}
+          disabled={!ready}
+          onChange={changeKey}
+          onRemove={removeKey}
+        />
+
+        {hasKey && (
+          <>
+            <hr style={{ borderColor: 'var(--app-border)' }} />
+            <ModelControl value={model} disabled={!ready} onChange={changeModel} />
+          </>
+        )}
       </div>
 
-      <KeyEntry
-        value={apiKey}
-        disabled={!ready}
-        onChange={changeKey}
-        onRemove={removeKey}
-      />
-
-      {hasKey && (
-        <>
-          <hr style={{ borderColor: 'var(--app-border)' }} />
-          <ModelControl value={model} disabled={!ready} onChange={changeModel} />
-        </>
-      )}
+      {/* Footer beneath the panel: the trust note. BYO-key honesty is checkable
+          because the code is open — point at it. */}
+      <p className="px-1 text-center text-xs" style={{ color: 'var(--app-muted)' }}>
+        All code is open source and reviewable on{' '}
+        <a
+          href="https://github.com/joshcoolman/palette-forge"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline-offset-2 transition hover:underline"
+          style={{ color: 'var(--app-text)' }}
+        >
+          GitHub
+        </a>
+        .
+      </p>
     </div>
   )
 }

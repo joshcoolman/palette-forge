@@ -25,15 +25,9 @@ export function KeyEntry({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-col gap-1">
-        <span className="text-sm" style={{ color: 'var(--app-text)' }}>
-          Anthropic API key
-        </span>
-        <p className="text-xs" style={{ color: 'var(--app-muted)' }}>
-          Optional. Add a key to unlock AI touches like creative renaming. The app
-          works fully without one.
-        </p>
-      </div>
+      <span className="text-sm" style={{ color: 'var(--app-text)' }}>
+        Anthropic API key
+      </span>
 
       <div className="relative">
         <input
@@ -63,49 +57,50 @@ export function KeyEntry({
       </div>
 
       <p className="text-xs" style={{ color: 'var(--app-muted)' }}>
-        Your key is stored in this browser only and sent only to Anthropic
-        (api.anthropic.com), directly from this page. There is no server. It is
-        visible to anything that can read this browser, so use a key you can revoke.
+        Your key is stored in this browser only and sent only to Anthropic.
       </p>
 
-      {hasKey &&
-        (confirmingRemove ? (
-          <div className="flex items-center gap-3 text-xs">
-            <span style={{ color: 'var(--app-text)' }}>
-              Remove the stored key from this browser?
-            </span>
+      {hasKey && (
+        <div className="flex items-center justify-end gap-3">
+          {confirmingRemove ? (
+            <>
+              <span className="text-xs" style={{ color: 'var(--app-muted)' }}>
+                Remove the stored key?
+              </span>
+              <button
+                type="button"
+                onClick={() => setConfirmingRemove(false)}
+                className="rounded-full border px-3 py-1.5 text-xs transition hover:opacity-70"
+                style={{ borderColor: 'var(--app-border)', color: 'var(--app-text)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => {
+                  setConfirmingRemove(false)
+                  onRemove()
+                }}
+                className="rounded-full px-3 py-1.5 text-xs font-medium text-white transition hover:opacity-70 disabled:opacity-50"
+                style={{ background: '#e5484d' }}
+              >
+                Remove key
+              </button>
+            </>
+          ) : (
             <button
               type="button"
               disabled={disabled}
-              onClick={() => {
-                setConfirmingRemove(false)
-                onRemove()
-              }}
-              className="font-medium transition hover:opacity-70 disabled:opacity-50"
-              style={{ color: 'var(--app-text)' }}
+              onClick={() => setConfirmingRemove(true)}
+              className="rounded-full border px-4 py-1.5 text-xs font-medium transition hover:opacity-70 disabled:opacity-50"
+              style={{ borderColor: '#e5484d', color: '#e5484d' }}
             >
-              Remove
+              Remove key
             </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingRemove(false)}
-              className="transition hover:opacity-70"
-              style={{ color: 'var(--app-muted)' }}
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => setConfirmingRemove(true)}
-            className="self-start text-xs underline-offset-2 transition hover:underline disabled:opacity-50"
-            style={{ color: 'var(--app-muted)' }}
-          >
-            Remove key
-          </button>
-        ))}
+          )}
+        </div>
+      )}
     </div>
   )
 }
