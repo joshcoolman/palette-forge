@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ChevronDown } from 'lucide-react'
+import { motion } from 'motion/react'
+import { ChevronDown, Heart, Settings } from 'lucide-react'
 
 import { PAIRINGS, pairingById } from '#/features/typography/pairings'
 import {
@@ -28,6 +29,9 @@ export function GlobalNav() {
   const pairingId = usePairingId()
   const current = pairingById(pairingId)
   const [open, setOpen] = useState(false)
+  // Bumps on each wordmark click to replay the heart pop (same easing as the
+  // palette-card heart). Click still just navigates home — the bounce is decor.
+  const [bump, setBump] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
 
   // Apply the persisted pairing on first client paint, and warm the previews.
@@ -55,13 +59,20 @@ export function GlobalNav() {
       <div className="flex items-center gap-5 text-sm">
         <Link
           to="/"
-          className="pf-heading font-semibold tracking-tight"
-          style={{ color: 'var(--app-text)' }}
+          onClick={() => setBump((b) => b + 1)}
+          className="pf-heading flex items-center gap-1.5 font-semibold tracking-tight"
+          style={{ color: '#ece4d0' }}
         >
-          Palette Forge
-        </Link>
-        <Link to="/settings" style={{ color: 'var(--app-muted)' }}>
-          Settings
+          <motion.span
+            key={bump}
+            className="inline-flex"
+            initial={{ scale: 1 }}
+            animate={bump === 0 ? { scale: 1 } : { scale: [1, 1.4, 1] }}
+            transition={{ duration: 0.32, ease: 'easeOut' }}
+          >
+            <Heart size={14} fill="#f0577f" stroke="#f0577f" />
+          </motion.span>
+          Color for Days
         </Link>
       </div>
 
@@ -137,6 +148,16 @@ export function GlobalNav() {
           </div>
         )}
         </div>
+
+        <Link
+          to="/settings"
+          aria-label="Settings"
+          title="Settings"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border transition hover:opacity-70"
+          style={{ borderColor: 'var(--app-border)', color: 'var(--app-muted)' }}
+        >
+          <Settings size={15} />
+        </Link>
       </div>
     </nav>
   )

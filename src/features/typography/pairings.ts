@@ -47,9 +47,27 @@ export const PAIRINGS: Pairing[] = [
     heading: 'Fraunces',
     body: 'Inter',
   },
+  {
+    id: 'pt-sans-ibm-plex-serif',
+    label: 'PT Sans + IBM Plex Serif',
+    heading: 'PT Sans',
+    body: 'IBM Plex Serif',
+  },
+  {
+    id: 'alegreya-source-sans-pro',
+    label: 'Alegreya + Source Sans Pro',
+    heading: 'Alegreya',
+    body: 'Source Sans Pro',
+  },
+  {
+    id: 'gloock-inter',
+    label: 'Gloock + Inter',
+    heading: 'Gloock',
+    body: 'Inter',
+  },
 ]
 
-export const DEFAULT_PAIRING_ID = 'fraunces-inter'
+export const DEFAULT_PAIRING_ID = 'space-grotesk-inter'
 
 export function pairingById(id: string): Pairing {
   return PAIRINGS.find((p) => p.id === id) ?? PAIRINGS[0]

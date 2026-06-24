@@ -141,6 +141,12 @@ function messageFrom(e: unknown): string {
   return 'The composer hit an error. Try again.'
 }
 
+/** Non-hook read of whether a journey already holds a source — for the one-time
+ *  first-run bootstrap, which must not start a round over a restored session. */
+export function journeyHasSource(id: string): boolean {
+  return !!getState(id).source
+}
+
 export function useJourney(id: string): JourneyState {
   return useSyncExternalStore(
     subscribe,

@@ -89,9 +89,9 @@ export function toTailwindV3(palette: Palette): string {
 }
 
 export const EXPORT_FORMATS = [
-  { id: 'tailwind', label: 'Tailwind' },
-  { id: 'css', label: 'CSS' },
   { id: 'hex', label: 'Hex' },
+  { id: 'css', label: 'CSS' },
+  { id: 'tailwind', label: 'Tailwind' },
 ] as const
 
 export type ExportFormatId = (typeof EXPORT_FORMATS)[number]['id']

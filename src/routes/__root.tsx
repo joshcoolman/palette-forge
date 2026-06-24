@@ -25,8 +25,10 @@ export const Route = createRootRoute({
         rel: 'stylesheet',
         href: appCss,
       },
-      // Default pairing (Fraunces + Inter), server-loaded so the app opens in it
-      // with no font flash. Other presets load on demand via the type-store.
+      // Default pairing (Space Grotesk + Inter), server-loaded so the app opens
+      // in it with no font flash. Other presets load on demand via the
+      // type-store. Space Grotesk + Inter also back the locked swatch labels in
+      // SquareCard, so they must always be present regardless of the pairing.
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       {
         rel: 'preconnect',
@@ -35,7 +37,7 @@ export const Route = createRootRoute({
       },
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&display=swap',
+        href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap',
       },
       {
         rel: 'stylesheet',

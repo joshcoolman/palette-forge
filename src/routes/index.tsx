@@ -2,13 +2,19 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { RefreshCw, X } from 'lucide-react'
 
-import type { Palette, ScoredPalette, Source } from '#/features/palette/types'
+import type {
+  Mode,
+  Palette,
+  ScoredPalette,
+  Source,
+} from '#/features/palette/types'
 import { isValidHex, withLightness } from '#/features/color/color-utils'
 import { deletePalette, listPalettes } from '#/features/palette/palette-repo'
 import { createSamplePalettes } from '#/features/palette/samples'
 import {
   chooseVariation,
   hydrateJourney,
+  journeyHasSource,
   rerunJourney,
   resetJourney,
   setSourceColor,
@@ -100,6 +106,7 @@ function Home() {
   const [confirming, setConfirming] = useState<Palette | null>(null)
   const [seeding, setSeeding] = useState(false)
   const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false)
+  const [defaultMode, setDefaultMode] = useState<Mode>('dark')
   const [editingColor, setEditingColor] = useState(false)
 
   const active = !!journey.source
@@ -111,23 +118,57 @@ function Home() {
     setLoaded(true)
   }
 
-  // Restore an in-progress set from IndexedDB on first load (no-op if live).
-  useEffect(() => {
-    void hydrateJourney(ACTIVE)
-  }, [])
-
-  // Mirror the skip-delete-confirm pref (whether deleting a favorite needs the
-  // confirm popup).
+  // First-load bootstrap: restore any in-progress set, mirror the prefs the page
+  // reads (skip-delete-confirm, default card mode), and — whenever the library
+  // loads empty (a brand-new visitor, or someone who deleted everything and then
+  // reloaded) — seed the three samples and open a round from a neutral seed so the
+  // page lands lively and clickable instead of blank. Mid-session the empty state
+  // still shows its manual "Create sample palettes" button; only a fresh load
+  // re-seeds. Hydrate first so a returning session isn't started over.
   useEffect(() => {
     let alive = true
-    void ensureHydrated().then(() => {
+    async function bootstrap() {
+      await hydrateJourney(ACTIVE)
+      await ensureHydrated()
       if (!alive) return
-      setSkipDeleteConfirm(getSettings().skipDeleteConfirm)
-    })
+      const s = getSettings()
+      setSkipDeleteConfirm(s.skipDeleteConfirm)
+      setDefaultMode(s.defaultPaletteMode)
+      const existing = await listPalettes()
+      if (!alive || existing.length > 0) return
+      setSeeding(true)
+      try {
+        await createSamplePalettes()
+        await refresh()
+        if (!journeyHasSource(ACTIVE)) {
+          await startJourney(ACTIVE, {
+            type: 'color',
+            value: '#8d8d8f',
+            extracted: ['#8d8d8f'],
+          })
+        }
+      } finally {
+        if (alive) setSeeding(false)
+      }
+    }
+    void bootstrap()
     return () => {
       alive = false
     }
   }, [])
+
+  // ESC dismisses the current round — a keyboard mirror of the X ("Start over")
+  // button. Ignored while a modal is open so it doesn't double up on their own
+  // dismissal, and only when a working area is showing.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      if (!active || open || confirming || editingColor) return
+      startOver()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [active, open, confirming, editingColor])
 
   // The grid is keyed off palette-repo, but hearts flow through the journey
   // store — re-list whenever the active set's saved ids change so the grid stays
@@ -191,20 +232,9 @@ function Home() {
         )}
       />
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-5 px-4 py-12">
-        <header className="flex items-center justify-between gap-4">
-          <div>
-            <h1
-              className="pf-heading text-2xl font-semibold tracking-tight"
-              style={{ color: 'var(--app-text)' }}
-            >
-              Palette Forge
-            </h1>
-            <p className="mt-1 text-xs" style={{ color: 'var(--app-muted)' }}>
-              {loaded
-                ? `${palettes.length} saved ${palettes.length === 1 ? 'palette' : 'palettes'}`
-                : 'Loading…'}
-            </p>
-          </div>
+        {/* Brand lives in the global nav now; the homepage stays clean — just the
+            forge button, the working area, and the colorful grid. */}
+        <header className="flex items-center justify-end gap-4">
           <SourcePopover onStart={handleStart} />
         </header>
 
@@ -304,6 +334,7 @@ function Home() {
               <FavoriteCard
                 key={p.id}
                 palette={p}
+                defaultMode={defaultMode}
                 onOpen={() => setOpen(p)}
                 onDelete={() => requestDelete(p)}
               />

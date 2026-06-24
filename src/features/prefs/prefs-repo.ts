@@ -5,6 +5,7 @@ import { STORE_SETTINGS, idbGet, idbPut } from '#/lib/db'
 type SettingRecord = { key: string; value: string }
 
 const KEY_SKIP_DELETE_CONFIRM = 'skip-delete-confirm'
+const KEY_DEFAULT_PALETTE_MODE = 'default-palette-mode'
 
 async function getSetting(key: string): Promise<string | undefined> {
   const record = await idbGet<SettingRecord>(STORE_SETTINGS, key)
@@ -24,4 +25,15 @@ export async function getSkipDeleteConfirm(): Promise<boolean> {
 
 export function setSkipDeleteConfirm(value: boolean): Promise<void> {
   return putSetting(KEY_SKIP_DELETE_CONFIRM, value ? 'true' : 'false')
+}
+
+/** Preference: which mode saved-palette cards open in. Default dark. */
+export async function getDefaultPaletteMode(): Promise<'light' | 'dark'> {
+  return (await getSetting(KEY_DEFAULT_PALETTE_MODE)) === 'light'
+    ? 'light'
+    : 'dark'
+}
+
+export function setDefaultPaletteMode(value: 'light' | 'dark'): Promise<void> {
+  return putSetting(KEY_DEFAULT_PALETTE_MODE, value)
 }

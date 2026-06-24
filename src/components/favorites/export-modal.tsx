@@ -17,7 +17,7 @@ export function ExportModal({
   palette: Palette
   onClose: () => void
 }) {
-  const [formatId, setFormatId] = useState<ExportFormatId>('tailwind')
+  const [formatId, setFormatId] = useState<ExportFormatId>('hex')
   const [tailwindVersion, setTailwindVersion] = useState<TailwindVersion>('v4')
   const [copied, setCopied] = useState(false)
 

@@ -3,21 +3,24 @@ import { useEffect, useState } from 'react'
 import {
   ensureHydrated,
   getSettings,
+  saveDefaultPaletteMode,
   saveSkipDeleteConfirm,
 } from '#/lib/settings'
 
-/** App preferences. Today: whether deleting a saved palette needs the confirm
- *  popup. Default off (popup shows); the popup's "Don't ask me again" checkbox
- *  flips this on, and it can be flipped back here. */
+/** App preferences: whether deleting a saved palette needs the confirm popup,
+ *  and which mode (light/dark) saved-palette cards open in. */
 export function Preferences() {
   const [skipDeleteConfirm, setSkip] = useState(false)
+  const [defaultPaletteMode, setMode] = useState<'light' | 'dark'>('dark')
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
     let active = true
     void ensureHydrated().then(() => {
       if (!active) return
-      setSkip(getSettings().skipDeleteConfirm)
+      const s = getSettings()
+      setSkip(s.skipDeleteConfirm)
+      setMode(s.defaultPaletteMode)
       setReady(true)
     })
     return () => {
@@ -28,6 +31,11 @@ export function Preferences() {
   function toggle(next: boolean) {
     setSkip(next)
     void saveSkipDeleteConfirm(next)
+  }
+
+  function changeMode(next: 'light' | 'dark') {
+    setMode(next)
+    void saveDefaultPaletteMode(next)
   }
 
   return (
@@ -65,6 +73,45 @@ export function Preferences() {
           style={{ color: 'var(--app-text)' }}
         />
       </label>
+
+      <hr style={{ borderColor: 'var(--app-border)' }} />
+
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm" style={{ color: 'var(--app-text)' }}>
+            Default palette display mode
+          </span>
+          <p className="text-xs" style={{ color: 'var(--app-muted)' }}>
+            New saved-palette cards open in light or dark mode by default.
+          </p>
+        </div>
+        <div className="mt-1 flex shrink-0 gap-1.5">
+          {(['light', 'dark'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              disabled={!ready}
+              aria-pressed={defaultPaletteMode === m}
+              onClick={() => changeMode(m)}
+              className="rounded-full border px-3 py-1 text-xs capitalize transition disabled:opacity-50"
+              style={{
+                borderColor:
+                  defaultPaletteMode === m
+                    ? 'var(--app-text)'
+                    : 'var(--app-border)',
+                background:
+                  defaultPaletteMode === m ? 'var(--app-text)' : 'transparent',
+                color:
+                  defaultPaletteMode === m
+                    ? 'var(--app-bg)'
+                    : 'var(--app-text)',
+              }}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

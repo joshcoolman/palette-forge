@@ -25,6 +25,12 @@ export type SquareSwatch = { label: string; hex: string }
 
 const SLOTS = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 
+// The on-swatch label + hex are locked to Space Grotesk / Inter so they read the
+// same regardless of the site-wide type pairing (which the specimen face shows
+// off). Both families are always loaded via __root, so these stacks never flash.
+const LABEL_FONT = '"Space Grotesk", system-ui, sans-serif'
+const HEX_FONT = '"Inter", system-ui, sans-serif'
+
 /**
  * The seven-color swatch order the locked layout expects: background banner ·
  * [surface border muted text] neutral row · secondary band + accent corner. The
@@ -106,14 +112,14 @@ export function SquareCard({
           >
             <div
               className="text-[10px] font-bold uppercase leading-tight tracking-wide"
-              style={{ color: ink }}
+              style={{ color: ink, fontFamily: LABEL_FONT }}
             >
               {s.label}
             </div>
             {showHex && (
               <div
                 className="mt-0.5 text-[7px] uppercase leading-none tracking-wide tabular-nums"
-                style={{ color: ink, opacity: 0.7 }}
+                style={{ color: ink, opacity: 0.7, fontFamily: HEX_FONT }}
               >
                 {s.hex}
               </div>

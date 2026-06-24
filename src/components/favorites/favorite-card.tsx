@@ -102,12 +102,15 @@ export function FavoriteCard({
   palette,
   onOpen,
   onDelete,
+  defaultMode = 'dark',
 }: {
   palette: Palette
   onOpen: () => void
   onDelete: () => void
+  /** Which face the card opens on — driven by the user's default-mode pref. */
+  defaultMode?: Mode
 }) {
-  const [mode, setMode] = useState<Mode>('dark')
+  const [mode, setMode] = useState<Mode>(defaultMode)
   const [flipped, setFlipped] = useState(false)
 
   // The toggle floats bare over the background on both faces — the SquareCard's

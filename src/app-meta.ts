@@ -1,4 +1,4 @@
 /** Per-app identity used for the document title. */
 export const appMeta = {
-  name: 'Palette Forge',
+  name: 'Color for Days',
 } as const

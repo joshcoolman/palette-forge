@@ -15,7 +15,7 @@ function NotFound() {
         className="rounded-md px-4 py-2 text-sm font-medium"
         style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}
       >
-        Back to Palette Forge
+        Back to Color for Days
       </Link>
     </main>
   )
