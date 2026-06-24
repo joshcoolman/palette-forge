@@ -93,7 +93,10 @@ export function GlobalNav() {
                 : undefined,
             }}
           >
-            {current.label}
+            {/* Closed trigger shows only the primary (heading) font — the full
+                "X + Y" pairing label runs too long. The open menu still spells
+                out the body font beneath each option. */}
+            {current.heading ?? 'System'}
           </span>
           <ChevronDown size={13} style={{ color: 'var(--app-muted)' }} />
         </button>
