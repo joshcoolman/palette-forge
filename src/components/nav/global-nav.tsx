@@ -60,8 +60,11 @@ export function GlobalNav() {
         <Link
           to="/"
           onClick={() => setBump((b) => b + 1)}
-          className="pf-heading flex items-center gap-1.5 font-semibold tracking-tight"
-          style={{ color: '#ece4d0' }}
+          className="flex items-center gap-1.5 font-semibold tracking-tight"
+          // Wordmark is locked to Space Grotesk so the brand stays put when the
+          // user changes the global font pairing (it does NOT use `pf-heading`,
+          // which would follow the selected heading font).
+          style={{ color: '#ece4d0', fontFamily: fontStackByName('Space Grotesk') }}
         >
           <motion.span
             key={bump}
