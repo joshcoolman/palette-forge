@@ -2,6 +2,8 @@
 
 > An image or seed color in, refined and accessible light + dark palettes out. Four distinct takes, re-run for more, keep the ones you like.
 
+**Live at [colorfordays.com](https://colorfordays.com).**
+
 **Status: v1 shipped.** A focused, fully-local color-palette utility — no account, no API key, nothing sent anywhere. Built in public; the full history from scaffold to v1 lives in [`log/`](log/).
 
 ---
