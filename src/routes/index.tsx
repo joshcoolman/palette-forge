@@ -383,19 +383,41 @@ function Home() {
               </div>
             </div>
 
-            <SceneVariations
-              rounds={journey.rounds}
-              savedIds={journey.saved}
-              progress={journey.progress}
-              onToggleSave={(palette) => {
-                const wasSaved = journey.saved.includes(palette.id)
-                toggleSaved(ACTIVE, palette)
-                // Hearting re-themes the page to this palette (the backdrop keys
-                // off `chosen`); un-hearting leaves the current theme as-is.
-                if (!wasSaved) chooseVariation(ACTIVE, palette)
-              }}
-              onRegenerate={() => void rerunJourney(ACTIVE)}
-            />
+            {journey.rounds.length === 0 ? (
+              // Interrupted hydrate: the source survived a mid-generation refresh but
+              // the round didn't (a model stream can't resume). Offer to regenerate
+              // rather than show a blank area — the brief isn't lost.
+              <div
+                className="flex flex-col items-start gap-3 rounded-[var(--app-radius)] border border-dashed p-5"
+                style={{ borderColor: 'var(--app-border)' }}
+              >
+                <p className="text-sm" style={{ color: 'var(--app-muted)' }}>
+                  That run was interrupted — your description is saved.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleStart(journey.source!)}
+                  className="rounded-md px-3 py-1.5 text-sm font-medium"
+                  style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}
+                >
+                  Generate again
+                </button>
+              </div>
+            ) : (
+              <SceneVariations
+                rounds={journey.rounds}
+                savedIds={journey.saved}
+                progress={journey.progress}
+                onToggleSave={(palette) => {
+                  const wasSaved = journey.saved.includes(palette.id)
+                  toggleSaved(ACTIVE, palette)
+                  // Hearting re-themes the page to this palette (the backdrop keys
+                  // off `chosen`); un-hearting leaves the current theme as-is.
+                  if (!wasSaved) chooseVariation(ACTIVE, palette)
+                }}
+                onRegenerate={() => void rerunJourney(ACTIVE)}
+              />
+            )}
           </section>
         )}
 

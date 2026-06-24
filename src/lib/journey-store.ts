@@ -105,23 +105,22 @@ function reinjectSeed(p: ScoredPalette, value: string): ScoredPalette {
   return { ...p, seed: { ...p.seed, value } }
 }
 
-function settled(state: JourneyState): boolean {
-  return !!state.source && !state.rounds.some((r) => r.phase === 'running')
-}
-
 const persistTimers: Record<string, ReturnType<typeof setTimeout>> = {}
 
 /**
- * Mirror a settled journey to IndexedDB (debounced). Never persists while a round
- * is running, so a refresh can't rehydrate a row stuck mid-compose.
+ * Mirror a journey to IndexedDB (debounced). The source persists as soon as it's set
+ * — so a refresh mid-generation keeps the brief instead of losing everything — but a
+ * **running** round is never persisted (it would rehydrate as stuck, and a model
+ * stream can't resume across a reload). An interrupted journey therefore restores as
+ * "source present, no rounds", which the UI offers to regenerate.
  */
 function schedulePersist(id: string): void {
-  if (!settled(getState(id))) return
+  if (!getState(id).source) return
   clearTimeout(persistTimers[id]) // no-op when absent
   persistTimers[id] = setTimeout(() => {
     delete persistTimers[id]
     const s = getState(id)
-    if (!settled(s) || !s.source) return
+    if (!s.source) return
     // Stripping the per-take seed only pays off for images (one shared dataURL,
     // else stored N times). Color/prompt seeds are tiny — and a prompt journey's
     // takes each carry their OWN seed, so stripping + reinjecting one source value
@@ -130,10 +129,12 @@ function schedulePersist(id: string): void {
     const record: PersistedJourney = {
       id,
       source: s.source,
-      rounds: s.rounds.map((r) => ({
-        ...r,
-        variations: strip ? r.variations.map(stripSeed) : r.variations,
-      })),
+      rounds: s.rounds
+        .filter((r) => r.phase !== 'running')
+        .map((r) => ({
+          ...r,
+          variations: strip ? r.variations.map(stripSeed) : r.variations,
+        })),
       chosen: s.chosen ? (strip ? stripSeed(s.chosen) : s.chosen) : null,
       saved: s.saved,
     }
