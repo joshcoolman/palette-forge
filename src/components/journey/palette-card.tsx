@@ -70,7 +70,7 @@ export function PaletteCard({
         animate={{ scale: saved ? [1, 1.4, 1] : 1 }}
         transition={{ duration: 0.32, ease: 'easeOut' }}
       >
-        <Heart size={16} strokeWidth={2.25} fill={saved ? 'currentColor' : 'none'} />
+        <Heart className="size-5 sm:size-4" strokeWidth={2.25} fill={saved ? 'currentColor' : 'none'} />
       </motion.span>
     </motion.button>
   )

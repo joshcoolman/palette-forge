@@ -269,7 +269,14 @@ function Home() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              {/*
+                On mobile, flip the order and widen the gap: Re-run (the frequent,
+                safe action) lands in the far-right corner where the screen edge
+                stops the thumb from overshooting, and Start over (X, destructive)
+                moves inward with real separation so it's no longer an accidental
+                tap. Desktop keeps the original order/spacing (mouse — no hazard).
+              */}
+              <div className="flex flex-row-reverse items-center gap-4 sm:flex-row sm:gap-2">
                 {!running && (
                   <IconButton
                     label="Re-run"
