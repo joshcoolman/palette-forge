@@ -1,6 +1,6 @@
 /** User preferences, stored only in this browser (IndexedDB). */
 
-import { STORE_SETTINGS, idbGet, idbPut } from '#/lib/db'
+import { STORE_SETTINGS, idbDelete, idbGet, idbPut } from '#/lib/db'
 
 type SettingRecord = { key: string; value: string }
 
@@ -66,6 +66,12 @@ export async function getApiKey(): Promise<string> {
 
 export function setApiKey(value: string): Promise<void> {
   return putSetting(KEY_API_KEY, value)
+}
+
+/** Truly delete the stored key — removes the IndexedDB record, not just blanks
+ *  it — so "remove key" leaves nothing behind in the browser. */
+export function removeApiKey(): Promise<void> {
+  return idbDelete(STORE_SETTINGS, KEY_API_KEY)
 }
 
 /** Which model the AI layer calls. Default haiku (fast, cheap). */

@@ -21,8 +21,8 @@ The current experience is the product. AI is additive, never a replacement.
 
 | # | Plan | What it is | Status |
 |---|------|-----------|--------|
-| 0 | [plan-ai-byo-key.md](plan-ai-byo-key.md) | BYO-key foundation — settings, client, gate | Not started |
-| 1 | [plan-ai-rename.md](plan-ai-rename.md) | Creative Rename — per-card AI name, instant fallback | Not started |
+| 0 | [plan-ai-byo-key.md](plan-ai-byo-key.md) | BYO-key foundation — settings, client, gate | Done |
+| 1 | [plan-ai-rename.md](plan-ai-rename.md) | Creative Rename — per-card AI name, instant fallback | Done (locale deferred) |
 | 2 | [plan-ai-prompt-to-palette.md](plan-ai-prompt-to-palette.md) | Prompt-to-Palette — text as a third input on-ramp | Not started |
 | 3 | [plan-ai-thinking-feed.md](plan-ai-thinking-feed.md) | Thinking Feed — real-time paced progress stream | Not started |
 | 4 | [plan-ai-conversational-refine.md](plan-ai-conversational-refine.md) | Conversational Refine — clarify-then-act on a palette | Not started |

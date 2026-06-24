@@ -9,6 +9,7 @@ import {
   getDefaultPaletteMode,
   getSavedView,
   getSkipDeleteConfirm,
+  removeApiKey,
   setApiKey,
   setChatModel,
   setDefaultPaletteMode,
@@ -80,6 +81,12 @@ export async function saveApiKey(value: string): Promise<void> {
   await ensureHydrated()
   await setApiKey(value)
   current = { ...current, apiKey: value }
+}
+
+export async function clearApiKey(): Promise<void> {
+  await ensureHydrated()
+  await removeApiKey()
+  current = { ...current, apiKey: '' }
 }
 
 export async function saveChatModel(value: ChatModel): Promise<void> {

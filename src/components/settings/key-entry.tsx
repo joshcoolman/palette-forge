@@ -10,12 +10,18 @@ export function KeyEntry({
   value,
   disabled = false,
   onChange,
+  onRemove,
 }: {
   value: string
   disabled?: boolean
   onChange: (next: string) => void
+  /** Delete the stored key entirely (record removed, not blanked). When a key is
+   *  present, a two-step "Remove key" control confirms before calling this. */
+  onRemove: () => void
 }) {
   const [revealed, setRevealed] = useState(false)
+  const [confirmingRemove, setConfirmingRemove] = useState(false)
+  const hasKey = value.trim().length > 0
 
   return (
     <div className="flex flex-col gap-2">
@@ -61,6 +67,45 @@ export function KeyEntry({
         (api.anthropic.com), directly from this page. There is no server. It is
         visible to anything that can read this browser, so use a key you can revoke.
       </p>
+
+      {hasKey &&
+        (confirmingRemove ? (
+          <div className="flex items-center gap-3 text-xs">
+            <span style={{ color: 'var(--app-text)' }}>
+              Remove the stored key from this browser?
+            </span>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                setConfirmingRemove(false)
+                onRemove()
+              }}
+              className="font-medium transition hover:opacity-70 disabled:opacity-50"
+              style={{ color: 'var(--app-text)' }}
+            >
+              Remove
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmingRemove(false)}
+              className="transition hover:opacity-70"
+              style={{ color: 'var(--app-muted)' }}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setConfirmingRemove(true)}
+            className="self-start text-xs underline-offset-2 transition hover:underline disabled:opacity-50"
+            style={{ color: 'var(--app-muted)' }}
+          >
+            Remove key
+          </button>
+        ))}
     </div>
   )
 }

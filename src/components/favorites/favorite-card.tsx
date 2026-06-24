@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'motion/react'
-import { Code, Moon, Sun, Trash2 } from 'lucide-react'
+import { Code, Moon, Pencil, Sun, Trash2 } from 'lucide-react'
 
 import type { Mode, Palette, Role } from '#/features/palette/types'
 import { hexToRgb } from '#/features/color/color-utils'
@@ -102,11 +102,15 @@ export function FavoriteCard({
   palette,
   onOpen,
   onDelete,
+  onRename,
   defaultMode = 'dark',
 }: {
   palette: Palette
   onOpen: () => void
   onDelete: () => void
+  /** Open the rename dialog (manual edit always; AI suggestions inside it are
+   *  gated by whether a key is set). A base feature, so always provided. */
+  onRename: () => void
   /** Which face the card opens on — driven by the user's default-mode pref. */
   defaultMode?: Mode
 }) {
@@ -181,6 +185,13 @@ export function FavoriteCard({
           {palette.name}
         </span>
         <div className="flex items-center gap-2">
+          <IconButton
+            label={`Rename ${palette.name}`}
+            title="Rename this palette"
+            onClick={onRename}
+          >
+            <Pencil size={14} />
+          </IconButton>
           <IconButton label={`View ${palette.name} code`} onClick={onOpen}>
             <Code size={14} />
           </IconButton>

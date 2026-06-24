@@ -16,7 +16,7 @@ import { getSettings } from '#/lib/settings'
 import type { ChatModel } from '#/features/prefs/prefs-repo'
 
 const MODEL_IDS: Record<ChatModel, string> = {
-  haiku: 'claude-haiku-4-5-20251001',
+  haiku: 'claude-haiku-4-5',
   sonnet: 'claude-sonnet-4-6',
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import type { ChatModel } from '#/features/prefs/prefs-repo'
 import {
+  clearApiKey,
   ensureHydrated,
   getSettings,
   saveApiKey,
@@ -46,6 +47,11 @@ export function AiAccess() {
     void saveChatModel(next)
   }
 
+  function removeKey() {
+    setKey('')
+    void clearApiKey()
+  }
+
   const hasKey = apiKey.trim().length > 0
 
   return (
@@ -66,7 +72,12 @@ export function AiAccess() {
         </p>
       </div>
 
-      <KeyEntry value={apiKey} disabled={!ready} onChange={changeKey} />
+      <KeyEntry
+        value={apiKey}
+        disabled={!ready}
+        onChange={changeKey}
+        onRemove={removeKey}
+      />
 
       {hasKey && (
         <>

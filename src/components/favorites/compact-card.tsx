@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Code, Moon, Sun, Trash2 } from 'lucide-react'
+import { Code, Moon, Pencil, Sun, Trash2 } from 'lucide-react'
 
 import type { Mode, Palette } from '#/features/palette/types'
 import { IconButton } from '#/components/ui/icon-button'
@@ -25,6 +25,7 @@ export function CompactCard({
   palette,
   onOpen,
   onDelete,
+  onRename,
   defaultMode = 'dark',
   expanded,
   onToggleControls,
@@ -33,6 +34,9 @@ export function CompactCard({
   palette: Palette
   onOpen: () => void
   onDelete: () => void
+  /** Open the rename dialog. Sits in the inline controls row (mobile); desktop
+   *  find-and-share has no controls. A base feature, so always provided. */
+  onRename: () => void
   defaultMode?: Mode
   expanded: boolean
   onToggleControls: () => void
@@ -72,6 +76,13 @@ export function CompactCard({
                 <Trash2 size={14} />
               </IconButton>
               <div className="flex items-center gap-2">
+                <IconButton
+                  label={`Rename ${palette.name}`}
+                  title="Rename this palette"
+                  onClick={onRename}
+                >
+                  <Pencil size={14} />
+                </IconButton>
                 <IconButton label={`View ${palette.name} code`} onClick={onOpen}>
                   <Code size={14} />
                 </IconButton>
