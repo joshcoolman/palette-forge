@@ -343,11 +343,21 @@ function Home() {
                     className="text-xs"
                     style={{ color: 'var(--app-muted)' }}
                   >
-                    {journey.source.type === 'image'
-                      ? 'From an image'
-                      : journey.source.type === 'prompt'
-                        ? 'From your description'
-                        : `From ${journey.source.value}`}
+                    {journey.source.type === 'image' ? (
+                      'From an image'
+                    ) : journey.source.type === 'prompt' ? (
+                      <>
+                        From your description:{' '}
+                        <span
+                          className="italic"
+                          style={{ color: 'var(--app-text)' }}
+                        >
+                          “{journey.source.value}”
+                        </span>
+                      </>
+                    ) : (
+                      `From ${journey.source.value}`
+                    )}
                   </p>
                 </div>
               </div>
@@ -376,6 +386,7 @@ function Home() {
             <SceneVariations
               rounds={journey.rounds}
               savedIds={journey.saved}
+              progress={journey.progress}
               onToggleSave={(palette) => {
                 const wasSaved = journey.saved.includes(palette.id)
                 toggleSaved(ACTIVE, palette)

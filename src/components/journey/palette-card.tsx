@@ -55,6 +55,9 @@ export function PaletteCard({
           : `Save ${palette.name} to favorites`
       }
       aria-pressed={saved}
+      // Hover reveals the model's rationale (or the archetype character) without
+      // putting text on every strip — the clean color wall stays clean.
+      title={palette.character ? `${palette.name} — ${palette.character}` : palette.name}
       className="relative block w-full overflow-hidden rounded-[var(--app-radius)] border"
       style={{
         borderColor: saved
