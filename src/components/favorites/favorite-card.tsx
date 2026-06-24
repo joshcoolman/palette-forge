@@ -123,8 +123,10 @@ export function FavoriteCard({
   const toggleOver = cellColor(palette, 'background', mode)
   const toggleFg = textTone(toggleOver, 0.92)
 
+  // The card wears its *own* border color, not the site-wide one — the border role
+  // for whichever mode is showing. Each card is self-defined, not framed by the app.
   const faceStyle = {
-    borderColor: 'var(--app-border)',
+    borderColor: cellColor(palette, 'border', mode),
     backfaceVisibility: 'hidden' as const,
     WebkitBackfaceVisibility: 'hidden' as const,
   }
