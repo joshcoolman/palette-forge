@@ -300,7 +300,7 @@ function Home() {
           ) : (
             <span />
           )}
-          <SourcePopover onStart={handleStart} />
+          <SourcePopover onStart={handleStart} aiEnabled={aiEnabled} />
         </header>
 
         {active && journey.source && (

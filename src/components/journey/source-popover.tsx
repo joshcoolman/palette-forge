@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
-import { ImageUp, Pipette, Plus } from 'lucide-react'
+import { ImageUp, Loader2, Pipette, Plus, Sparkles } from 'lucide-react'
 
 import { extractDominantColors } from '#/features/color/dominant-color'
 import { normalizeHex } from '#/features/color/color-utils'
+import { promptToSeed } from '#/features/agent/prompt-engine'
 import type { Source } from '#/features/palette/types'
 import { IconButton } from '#/components/ui/icon-button'
 import { ColorPicker } from '#/components/journey/color-picker'
@@ -45,12 +46,18 @@ const CURATED = [
  */
 export function SourcePopover({
   onStart,
+  aiEnabled,
 }: {
   onStart: (source: Source) => void
+  /** Whether a key is present — gates the "describe it" prompt section's existence. */
+  aiEnabled: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [picking, setPicking] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [prompt, setPrompt] = useState('')
+  const [thinking, setThinking] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -90,6 +97,27 @@ export function SourcePopover({
     const norm = normalizeHex(hex) ?? '#3d5c49'
     setOpen(false)
     onStart({ type: 'color', value: norm, extracted: [norm] })
+  }
+
+  // The model translates the words into one seed hex; the engine builds the round
+  // from it like any other color source (the original text rides along in `prompt`
+  // for the deferred mood board). A bad hex falls back to neutral inside
+  // promptToSeed; only a transport error throws, which we surface here.
+  async function startFromPrompt() {
+    const text = prompt.trim()
+    if (!text || thinking) return
+    setThinking(true)
+    setError(null)
+    try {
+      const seed = await promptToSeed(text)
+      setOpen(false)
+      setPrompt('')
+      onStart({ type: 'color', value: seed, extracted: [seed], prompt: text })
+    } catch {
+      setError('Couldn’t reach Anthropic. Check your API key in Settings.')
+    } finally {
+      setThinking(false)
+    }
   }
 
   return (
@@ -177,6 +205,68 @@ export function SourcePopover({
               <Pipette size={15} />
             </button>
           </div>
+
+          {/* Describe it — additive, only with a key (no nag otherwise). The model
+              maps the words to a seed; the engine runs from there. */}
+          {aiEnabled && (
+            <>
+              <div
+                className="mt-3 mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-wide"
+                style={{ color: 'var(--app-muted)' }}
+              >
+                <Sparkles size={12} />
+                or describe it
+              </div>
+
+              <form
+                className="flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  void startFromPrompt()
+                }}
+              >
+                <input
+                  type="text"
+                  value={prompt}
+                  disabled={thinking}
+                  maxLength={120}
+                  placeholder="warm, mid-century, calm"
+                  aria-label="Describe the palette"
+                  onChange={(e) => {
+                    setPrompt(e.target.value)
+                    if (error) setError(null)
+                  }}
+                  className="min-w-0 flex-1 rounded-md border bg-transparent px-2.5 py-1.5 text-sm outline-none disabled:opacity-50"
+                  style={{
+                    borderColor: 'var(--app-border)',
+                    color: 'var(--app-text)',
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={thinking || prompt.trim().length === 0}
+                  aria-label="Forge from description"
+                  className="flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition disabled:opacity-40"
+                  style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}
+                >
+                  {thinking ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    'Forge'
+                  )}
+                </button>
+              </form>
+
+              {error && (
+                <p
+                  className="mt-2 text-xs"
+                  style={{ color: 'var(--app-text)' }}
+                >
+                  {error}
+                </p>
+              )}
+            </>
+          )}
         </motion.div>
       )}
 
