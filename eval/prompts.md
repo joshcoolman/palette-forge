@@ -1,0 +1,46 @@
+# Eval prompts
+
+A small, stable set of real briefs to test the AI palette flow against — so changes
+to the system prompt / model / contract can be judged consistently instead of by
+one-off vibes. Grab these for manual runs; a future eval runner can parse this file.
+
+Each case records the brief verbatim, the **intent** a good result must honor, and
+any **must-not** (hard constraints the user stated in words). The v1 seed-only path
+fails the must-nots because the model only picked a seed hue and the deterministic
+engine chose the accent — see `docs/plan-ai-model-direct.md` for why, and the fix.
+
+---
+
+## lawn-care — natural / professional
+
+> We're in the Pacific Northwest. We need a palette for a lawn care company:
+> professional, residential services.
+
+- **Intent:** natural, outdoorsy, trustworthy; greens/earth; calm and credible, not loud.
+- **Must-not:** nothing garish or toy-like; no hot pink / magenta accents.
+- **v1 result (seed-only):** seed greens were right (`#2d5a1b`, `#348514`), but engine
+  accents rotated to magenta/pink — **fails** the must-not.
+
+## racing-brand — serious / no-frills
+
+> We're a serious performance mechanic for serious racers. We want a racing brand,
+> a set of colors, nothing girly. It's a pretty serious crowd. Show us what you have.
+
+- **Intent:** bold, high-contrast, performance/automotive; serious and masculine-coded;
+  reds/blacks/steel/electric accents read well here.
+- **Must-not:** **explicitly no "girly"** — no pink, no purple/lavender, no pastels.
+- **v1 result (seed-only):** pink and purple accents throughout — **fails** the must-not,
+  and the user called it out directly. This is the motivating case for model-authored
+  palettes (the model controls every hue, so it can simply obey "nothing girly").
+
+---
+
+## How to use (for now)
+
+1. Add a real Anthropic key in Settings.
+2. Open the source popover → "Chat with AI" → paste a brief above → Submit.
+3. Judge against Intent + Must-not. With observability on (`docs/plan-ai-model-direct.md`),
+   the dev console / call log shows the model, the exact prompt, and the raw response.
+
+A scripted runner (feed each prompt, capture JSON, auto-check the must-nots like
+"no hue in the magenta/pink band") is a later step once the model-direct contract lands.
