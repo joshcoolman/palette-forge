@@ -84,12 +84,6 @@ export function PaletteCard({
             >
               {palette.name}
             </span>
-            <span
-              className="shrink-0 text-xs tabular-nums"
-              style={{ color: 'var(--app-muted)' }}
-            >
-              {palette.score.overall}
-            </span>
           </div>
           {palette.character && (
             <span

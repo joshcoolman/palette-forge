@@ -24,10 +24,10 @@ function colorsWithAccent(hex: string): ColorRow[] {
 }
 
 describe('palette namer', () => {
-  it('names the four takes of a round distinctly', async () => {
-    const four = await engine.compose(SOURCE)
-    const names = four.map((p) => p.name)
-    expect(new Set(names).size).toBe(4)
+  it('names the takes of a round distinctly', async () => {
+    const takes = await engine.compose(SOURCE)
+    const names = takes.map((p) => p.name)
+    expect(new Set(names).size).toBe(takes.length)
     // `<Word> <Word>` shape, both capitalized.
     expect(names.every((n) => /^[A-Z][a-z]+ [A-Z][a-z]/.test(n))).toBe(true)
   })
@@ -39,15 +39,15 @@ describe('palette namer', () => {
   })
 
   it('picks the hue word from the accent (warm vs cool differ)', () => {
-    const warm = nameFor(colorsWithAccent('#d24a1a'), 'Vivid', new Set())
-    const cool = nameFor(colorsWithAccent('#1a55d2'), 'Vivid', new Set())
+    const warm = nameFor(colorsWithAccent('#d24a1a'), 'Jewel', new Set())
+    const cool = nameFor(colorsWithAccent('#1a55d2'), 'Jewel', new Set())
     expect(warm).not.toEqual(cool)
   })
 
   it('dedupes against the seen set', () => {
     const seen = new Set<string>()
-    const a = nameFor(colorsWithAccent('#d24a1a'), 'Vivid', seen)
-    const b = nameFor(colorsWithAccent('#d24a1a'), 'Vivid', seen)
+    const a = nameFor(colorsWithAccent('#d24a1a'), 'Jewel', seen)
+    const b = nameFor(colorsWithAccent('#d24a1a'), 'Jewel', seen)
     expect(a).not.toEqual(b)
   })
 })

@@ -1,112 +1,33 @@
 /**
- * Deterministic, zero-token PaletteEngine. Extraction is real; the four takes
- * are composed by recipe, repaired against the contrast policy, and scored by
- * the shared heuristic. It responds to the user's actual source and steers — the
- * no-key demo's feel is fully tunable here before Claude is wired in.
+ * Deterministic, zero-token PaletteEngine. Extraction is real; each take is a
+ * treatment archetype (`features/palette/tuning.ts`) filled with hues derived
+ * from the user's actual source — so every result reads as *their* color or
+ * image, rendered through a different mood.
  *
- * The four are distinct by design: they rotate the accent hue, swing accent
- * saturation and lightness, and vary the neutral tint, so the "surprise me"
- * grid reads as four genuinely different moods, not minor tweaks of one idea.
+ * The takes are distinct by design: a dark jewel, a moody twilight, a warm
+ * sand, a crisp paper, a calm meadow, a loud signal. They share the seed's hue
+ * family (coherent grid) but differ in ground depth, text duotone, and the
+ * cross-hue accent relationship — the closest a deterministic engine gets to
+ * "surprise me." Legibility is baked into the archetypes; there is no runtime
+ * contrast repair flattening bold combinations back to "safe."
  */
 
 import type {
   ColorRow,
+  Mode,
+  Role,
   ScoredPalette,
   Seed,
   Source,
 } from '#/features/palette/types'
-import {
-  clamp,
-  hexToHsl,
-  hexToRgb,
-  hslToHex,
-} from '#/features/color/color-utils'
-import {
-  parsePairing,
-  policyFailures,
-  relativeLuminance,
-} from '#/features/color/contrast'
+import { ROLES } from '#/features/palette/types'
+import { clamp, hexToHsl, hslToHex } from '#/features/color/color-utils'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
 import { nameFor } from '#/features/palette/namer'
-import { TUNING } from '#/features/palette/tuning'
+import { ARCHETYPES, DERIVATION } from '#/features/palette/tuning'
+import type { Archetype } from '#/features/palette/tuning'
 import type { PaletteEngine, ProgressFn } from '#/features/agent/engine'
 import { finalizePalette } from '#/features/agent/engine'
-
-type Recipe = {
-  baseHue: number
-  accentHueShift: number
-  neutralSat: number
-  accentSatLight: number
-  accentSatDark: number
-  accentLightLight: number
-  accentLightDark: number
-}
-
-/** One of the four characters the no-key demo surprises with. */
-type Composition = {
-  name: string
-  character: string
-  accentHueShift: number
-  neutralSat: number
-  accentSatLight: number
-  accentSatDark: number
-  accentLightLight: number
-  accentLightDark: number
-}
-
-// Four deliberately distinct reads of the same source: a punchy lead, a
-// restrained professional, a dark complement, and a soft calm. They differ in
-// temperature (hue rotation), energy (accent saturation), and depth (accent
-// lightness + neutral tint) — the closest a deterministic engine gets to the
-// vision model's "surprise me."
-const COMPOSITIONS: Composition[] = [
-  {
-    name: 'Vivid',
-    character: 'Bright and confident — a saturated accent over crisp neutrals.',
-    accentHueShift: 0,
-    neutralSat: 0.07,
-    accentSatLight: 0.84,
-    accentSatDark: 0.6,
-    accentLightLight: 0.47,
-    accentLightDark: 0.66,
-  },
-  {
-    name: 'Composed',
-    character: 'Muted and professional — restrained color, quiet authority.',
-    accentHueShift: 20,
-    neutralSat: 0.05,
-    accentSatLight: 0.5,
-    accentSatDark: 0.4,
-    accentLightLight: 0.42,
-    accentLightDark: 0.62,
-  },
-  {
-    name: 'Nocturne',
-    character: 'Dark and intense — a deep, moody complement.',
-    accentHueShift: 180,
-    neutralSat: 0.13,
-    accentSatLight: 0.72,
-    accentSatDark: 0.52,
-    accentLightLight: 0.4,
-    accentLightDark: 0.64,
-  },
-  {
-    name: 'Hush',
-    character: 'Soft and calm — gentle, airy, low-contrast warmth.',
-    accentHueShift: 32,
-    neutralSat: 0.1,
-    accentSatLight: 0.48,
-    accentSatDark: 0.4,
-    accentLightLight: 0.52,
-    accentLightDark: 0.68,
-  },
-]
-
-const NEUTRAL_GROUND = new Set(['background', 'surface'])
-
-function luminance(hex: string): number {
-  return relativeLuminance(hexToRgb(hex))
-}
 
 /** Candidate anchor hues from the source, most-saturated first. */
 function anchorHues(source: Source): number[] {
@@ -125,23 +46,22 @@ const GOLDEN_ANGLE = 137.508
  * Classic color-theory offsets from the seed hue, ordered so consecutive re-runs
  * jump across the wheel: monochromatic, complementary, the two triadics, the two
  * split-complementaries, the two analogous. A color re-run walks this list, so
- * every round is a recognizable, intentional scheme *derived from* the seed —
- * not a random hue. Index 0 (mono) is the opening and isn't reached by re-runs.
+ * every round is a recognizable scheme *derived from* the seed — never a random
+ * hue. Index 0 (mono) is the opening and isn't reached by re-runs.
  */
 const HARMONICS = [0, 180, 120, 240, 150, 330, 210, 30]
 
 /**
- * The base hue for a round. Variation 0 (the opening) anchors on the most
- * saturated source color — the honest read, unchanged for both source types.
+ * The base hue for a round — the spine of seed-coherence. Every neutral role
+ * (background, surface, muted, border, text) is this hue, so the whole palette
+ * reads as the user's color; only the accent rotates away from it.
  *
- * Re-runs diverge by source type, but both now move boldly each round:
- * - **Image:** rotate the whole palette by the golden angle. Walking the image's
- *   own colors (the prior approach) collapses to a wobble when the image is
- *   hue-narrow — all browns/olives re-run to themselves. A re-run is "surprise me
- *   again," so we explore the wheel; the accent swings most, grounds re-tint.
+ * Variation 0 (the opening) anchors on the most saturated source color — the
+ * honest read. Re-runs move boldly but stay keyed to the seed:
+ * - **Image:** rotate by the golden angle (explore the wheel; a hue-narrow
+ *   image otherwise wobbles in place).
  * - **Color:** rotate through `HARMONICS` — complementary / triadic / etc.
- *   relative to the seed. Still keyed off the chosen color (every offset is a
- *   relationship to it), but with the same across-round variety images get.
+ *   relative to the seed.
  */
 function pickBaseHue(source: Source, variation: number): number {
   const base = anchorHues(source)[0] ?? 220
@@ -151,151 +71,51 @@ function pickBaseHue(source: Source, variation: number): number {
 }
 
 /**
- * Deterministic hash in [0, 1) from an integer — the classic sin-fract trick.
- * Drives id-seeded jitter so re-runs differ without any real randomness (the
- * engine stays a pure function of its inputs; tests stay stable).
+ * The six role hexes for one render mode of an archetype at a given base hue.
+ * Light and dark are inversions: light mode is a light ground with ink text;
+ * dark mode flips to the hero dark ground with light text. The derivation is
+ * keyed by mode (not the archetype), so the toggle swaps ground↔text rather
+ * than just darkening the same look.
  */
-function noise(n: number): number {
-  const x = Math.sin(n * 12.9898) * 43758.5453
-  return x - Math.floor(x)
-}
-
-/**
- * Bounded per-round jitter so a keyless re-run yields a fresh four, not a repeat.
- * No-op on the opening round. Same offsets across the round's four takes, so the
- * round shifts cohesively while the characters stay distinct. Deliberately small
- * — re-runs read as "the same seed, explored," not a different color entirely.
- */
-function varyRecipe(recipe: Recipe, variation: number): Recipe {
-  if (variation <= 0) return recipe
-  const jolt = (salt: number): number => noise(variation * 7.13 + salt) * 2 - 1
+function roleHexes(
+  baseHue: number,
+  arch: Archetype,
+  mode: Mode,
+): Record<Role, string> {
+  const g = arch.ground[mode]
+  const d = DERIVATION[mode]
+  const a = arch.accent[mode]
   return {
-    ...recipe,
-    baseHue: (recipe.baseHue + jolt(1) * 15 + 360) % 360,
-    neutralSat: clamp(recipe.neutralSat + jolt(2) * 0.02, 0, 0.3),
-    accentSatLight: clamp(
-      recipe.accentSatLight + jolt(3) * 0.08,
-      0.3,
-      ACCENT_SAT_CEILING,
-    ),
-    accentSatDark: clamp(
-      recipe.accentSatDark + jolt(4) * 0.08,
-      0.3,
-      ACCENT_SAT_CEILING,
-    ),
-    accentLightLight: clamp(recipe.accentLightLight + jolt(5) * 0.05, 0.28, 0.7),
-    accentLightDark: clamp(recipe.accentLightDark + jolt(6) * 0.05, 0.4, 0.82),
+    background: hslToHex({ h: baseHue, s: g.s, l: g.l }),
+    surface: hslToHex({
+      h: baseHue,
+      s: g.s,
+      l: clamp(g.l + d.surfaceLightStep, 0, 1),
+    }),
+    text: hslToHex({ h: baseHue, s: d.text.s, l: d.text.l }),
+    muted: hslToHex({ h: baseHue, s: g.s * d.muted.satFactor, l: d.muted.l }),
+    accent: hslToHex({
+      h: (baseHue + arch.accentShift + 360) % 360,
+      s: a.s,
+      l: a.l,
+    }),
+    border: hslToHex({
+      h: baseHue,
+      s: g.s * d.borderSatFactor,
+      l: clamp(g.l + d.borderLightStep, 0, 1),
+    }),
   }
 }
 
-function recipeFor(comp: Composition, baseHue: number): Recipe {
-  return {
-    baseHue,
-    accentHueShift: comp.accentHueShift,
-    neutralSat: comp.neutralSat,
-    accentSatLight: comp.accentSatLight,
-    accentSatDark: comp.accentSatDark,
-    accentLightLight: comp.accentLightLight,
-    accentLightDark: comp.accentLightDark,
-  }
-}
-
-// Taste knobs live in `features/palette/tuning.ts` — edit there to retune the
-// whole app (every take, re-run, and sample card). Aliased here for brevity.
-const NEUTRAL_SAT_FLOOR = TUNING.comfortBand.neutralSatFloor
-const ACCENT_SAT_CEILING = TUNING.comfortBand.accentSatCeiling
-
-/** A tinted neutral: the base hue at a fraction of the recipe's tint strength. */
-function tinted(hue: number, sat: number, light: number): string {
-  return hslToHex({ h: hue, s: clamp(sat, 0, 1), l: clamp(light, 0, 1) })
-}
-
-function composeColors(recipe: Recipe): ColorRow[] {
-  const { baseHue, neutralSat: t } = recipe
-  const aHue = (baseHue + recipe.accentHueShift + 360) % 360
-  const floor = (sat: number): number => Math.max(sat, NEUTRAL_SAT_FLOOR)
-  const N = TUNING.neutrals
-  return [
-    {
-      // Tinted paper in light — the page sits where surface used to (clearly
-      // off-white, not near-white); a warm/cool charcoal (not inverted white) in
-      // dark, carrying a touch more tint than light mode.
-      role: 'background',
-      light: tinted(baseHue, floor(t * N.background.tintLight), N.background.light),
-      dark: tinted(baseHue, floor(t * N.background.tintDark), N.background.dark),
-    },
-    {
-      // Keys off the (tinted) background: a gentle step darker + a touch more
-      // tint, so a raised panel reads as a quiet lift, not a hard jump. Small
-      // elevation lift in dark.
-      role: 'surface',
-      light: tinted(baseHue, floor(t * N.surface.tintLight), N.surface.light),
-      dark: tinted(baseHue, floor(t * N.surface.tintDark), N.surface.dark),
-    },
-    {
-      // Note: text is deliberately not floored — at very low tint it just reads
-      // as near-neutral ink, which is fine for the most-read color.
-      role: 'text',
-      light: tinted(baseHue, t * N.text.tintLight, N.text.light),
-      dark: tinted(baseHue, t * N.text.tintDark, N.text.dark),
-    },
-    {
-      role: 'muted',
-      light: tinted(baseHue, floor(t * N.muted.tintLight), N.muted.light),
-      dark: tinted(baseHue, floor(t * N.muted.tintDark), N.muted.dark),
-    },
-    {
-      role: 'accent',
-      light: hslToHex({
-        h: aHue,
-        s: Math.min(recipe.accentSatLight, ACCENT_SAT_CEILING),
-        l: recipe.accentLightLight,
-      }),
-      dark: hslToHex({
-        h: aHue,
-        s: Math.min(recipe.accentSatDark, ACCENT_SAT_CEILING),
-        l: recipe.accentLightDark,
-      }),
-    },
-    {
-      role: 'border',
-      light: tinted(baseHue, floor(t * N.border.tintLight), N.border.light),
-      dark: tinted(baseHue, floor(t * N.border.tintDark), N.border.dark),
-    },
-  ]
-}
-
-/**
- * The deterministic analog of the agent's revise loop: nudge the adjustable
- * (non-ground) role of each failing pairing toward more contrast until the
- * policy is satisfied or we run out of steps (then the badge stays honest).
- */
-function repair(
-  colors: ColorRow[],
-  policy: ReturnType<typeof loadContrastPolicy>,
-): ColorRow[] {
-  const out = colors.map((c) => ({ ...c }))
-  for (let step = 0; step < 48; step += 1) {
-    const failures = policyFailures(out, policy)
-    if (failures.length === 0) break
-    for (const failure of failures) {
-      const roles = parsePairing(failure.pairing)
-      if (!roles) continue
-      const adjustRole = NEUTRAL_GROUND.has(roles.fg) ? roles.bg : roles.fg
-      const groundRole = adjustRole === roles.fg ? roles.bg : roles.fg
-      const row = out.find((c) => c.role === adjustRole)
-      const ground = out.find((c) => c.role === groundRole)
-      if (!row || !ground) continue
-      const hsl = hexToHsl(row[failure.mode])
-      const direction =
-        luminance(row[failure.mode]) >= luminance(ground[failure.mode]) ? 1 : -1
-      row[failure.mode] = hslToHex({
-        ...hsl,
-        l: clamp(hsl.l + direction * 0.03, 0, 1),
-      })
-    }
-  }
-  return out
+/** Compose the full light+dark palette for one archetype at a base hue. */
+function composeColors(baseHue: number, arch: Archetype): ColorRow[] {
+  const light = roleHexes(baseHue, arch, 'light')
+  const dark = roleHexes(baseHue, arch, 'dark')
+  return ROLES.map((role) => ({
+    role,
+    light: light[role],
+    dark: dark[role],
+  }))
 }
 
 function toSeed(source: Source): Seed {
@@ -309,19 +129,18 @@ export class SimulatedEngine implements PaletteEngine {
     variation = 0,
     usedNames?: Iterable<string>,
   ): Promise<ScoredPalette[]> {
-    onProgress?.('Composing four takes…')
+    onProgress?.('Composing takes…')
     const policy = loadContrastPolicy()
     const baseHue = pickBaseHue(source, variation)
-    // Seeded with names already on screen this journey, so a re-run's four don't
-    // collide with each other *or* with earlier rounds.
+    // Seeded with names already on screen this journey, so a re-run's takes
+    // don't collide with each other *or* with earlier rounds.
     const seen = new Set<string>(usedNames)
-    return COMPOSITIONS.map((comp) => {
-      const recipe = varyRecipe(recipeFor(comp, baseHue), variation)
-      const colors = repair(composeColors(recipe), policy)
+    return ARCHETYPES.map((arch) => {
+      const colors = composeColors(baseHue, arch)
       return finalizePalette({
         seed: toSeed(source),
-        name: nameFor(colors, comp.name, seen),
-        character: comp.character,
+        name: nameFor(colors, arch.key, seen),
+        character: arch.character,
         colors,
         policy,
       })

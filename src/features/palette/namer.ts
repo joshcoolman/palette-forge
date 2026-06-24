@@ -40,11 +40,15 @@ function hueWords(h: number): string[] {
 
 const NEUTRAL_WORDS = ['Ash', 'Stone', 'Pewter', 'Linen', 'Graphite', 'Smoke']
 
+// Mood words keyed by treatment archetype (see `features/palette/tuning.ts`).
+// The second word of a name comes from here; the first from the accent's hue.
 const MOOD: Record<string, string[]> = {
-  Vivid: ['Flare', 'Bold', 'Spark', 'Pop', 'Blaze', 'Punch'],
-  Composed: ['Studio', 'Quarter', 'Press', 'Atelier', 'Bureau', 'Salon'],
-  Nocturne: ['Midnight', 'Deep', 'Onyx', 'Eclipse', 'Shadow', 'Dusk'],
-  Hush: ['Hush', 'Veil', 'Calm', 'Drift', 'Whisper', 'Lull'],
+  Jewel: ['Jewel', 'Velvet', 'Regal', 'Crown', 'Noir', 'Court'],
+  Twilight: ['Twilight', 'Dusk', 'Gloaming', 'Vesper', 'Eclipse', 'Shade'],
+  Sand: ['Press', 'Atelier', 'Quarter', 'Bureau', 'Salon', 'Studio'],
+  Paper: ['Folio', 'Press', 'Edition', 'Quarto', 'Plate', 'Print'],
+  Meadow: ['Meadow', 'Field', 'Garden', 'Grove', 'Pasture', 'Common'],
+  Signal: ['Flare', 'Signal', 'Beacon', 'Spark', 'Blaze', 'Pop'],
 }
 const MOOD_FALLBACK = ['Take', 'Mix', 'Cut', 'Set', 'Edit', 'Draft']
 

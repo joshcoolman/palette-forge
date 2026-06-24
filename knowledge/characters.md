@@ -1,34 +1,46 @@
 # Characters
 
-The image is the brief. The user likes it and wants four palettes that work for
-UI — surprise them. Don't reach for color-theory labels (monochrome, triadic);
-nobody picks an interface by its hue geometry. Read the source for **character**
-— the vibe a real design language speaks — and give back four of them.
+The seed is the brief — a color the user picked or the dominant color of an
+image they like. Every take must read as *that* color, rendered through a
+different mood. Coherence with the seed is the one rule you never break; a take
+that ignores the user's input is a failure no matter how nice it looks.
 
-## Make the four genuinely distinct
+Within that, surprise them. Don't reach for color-theory labels (monochrome,
+triadic); nobody picks an interface by its hue geometry. Read for **character** —
+the vibe a real design language speaks — and give back a spread of them.
 
-Four reads of the same source, not four tweaks of one. Pull them apart along the
-axes people actually feel:
+## The ground is the hero
 
-- **Energy** — from a loud, saturated accent to a restrained, almost-quiet one.
-- **Temperature** — warm vs cool casts; lean different ways across the four.
-- **Depth** — bright and airy vs dark and intense; vary the value range.
-- **Mood** — playful, professional, editorial, calm. Name what you're going for.
+The single biggest lever. A palette feels bespoke when its **background is a
+real, saturated color** — a deep jewel, a warm sand, a bold signal — not a
+near-white tint with one accent doing all the work. Build the ground from the
+seed's hue at a confident saturation and a deliberate lightness; let the neutrals
+(surface, muted, border) be a family around it, sharing that hue. Then the accent
+is the *second* color decision, not the only one.
 
-If two of the four could swap names without anyone noticing, they're too close.
-Spread them out.
+## The accent is a cross-hue surprise
 
-## Keep every one UI-ready
+The accent earns its keep by jumping to a **different hue family** from the
+ground — a cool ground with a warm spark, a warm ground with a cool depth. That
+contrast is where the interest lives. Rotate it off the ground hue
+(complementary, split-complementary, triadic, analogous) so it relates to the
+seed but clearly departs from it.
 
-Character is the point, but each take is still a real interface: six roles, a
-distinct accent, quiet neutrals, both modes intentional, every contrast target
-met. A striking palette that fails the rubric is not a take — fix it or drop it.
+## Make the takes genuinely distinct
 
-- **The accent carries the character.** It's the one loud color; the neutrals
-  carry a faint shared temperature and stay out of the way.
-- **Restraint reads as quality.** The design languages people admire — restrained
-  neutrals plus one confident accent — get their authority from what they leave
-  out. A single decisive accent beats three competing ones.
-- **Name the character.** Give each take a short name and a one-line character
-  (e.g. "bright & punchy", "muted & professional", "dark & intense", "soft &
-  calm"). The name is how the user tells them apart — make it earn its keep.
+A set of reads of the same seed, not tweaks of one. Pull them apart along the
+axes people feel:
+
+- **Depth** — a deep jewel vs an airy page; vary the ground lightness boldly.
+- **Temperature** — where the accent lands relative to the ground.
+- **Energy** — a loud saturated ground vs a calm mid-tone.
+- **Mood** — jewel, twilight, sand, paper, meadow, signal. Name what you mean.
+
+If two takes could swap names without anyone noticing, they're too close.
+
+## Legibility lives in the recipe, not a checker
+
+There is no runtime contrast enforcement — nothing nudges colors back to "safe."
+Bake legibility into the treatment: a dark ground always pairs with a light
+text, a light ground with an ink text. Get the duotone right and the palette is
+readable by construction, the way a hand-built theme is. Bold beats compliant.

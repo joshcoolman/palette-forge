@@ -2,18 +2,41 @@
 
 What makes a palette good, independent of which hues are chosen.
 
-- **Value range.** Span a deliberate range from background to text. Avoid clustering everything in the mid-tones — muddy mid-grays read as indecision.
-- **Distinct accent.** The accent must be unmistakably the accent: separated from the neutrals in hue and saturation, never a faintly-tinted gray.
-- **Quiet neutrals.** Background, surface, muted, and border are a neutral family. Give them a faint shared temperature (a hint of the accent's hue, or a chosen warm/cool cast) rather than dead gray — but keep them quiet.
-- **Both modes intentional.** Compose light and dark each as a first-class theme — see Dark mode below.
-- **Restraint.** Six roles, no more. Resist decorative extra colors; the accent does the talking.
+- **Hero ground.** The background is a real color — a saturated mid-tone built
+  from the seed's hue — not a near-white or near-black tint. The neutrals
+  (surface, muted, border) are a family around it, sharing that hue.
+- **Cross-hue accent.** The accent is unmistakably the accent: it sits in a
+  *different* hue family from the ground (a warm spark on a cool ground, a cool
+  depth on a warm one), separated in hue and saturation. Never a faintly-tinted
+  gray.
+- **Deliberate value range.** Span ground → text with intent. The ground owns its
+  depth; the text is its duotone partner (light text on a dark ground, ink on a
+  light one).
+- **Seed coherence.** Every neutral role carries the seed's hue, so the whole
+  palette reads as the user's color. Only the accent rotates away.
+- **Range across the set.** A round spans treatments — deep jewel, moody
+  twilight, warm sand, crisp paper, calm meadow, loud signal — the way a
+  hand-built theme grid does. One airy near-light take is fine *as part of* that
+  range, not as every take.
+- **Restraint where it counts.** Six roles, no decorative extras. The interest
+  comes from the ground/accent relationship, not from piling on colors.
 
-## Dark mode — compose it, don't invert
+## Light and dark are genuine inversions
 
-Dark is not the light theme flipped. Compose it on its own terms.
+Each palette ships a `light` and a `dark` rendering, and they **flip** — the
+toggle is a real light/dark theme switch, not a "darken everything" pass.
 
-- **Warm/cool charcoal backgrounds**, lightness ~10–16% — never pure `#000000`, and carrying a touch more of the palette's tint than light mode does.
-- **Elevation lifts, in small steps.** Surfaces sit a _subtle_ step lighter than the background (~4–7% lightness), not the larger step light mode can afford.
-- **Desaturate the accent.** A fully-saturated accent vibrates and glows on dark — pull its saturation down ~10–20% from the light-mode value and place it at a mid-high lightness so it reads confident, not neon.
-- **Soften the text.** Primary text below pure white (~90–94% lightness); muted text lifted enough to stay legible, not just the light-mode muted darkened.
-- **Quiet borders** — a low-contrast lift off the surface, not the inverted light-mode border.
+- **Light mode is a true light theme** — a richly-tinted light ground (not flat
+  white — let it carry the seed hue) with a deep, **color-carrying ink** text
+  (the hero hue at low lightness, not pure black). Plus the bold cross-hue accent.
+- **Dark mode flips it** — the hero saturated dark ground with light text. The
+  deep hue that is the *text* in light mode becomes the *ground* in dark mode:
+  ground↔text swap, so the two modes share the same colors in opposite roles.
+- **Tune each mode first-class.** Honor the swap's spirit, but don't blind-invert
+  every role — keep `muted` dimmer than `text` and `surface` a sensible step off
+  the ground in *both* modes, so neither reads as a mechanical flip.
+- **The accent is roughly constant** across modes (a touch lighter/less saturated
+  on the dark ground so it reads confident, not neon).
+
+There is no runtime contrast check. Legibility is the recipe's job — get each
+mode's ground/text duotone right and both renderings are readable by construction.

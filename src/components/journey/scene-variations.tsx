@@ -6,7 +6,7 @@ import type { VariationRound } from '#/lib/journey-store'
 import { PaletteCard } from '#/components/journey/palette-card'
 import { ExportModal } from '#/components/favorites/export-modal'
 
-/** Scene 2 — composed, scored variations as a stack of rounds (newest first). */
+/** Scene 2 — composed treatment takes as a stack of rounds (newest first). */
 export function SceneVariations({
   rounds,
   chosenId,

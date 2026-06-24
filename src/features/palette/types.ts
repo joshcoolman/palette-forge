@@ -77,20 +77,13 @@ export type Palette = {
   createdAt: string
 }
 
-/** The agent's judgment of a composed palette (0–100 per dimension). */
-export type Score = {
-  overall: number
-  harmony: number
-  contrast: number
-  cohesion: number
-  rationale: string
-}
-
 /**
- * A composed palette carrying the agent's score and the free-form `character`
- * it named for this take (e.g. "bright & punchy") — not a fixed taxonomy type.
+ * A composed palette carrying the free-form `character` named for this take
+ * (e.g. "Deep jewel ground with a bright complementary spark.") — not a fixed
+ * taxonomy type. (Name kept as `ScoredPalette` for continuity across the app;
+ * there is no longer a numeric score.)
  */
-export type ScoredPalette = Palette & { character?: string; score: Score }
+export type ScoredPalette = Palette & { character?: string }
 
 /** One pairing the contrast policy requires, with its target. */
 export type PolicyPairing = { pairing: string; target: ContrastTarget }

@@ -8,7 +8,7 @@ Reference spec for what shipped. It started as a BYO-key, vision-agent tool; bui
 
 ## The one thing it does
 
-Image or seed color in → refined palettes (light + dark) out. A fan of four distinct takes; re-run for fresh fours; keep the ones you like.
+Image or seed color in → expressive palettes (light + dark) out. A round of distinct treatment takes — each a saturated hero ground with a contrasting accent, all coherent with your seed; re-run for fresh rounds; keep the ones you like.
 
 If a feature doesn't serve that sentence, it's not v1.
 
@@ -26,15 +26,15 @@ This is the discipline that stops it becoming a sprawl.
 
 ## Why this is more than a color picker
 
-A color picker gives you one swatch. This runs a real **generate → verify → choose** loop, and it earns that because the domain has a **free, automatic verifier**: contrast ratio.
+A color picker gives you one swatch. This composes a whole round of **finished, expressive palettes** from your seed — saturated hero grounds, cross-hue accents, real range — the kind of bespoke combinations you'd otherwise hand-build.
 
-1. The engine **composes four distinct characters** from the source (image colors or seed), guided by `/knowledge`.
-2. It **computes contrast itself** for the key role-pairings, light and dark, and **repairs** until the policy is met — self-corrected before you see it.
-3. It **scores** each take against the taste rubric (distinct accent, quiet neutrals, deliberate value range) and shows the honest WCAG badges.
-4. **Re-run** explores — color seeds walk color-theory relationships to the seed (complementary, triadic, …), image seeds rotate around the wheel — so each four is genuinely different.
-5. **You** are the final oracle for taste — switch, retune the source color, heart what's right.
+1. The engine reads the source's dominant hue and renders it through a set of **treatment archetypes** (`src/features/palette/tuning.ts`) — deep jewel, moody twilight, warm sand, crisp paper, calm meadow, loud signal. Each is a hue-free template; the hues come from your seed, so every take reads as *your* color.
+2. The **ground is the hero** (a saturated mid-tone, not a near-white tint) and the **accent jumps to a contrasting hue family** — that cross-hue surprise is where the interest lives.
+3. **Legibility is baked into the recipe** — a dark ground pairs with light text, a light ground with ink. There is no runtime contrast repair and no score; bold combinations are never flattened back to "safe."
+4. **Re-run** explores — color seeds walk color-theory relationships to the seed (complementary, triadic, …), image seeds rotate around the wheel — so each round is genuinely different yet still seed-coherent.
+5. **You** are the oracle for taste — switch, retune the source color, heart what's right.
 
-Two verifiers stacked: contrast (automatic, non-negotiable) and you (taste, live). The loop is deterministic — no model, no key, instant, free to host.
+The loop is deterministic — no model, no key, instant, free to host. (Contrast ratios are still computed onto each record for reference, but never enforced or shown.)
 
 > **AI at the boundary, not in the loop.** The in-app LLM was removed because the deterministic engine + a deterministic namer deliver the whole loop better (instant, predictable, no key wall). The `PaletteEngine` seam and the clean records stay so the engine can be exposed as an **agent-callable capability (MCP/API)** later — AI returns at the boundary, driving the tool, rather than living inside it.
 
@@ -44,24 +44,19 @@ Two verifiers stacked: contrast (automatic, non-negotiable) and you (taste, live
 
 **`/knowledge` is plain, human-readable markdown. Read it and you know exactly what this app considers good. Edit it and the output changes.** It ships with solid design expertise out of the box (color, type, composition). A different expert can fork it and rewrite it for their own taste — by hand, or by pointing their own agent at the folder. No code required.
 
-Knowledge influences output in **two** places, and that's the whole point:
-
-1. It **guides what the engine generates** (the generation side — characters, neutrals, accent policy).
-2. It **is the rubric the scoring checks against** (the judgment side — the WCAG policy and the taste score).
-
-Change the policy and both the generation and the judgment shift. That visible cause-and-effect is the feature.
+Knowledge and the archetype dials together define the taste. The prose in `/knowledge` states the north star; the actual generation numbers live in `src/features/palette/tuning.ts` (`ARCHETYPES` — ground L/S, text duotone, accent relationship per take).
 
 ```
 knowledge/
-├── palettes.md     # value range, accent distinct from neutrals,
-│                   # light AND dark both first-class, avoid muddy mid-tones
-├── characters.md   # the four distinct characters (Vivid / Composed / Nocturne / Hush)
-├── contrast.md     # accessibility policy: AA floor (AAA where feasible),
-│                   # which role-pairings must be checked (text-on-bg, text-on-surface…)
+├── palettes.md     # hero ground, cross-hue accent, seed coherence,
+│                   # range across the set, light/dark as inversions
+├── characters.md   # the treatment archetypes and how to keep them distinct
+├── contrast.md     # legacy WCAG policy — still parsed to record contrast
+│                   # ratios for reference, but NOT enforced or shown
 └── roles.md        # what each role means: background, surface, text, muted, accent, border
 ```
 
-Note: contrast _math_ is mechanism (locked, in code). Contrast _policy_ (which targets, which pairings) lives in knowledge, so an expert can tighten or loosen it without touching code.
+Note: the taste dials live in `tuning.ts`; edit there to reshape every take, re-run, and sample card at once.
 
 **Deliberately deferred:** an in-app "talk to it and it edits its own knowledge" mode. The folder is just files — a human or an external agent can already edit it.
 
@@ -71,8 +66,8 @@ Note: contrast _math_ is mechanism (locked, in code). Contrast _policy_ (which t
 
 Get this loop to _feel good_; everything else is plumbing.
 
-- **Four takes** as a comparison set, each a named character, previewed in a realistic light/dark UI.
-- **Re-run** for a fresh, genuinely-different four (newest stacked on top).
+- **A round of takes** as a comparison set, each a named treatment character, previewed in a realistic light/dark UI.
+- **Re-run** for a fresh, genuinely-different round (newest stacked on top).
 - **Retune** the source color in-place (the editable swatch + picker) and re-run.
 - **Keep** the ones you like — they save to the local library.
 
@@ -110,10 +105,10 @@ TanStack Start + React + TypeScript + Tailwind, Vercel.
 
 ## v1 cut
 
-1. Input: image or seed color (a `+` popover — upload / curated seeds / picker). 2. Compose four contrast-checked, named takes with light/dark mock. 3. Re-run for varied fours; retune the seed color and re-run. 4. Heart to the local library; copy/download as JSON + CSS vars. 5. Settings = a single delete-confirm preference.
+1. Input: image or seed color (a `+` popover — upload / curated seeds / picker). 2. Compose a round of named treatment takes (hero ground + cross-hue accent) with light/dark mock. 3. Re-run for varied rounds; retune the seed color and re-run. 4. Heart to the local library; copy/download as JSON + CSS vars. 5. Settings = a single delete-confirm preference.
 
 Deferred (so they stop nagging): the mood-board input, MCP/API exposure, a knowledge-authoring mode, the color "comfort band" as explicit constants.
 
 ## The thesis
 
-A focused utility whose expertise is **legible markdown anyone can read and rewrite**, made genuinely useful by a free verifier (contrast) plus a live one (your taste), with a clean data model and engine seam that become an **agent-callable capability** later.
+A focused utility that turns one seed into a round of **bespoke, expressive, seed-coherent palettes** — the kind you'd hand-build — with taste that lives in legible dials (`tuning.ts`) and prose (`/knowledge`), and a clean data model + engine seam that become an **agent-callable capability** later.

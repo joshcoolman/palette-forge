@@ -67,7 +67,7 @@ describe('journey-store surfaces compose failures', () => {
 
   it('resolves a non-empty surprise to a done round', async () => {
     const id = 'ok'
-    compose.mockResolvedValueOnce([{ id: 'p1', score: { overall: 82 } }])
+    compose.mockResolvedValueOnce([{ id: 'p1', character: 'a take' }])
     const { result } = renderHook(() => useJourney(id))
     await act(async () => {
       await startJourney(id, SOURCE)
