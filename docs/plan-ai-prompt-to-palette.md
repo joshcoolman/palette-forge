@@ -73,3 +73,19 @@ This plan ships with a basic spinner during the model call. [plan-ai-thinking-fe
 ## Gate
 
 `tsc`, `eslint`, `pnpm build`. Manual: add key → popover shows text section → type a prompt → palettes appear at normal speed. Edit `knowledge/palettes.md` → same prompt → different hex. Remove key → text section absent. Append a `log/` beat.
+
+---
+
+## v1.1 — UX revision: lift the input out of the popover
+
+Shipped v1 put the prompt as a cramped one-line input *inside* the source popover. Real use surfaced the problem: a design brief is a focused task, and a single line you can't fully see is wrong for it (the user's roofing-company brief, ~30 words, didn't fit). The popover is for the quick picks (image, swatches); a worded brief deserves its own space.
+
+**Change (input affordance only — the model contract and `promptToSeed` are unchanged):**
+
+- The popover's inline prompt input is removed. In its place, below the swatches: a divider + a single key-gated **"Chat with AI"** button. (Forward-looking label — the surface grows into the phase-4 conversation; v1.1 is still one-shot.)
+- That button dismisses the popover and opens a **centered overlay** (`prompt-dialog.tsx`) built on a small reusable `Modal` shell (`components/ui/modal.tsx` — the new home for the backdrop/Escape/click-outside shell currently copy-pasted across the four existing dialogs; those adopt it later).
+- The overlay is the focused surface: heading, an **auto-growing textarea** (you see the whole brief), a plain **Submit** (no "Forge" — see the `ui-plain-labels-no-cute` memory), spinner while thinking, inline error. On success it closes and produces the round exactly as before.
+
+**Not in v1.1 (deferred to phase 4):** reacting to the produced palette, clarifying questions. v1.1 ends at "produces the palette and stops." See [plan-ai-conversational-refine.md](plan-ai-conversational-refine.md).
+
+**Files touched (v1.1):** `components/ui/modal.tsx` (new), `components/journey/prompt-dialog.tsx` (new), `components/journey/source-popover.tsx` (swap inline input → button + overlay), `knowledge/prompt.md` unchanged.
