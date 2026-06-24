@@ -70,22 +70,47 @@ The point: tune the model prompt with evidence, not vibes. All dev-only, zero pr
 - Eval tooling stays ~tiny, dev-only, single-project, no abstraction — "this is how LangChain
   starts; we stop here." (We're in evals/observability territory, not orchestration.)
 
-## Outstanding / next steps (tomorrow)
+## TOMORROW — do these first (repo-as-resume quick wins + analytics)
 
-The tooling is done; now **use it** — this is the prompt-tuning the eval loop was built for:
+Workflow is already strong (per-commit gate, prose commits, `log/` narrative, real PRs like
+#6, focused tests — don't over-engineer past this). Three quick, high-signal gaps the user
+wants closed first, then analytics:
 
-1. **Mono-hue neutrals (relax it).** `color-theorist.md` currently says neutrals share one
-   hue family — that's why each Minecraft take was single-hued. One-line relax to let the
-   model build cohering multi-hue palettes ("muted pink + cyan + muted purple"). The user is
-   keen to see this.
+1. **CI — the big one.** No `.github/workflows` exists, so "gate green per commit" is an
+   unverifiable claim. Add a GitHub Actions workflow running the gate (`tsc` + `eslint` +
+   `pnpm test` + `pnpm build`) on push + PR → verifiable green checks. **Tailor to this
+   stack, not a generic template:** pnpm (see the `vercel-deploy-tanstack-pnpm11` memory),
+   Node, TanStack Start + Nitro.
+2. **LICENSE — none exists**, but the app footer calls itself "open-source" (a real
+   claim/reality gap a reviewer will catch; legally meaningful too). Add one — MIT is the
+   conventional pick for a showcase repo; confirm with the user.
+3. **Tag `v1.0.0`** — "v1 shipped" with no git tag. A tiny signal that you ship deliberately.
+4. **Vercel Analytics** — the user enabled it in Vercel (org `devpdx`, project
+   `palette-forge`, live at colorfordays.com). Add `@vercel/analytics`. **GOTCHA: this is
+   TanStack Start, NOT Next.js** — the dashboard shows the Next.js snippet
+   (`@vercel/analytics/next`); use the React variant instead:
+   `import { Analytics } from '@vercel/analytics/react'` and render `<Analytics />` in the
+   root layout (`src/routes/__root.tsx`). Optional companion: `@vercel/speed-insights/react`.
+
+Workflow habit notes: keep cherry-picks rare (the border tweak `cf18369` is a dup on both
+`main` and the branch — reconcile at merge); land `feat/prompt-to-palette` as a proper PR
+when ready (CI will then decorate it). Skip: e2e/component tests, conventional-commits
+(your prose messages are better), heavy branch protection.
+
+## THEN — the prompt tuning (what the eval loop was built for)
+
+Use the EVAL bar (needs a real key): pick a brief → Run → read `eval/runs.jsonl` /
+`latest.json` → tweak `color-theorist.md` → Run again → compare.
+
+1. **Mono-hue neutrals (relax it).** `color-theorist.md` says neutrals share one hue family
+   — that's why each Minecraft take was single-hued. One-line relax to let the model build
+   cohering multi-hue palettes ("muted pink + cyan + muted purple"). User is keen on this.
 2. **Ground-lightness range.** `wellness-yoga` brief returned grounds too dark (~`#191419`,
-   near-black) for a professional site. Add a "deep but breathing, ~L 12–20%, not near-black"
-   guideline to `color-theorist.md`. (`wellness-yoga` is the tagged test case.)
-3. **Workflow:** with a real key, use the EVAL bar — pick a brief → Run → read
-   `eval/runs.jsonl`/`latest.json` → tweak `color-theorist.md` → Run again → compare.
-4. **Deferred:** scope/refusal eval (the `battery-question` "pass" = graceful decline — needs
-   a guardrail in the prompt + a way to judge it); automated scorers (codify a must-not like
-   "no magenta-band hue"); epic phases 3–4 (thinking feed, conversational refine).
+   near-black) for a pro site. Add "deep but breathing, ~L 12–20%, not near-black" to
+   `color-theorist.md`. (`wellness-yoga` is the tagged test case.)
+3. **Deferred:** scope/refusal eval (the `battery-question` "pass" = graceful decline —
+   needs a prompt guard + a way to judge it); automated scorers (codify a must-not like "no
+   magenta-band hue"); epic phases 3–4 (thinking feed, conversational refine).
 
 ## Git state
 
