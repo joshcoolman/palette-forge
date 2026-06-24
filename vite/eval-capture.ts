@@ -55,13 +55,46 @@ export function evalCapture(): Plugin {
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use('/__eval/prompts', (req, res, next) => {
-        if (req.method !== 'GET') return next()
-        res.setHeader('content-type', 'application/json')
-        try {
-          res.end(JSON.stringify(parsePrompts(readFileSync(PROMPTS, 'utf8'))))
-        } catch {
-          res.end('[]') // no prompts file yet → empty list, runner hides itself
+        if (req.method === 'GET') {
+          res.setHeader('content-type', 'application/json')
+          try {
+            res.end(JSON.stringify(parsePrompts(readFileSync(PROMPTS, 'utf8'))))
+          } catch {
+            res.end('[]') // no prompts file yet → empty list
+          }
+          return
         }
+        if (req.method !== 'POST') return next()
+        // Append a new brief to the golden set (eval/prompts.md), so the runner can
+        // grow the test cases from the UI. Inserted before the trailing "---" that
+        // precedes "How to use", so prompts stay grouped; appended if that's absent.
+        let body = ''
+        req.on('data', (chunk) => (body += chunk))
+        req.on('end', () => {
+          try {
+            const { label, brief } = JSON.parse(body) as {
+              label?: string
+              brief?: string
+            }
+            if (!label?.trim() || !brief?.trim()) {
+              res.statusCode = 400
+              return res.end()
+            }
+            const md = readFileSync(PROMPTS, 'utf8')
+            const section = `\n## ${label.trim()}\n\n> ${brief.trim()}\n`
+            const marker = md.lastIndexOf('\n---\n')
+            const updated =
+              marker !== -1
+                ? md.slice(0, marker) + section + md.slice(marker)
+                : md.replace(/\s*$/, '') + '\n' + section
+            writeFileSync(PROMPTS, updated)
+            res.statusCode = 204
+            res.end()
+          } catch {
+            res.statusCode = 400
+            res.end()
+          }
+        })
       })
 
       server.middlewares.use('/__eval/run', (req, res, next) => {

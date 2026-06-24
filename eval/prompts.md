@@ -49,6 +49,10 @@ engine chose the accent — see `docs/plan-ai-model-direct.md` for why, and the 
   near-black) — the test case for that prompt tweak. (The Minecraft brief, by contrast, ran
   great — so this is taste-tuning, not a contract bug.)
 
+## battery-question — off-topic guard
+
+> Teach me how to change my car battery.
+
 ---
 
 ## How to use (for now)

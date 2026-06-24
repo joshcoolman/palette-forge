@@ -298,6 +298,17 @@ function Home() {
         )}
       />
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-5 px-4 py-12">
+        {/* Dev-only eval bar — a burnt-orange strip spanning the content column,
+            above the app's own header, so it never reads as part of the product.
+            Also gated on a key (`aiEnabled`): with no key, running does nothing, so
+            it shouldn't show at all. */}
+        {import.meta.env.DEV && aiEnabled && (
+          <EvalRunner
+            onRun={(brief) =>
+              handleStart({ type: 'prompt', value: brief, extracted: [] })
+            }
+          />
+        )}
         {/* Brand lives in the global nav now; the homepage stays clean — just the
             forge button, the working area, and the colorful grid. The view toggle
             sits opposite the "+" (only meaningful once there are saved palettes).
@@ -316,16 +327,7 @@ function Home() {
           ) : (
             <span />
           )}
-          <div className="flex items-center gap-2">
-            {import.meta.env.DEV && (
-              <EvalRunner
-                onRun={(brief) =>
-                  handleStart({ type: 'prompt', value: brief, extracted: [] })
-                }
-              />
-            )}
-            <SourcePopover onStart={handleStart} aiEnabled={aiEnabled} />
-          </div>
+          <SourcePopover onStart={handleStart} aiEnabled={aiEnabled} />
         </header>
 
         {active && journey.source && (
