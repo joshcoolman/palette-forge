@@ -5,19 +5,24 @@
 
 import {
   getDefaultPaletteMode,
+  getSavedView,
   getSkipDeleteConfirm,
   setDefaultPaletteMode,
+  setSavedView,
   setSkipDeleteConfirm,
+  type SavedView,
 } from '#/features/prefs/prefs-repo'
 
 export type Settings = {
   skipDeleteConfirm: boolean
   defaultPaletteMode: 'light' | 'dark'
+  savedView: SavedView
 }
 
 let current: Settings = {
   skipDeleteConfirm: false,
   defaultPaletteMode: 'dark',
+  savedView: 'expanded',
 }
 let hydration: Promise<void> | null = null
 
@@ -28,6 +33,7 @@ export function ensureHydrated(): Promise<void> {
       current = {
         skipDeleteConfirm: await getSkipDeleteConfirm(),
         defaultPaletteMode: await getDefaultPaletteMode(),
+        savedView: await getSavedView(),
       }
     })().catch(() => {
       // IndexedDB unavailable (e.g. during SSR) — keep defaults.
@@ -52,4 +58,10 @@ export async function saveDefaultPaletteMode(
   await ensureHydrated()
   await setDefaultPaletteMode(value)
   current = { ...current, defaultPaletteMode: value }
+}
+
+export async function saveSavedView(value: SavedView): Promise<void> {
+  await ensureHydrated()
+  await setSavedView(value)
+  current = { ...current, savedView: value }
 }

@@ -6,6 +6,9 @@ type SettingRecord = { key: string; value: string }
 
 const KEY_SKIP_DELETE_CONFIRM = 'skip-delete-confirm'
 const KEY_DEFAULT_PALETTE_MODE = 'default-palette-mode'
+const KEY_SAVED_VIEW = 'saved-view-mode'
+
+export type SavedView = 'compact' | 'expanded'
 
 async function getSetting(key: string): Promise<string | undefined> {
   const record = await idbGet<SettingRecord>(STORE_SETTINGS, key)
@@ -36,4 +39,14 @@ export async function getDefaultPaletteMode(): Promise<'light' | 'dark'> {
 
 export function setDefaultPaletteMode(value: 'light' | 'dark'): Promise<void> {
   return putSetting(KEY_DEFAULT_PALETTE_MODE, value)
+}
+
+/** Preference: how the saved-palettes grid renders. Default expanded (full
+ *  interactive flip cards); compact shows just the color strips. */
+export async function getSavedView(): Promise<SavedView> {
+  return (await getSetting(KEY_SAVED_VIEW)) === 'compact' ? 'compact' : 'expanded'
+}
+
+export function setSavedView(value: SavedView): Promise<void> {
+  return putSetting(KEY_SAVED_VIEW, value)
 }

@@ -25,14 +25,18 @@ import {
 import {
   ensureHydrated,
   getSettings,
+  saveSavedView,
   saveSkipDeleteConfirm,
 } from '#/lib/settings'
+import type { SavedView } from '#/features/prefs/prefs-repo'
 import { IconButton } from '#/components/ui/icon-button'
 import { Backdrop } from '#/components/journey/backdrop'
 import { SceneVariations } from '#/components/journey/scene-variations'
 import { SourcePopover } from '#/components/journey/source-popover'
 import { ColorPicker } from '#/components/journey/color-picker'
 import { FavoriteCard } from '#/components/favorites/favorite-card'
+import { CompactCard } from '#/components/favorites/compact-card'
+import { ViewModeToggle } from '#/components/favorites/view-mode-toggle'
 import { ExportModal } from '#/components/favorites/export-modal'
 import { DeleteConfirm } from '#/components/favorites/delete-confirm'
 
@@ -107,6 +111,13 @@ function Home() {
   const [seeding, setSeeding] = useState(false)
   const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false)
   const [defaultMode, setDefaultMode] = useState<Mode>('dark')
+  const [viewMode, setViewMode] = useState<SavedView>('expanded')
+  // Compact view only: which card has its controls revealed. Single-open — tapping
+  // another row collapses this one. Null = all rows show just their colors.
+  const [openCardId, setOpenCardId] = useState<string | null>(null)
+  // Desktop compact behaves differently: a click jumps straight to the code popup
+  // (find-and-share) instead of revealing the mobile accordion controls.
+  const [isDesktop, setIsDesktop] = useState(false)
   const [editingColor, setEditingColor] = useState(false)
 
   const active = !!journey.source
@@ -134,6 +145,7 @@ function Home() {
       const s = getSettings()
       setSkipDeleteConfirm(s.skipDeleteConfirm)
       setDefaultMode(s.defaultPaletteMode)
+      setViewMode(s.savedView)
       const existing = await listPalettes()
       if (!alive || existing.length > 0) return
       setSeeding(true)
@@ -155,6 +167,16 @@ function Home() {
     return () => {
       alive = false
     }
+  }, [])
+
+  // Track the sm breakpoint (640px) so compact cards can switch click behavior.
+  // Defaults false (mobile-first, SSR-safe); resolves on mount and on resize.
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 640px)')
+    const update = () => setIsDesktop(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
   }, [])
 
   // ESC dismisses the current round — a keyboard mirror of the X ("Start over")
@@ -233,8 +255,23 @@ function Home() {
       />
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-5 px-4 py-12">
         {/* Brand lives in the global nav now; the homepage stays clean — just the
-            forge button, the working area, and the colorful grid. */}
-        <header className="flex items-center justify-end gap-4">
+            forge button, the working area, and the colorful grid. The view toggle
+            sits opposite the "+" (only meaningful once there are saved palettes).
+            To make this mobile-only later, add `sm:hidden` to the toggle wrapper
+            and force `effectiveView` to 'expanded' at >=sm. */}
+        <header className="flex items-center justify-between gap-4">
+          {loaded && palettes.length > 0 ? (
+            <ViewModeToggle
+              value={viewMode}
+              onChange={(v) => {
+                setViewMode(v)
+                setOpenCardId(null)
+                void saveSavedView(v)
+              }}
+            />
+          ) : (
+            <span />
+          )}
           <SourcePopover onStart={handleStart} />
         </header>
 
@@ -331,21 +368,33 @@ function Home() {
           </div>
         ) : (
           <div
-            className="grid gap-5"
+            className="grid items-start gap-5"
             style={{
               gridTemplateColumns:
                 'repeat(auto-fill, minmax(min(285px, 100%), 1fr))',
             }}
           >
-            {palettes.map((p) => (
-              <FavoriteCard
-                key={p.id}
-                palette={p}
-                defaultMode={defaultMode}
-                onOpen={() => setOpen(p)}
-                onDelete={() => requestDelete(p)}
-              />
-            ))}
+            {palettes.map((p) => {
+              const cardProps = {
+                palette: p,
+                defaultMode,
+                onOpen: () => setOpen(p),
+                onDelete: () => requestDelete(p),
+              }
+              return viewMode === 'compact' ? (
+                <CompactCard
+                  key={p.id}
+                  {...cardProps}
+                  expanded={openCardId === p.id}
+                  onToggleControls={() =>
+                    setOpenCardId((id) => (id === p.id ? null : p.id))
+                  }
+                  openCodeOnClick={isDesktop}
+                />
+              ) : (
+                <FavoriteCard key={p.id} {...cardProps} />
+              )
+            })}
           </div>
         )}
       </main>
@@ -362,7 +411,13 @@ function Home() {
         />
       )}
 
-      {open && <ExportModal palette={open} onClose={() => setOpen(null)} />}
+      {open && (
+        <ExportModal
+          palette={open}
+          defaultMode={defaultMode}
+          onClose={() => setOpen(null)}
+        />
+      )}
       {confirming && (
         <DeleteConfirm
           palette={confirming}

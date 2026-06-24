@@ -1,24 +1,29 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { Clipboard, ClipboardCheck, X } from 'lucide-react'
+import { Clipboard, ClipboardCheck, Moon, Sun, X } from 'lucide-react'
 
-import type { Palette } from '#/features/palette/types'
+import type { Mode, Palette } from '#/features/palette/types'
 import { EXPORT_FORMATS, buildExport } from '#/features/palette/export'
 import type { ExportFormatId, TailwindVersion } from '#/features/palette/export'
 import { IconButton } from '#/components/ui/icon-button'
 import { SwatchRow } from '#/components/swatch-row'
 
 /** A simple swatch row (the take-card look) over copy-able formats, with a v3/v4
- *  toggle for the Tailwind export. The name lives in the header. */
+ *  toggle for the Tailwind export. The name lives in the header, alongside a
+ *  light/dark toggle that previews the swatch row in either mode (the exported
+ *  code always carries both). */
 export function ExportModal({
   palette,
   onClose,
+  defaultMode = 'dark',
 }: {
   palette: Palette
   onClose: () => void
+  defaultMode?: Mode
 }) {
   const [formatId, setFormatId] = useState<ExportFormatId>('hex')
   const [tailwindVersion, setTailwindVersion] = useState<TailwindVersion>('v4')
+  const [mode, setMode] = useState<Mode>(defaultMode)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -70,7 +75,7 @@ export function ExportModal({
         </div>
 
         <div className="shrink-0">
-          <SwatchRow colors={palette.colors} />
+          <SwatchRow colors={palette.colors} mode={mode} />
         </div>
 
         <div className="flex shrink-0 items-center justify-between gap-3">
@@ -91,30 +96,39 @@ export function ExportModal({
               </button>
             ))}
           </div>
-          {formatId === 'tailwind' && (
-            <div
-              className="flex items-center gap-1.5 text-xs"
-              style={{ color: 'var(--app-muted)' }}
+          <div className="flex items-center gap-2">
+            {formatId === 'tailwind' && (
+              <div
+                className="flex items-center gap-1.5 text-xs"
+                style={{ color: 'var(--app-muted)' }}
+              >
+                {(['v4', 'v3'] as TailwindVersion[]).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setTailwindVersion(v)}
+                    className="rounded-md border px-2 py-0.5"
+                    style={{
+                      borderColor:
+                        v === tailwindVersion
+                          ? 'var(--app-text)'
+                          : 'var(--app-border)',
+                      color: 'var(--app-text)',
+                    }}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            )}
+            <IconButton
+              label={`Preview ${mode === 'light' ? 'dark' : 'light'} palette`}
+              pressed={mode === 'dark'}
+              onClick={() => setMode((m) => (m === 'light' ? 'dark' : 'light'))}
             >
-              {(['v4', 'v3'] as TailwindVersion[]).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setTailwindVersion(v)}
-                  className="rounded-md border px-2 py-0.5"
-                  style={{
-                    borderColor:
-                      v === tailwindVersion
-                        ? 'var(--app-text)'
-                        : 'var(--app-border)',
-                    color: 'var(--app-text)',
-                  }}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
-          )}
+              {mode === 'light' ? <Sun size={14} /> : <Moon size={14} />}
+            </IconButton>
+          </div>
         </div>
 
         <div className="relative min-h-0 flex-1">
