@@ -2,6 +2,16 @@
 
 **Read first:** [`docs/SPEC.md`](docs/SPEC.md) (the detailed reference spec). It defines what this is and what it refuses to be. The original "agent-first portfolio" umbrella is archived ([`docs/archive/OVERVIEW.md`](docs/archive/OVERVIEW.md)) — superseded by the single-utility, human- + agent-friendly identity (see the `project-identity-pivot` memory).
 
+## Bar for this repo
+
+This is a **public repo the owner points to as evidence of their craft** — development, design, front-end, and architecture. Write every change as if a **senior engineer will read it closely** and judge the author by it.
+
+- **No shortcuts that read as shortcuts.** No reinventing solved problems, no copy-paste duplication, no dead code, no TODO-shaped gaps left behind. If a dependency is the right call, isolate it cleanly rather than hand-rolling a worse version; if hand-rolling is the right call, make it obviously deliberate.
+- **The architecture should be legible from the file structure**, not just correct at runtime. Seams (`PaletteEngine`, the agent boundary, knowledge-as-prose) are statements — keep them sharp. A reviewer should see *why* the boundary is where it is.
+- **Every commit stands on its own** and passes the full gate (`tsc`, `eslint`, `pnpm build`). No half-built phases in the history someone could land on. Commit messages and `log/` beats are part of the artifact — write them for a reader.
+- **Comments earn their place** in the existing voice: the *why*, the decision, the tradeoff — not narration of the obvious.
+- When a plan and the actual code disagree on where something attaches, **follow the code** and note the deviation. The plans were written by reading the code; reality wins.
+
 ## Hold the line
 
 - **Deterministic core, agent at the boundary.** There is no in-app LLM. Generation is a deterministic engine: each take is a **treatment archetype** (`src/features/palette/tuning.ts`) — a hue-free relationship template (hero ground, cross-hue accent, light/dark duotone) filled with hues derived from the seed, plus harmonic re-run variety. The `PaletteEngine` seam (`src/features/agent/`) and addressable records stay clean so an external agent could drive generation later (MCP/API) — AI belongs at the boundary, not inside the loop. See the `ai-at-the-boundary` memory.

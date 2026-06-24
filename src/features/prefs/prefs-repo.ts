@@ -7,8 +7,15 @@ type SettingRecord = { key: string; value: string }
 const KEY_SKIP_DELETE_CONFIRM = 'skip-delete-confirm'
 const KEY_DEFAULT_PALETTE_MODE = 'default-palette-mode'
 const KEY_SAVED_VIEW = 'saved-view-mode'
+const KEY_API_KEY = 'anthropic-api-key'
+const KEY_CHAT_MODEL = 'anthropic-model'
 
 export type SavedView = 'compact' | 'expanded'
+
+/** The two models the optional AI layer offers: Haiku for speed/cost (the
+ *  default), Sonnet for quality. Lives here, the lowest layer, because this is
+ *  what persists it; the client and settings mirror import the type. */
+export type ChatModel = 'haiku' | 'sonnet'
 
 async function getSetting(key: string): Promise<string | undefined> {
   const record = await idbGet<SettingRecord>(STORE_SETTINGS, key)
@@ -49,4 +56,23 @@ export async function getSavedView(): Promise<SavedView> {
 
 export function setSavedView(value: SavedView): Promise<void> {
   return putSetting(KEY_SAVED_VIEW, value)
+}
+
+/** The user's Anthropic API key, stored only in this browser. Empty string =
+ *  no key = the AI layer is entirely absent (the prime directive). */
+export async function getApiKey(): Promise<string> {
+  return (await getSetting(KEY_API_KEY)) ?? ''
+}
+
+export function setApiKey(value: string): Promise<void> {
+  return putSetting(KEY_API_KEY, value)
+}
+
+/** Which model the AI layer calls. Default haiku (fast, cheap). */
+export async function getChatModel(): Promise<ChatModel> {
+  return (await getSetting(KEY_CHAT_MODEL)) === 'sonnet' ? 'sonnet' : 'haiku'
+}
+
+export function setChatModel(value: ChatModel): Promise<void> {
+  return putSetting(KEY_CHAT_MODEL, value)
 }

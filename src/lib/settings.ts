@@ -4,25 +4,33 @@
  */
 
 import {
+  getApiKey,
+  getChatModel,
   getDefaultPaletteMode,
   getSavedView,
   getSkipDeleteConfirm,
+  setApiKey,
+  setChatModel,
   setDefaultPaletteMode,
   setSavedView,
   setSkipDeleteConfirm,
-  type SavedView,
 } from '#/features/prefs/prefs-repo'
+import type { ChatModel, SavedView } from '#/features/prefs/prefs-repo'
 
 export type Settings = {
   skipDeleteConfirm: boolean
   defaultPaletteMode: 'light' | 'dark'
   savedView: SavedView
+  apiKey: string
+  model: ChatModel
 }
 
 let current: Settings = {
   skipDeleteConfirm: false,
   defaultPaletteMode: 'dark',
   savedView: 'expanded',
+  apiKey: '',
+  model: 'haiku',
 }
 let hydration: Promise<void> | null = null
 
@@ -34,6 +42,8 @@ export function ensureHydrated(): Promise<void> {
         skipDeleteConfirm: await getSkipDeleteConfirm(),
         defaultPaletteMode: await getDefaultPaletteMode(),
         savedView: await getSavedView(),
+        apiKey: await getApiKey(),
+        model: await getChatModel(),
       }
     })().catch(() => {
       // IndexedDB unavailable (e.g. during SSR) — keep defaults.
@@ -64,4 +74,16 @@ export async function saveSavedView(value: SavedView): Promise<void> {
   await ensureHydrated()
   await setSavedView(value)
   current = { ...current, savedView: value }
+}
+
+export async function saveApiKey(value: string): Promise<void> {
+  await ensureHydrated()
+  await setApiKey(value)
+  current = { ...current, apiKey: value }
+}
+
+export async function saveChatModel(value: ChatModel): Promise<void> {
+  await ensureHydrated()
+  await setChatModel(value)
+  current = { ...current, model: value }
 }
