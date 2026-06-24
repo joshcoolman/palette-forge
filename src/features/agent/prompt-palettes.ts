@@ -14,6 +14,7 @@
 import { collect } from '#/features/agent/client'
 import { getKnowledge } from '#/features/knowledge/knowledge-loader'
 import { normalizeHex } from '#/features/color/color-utils'
+import { captureRun } from '#/lib/eval-capture'
 import { ROLES } from '#/features/palette/types'
 import type { ColorRow, Role } from '#/features/palette/types'
 
@@ -166,9 +167,11 @@ export async function promptToPalettes(brief: string): Promise<ModelResponse> {
   })
 
   if (import.meta.env.DEV) {
-    // Dev observability: see exactly what the model returned while massaging the prompt.
+    // Dev observability: see exactly what the model returned while massaging the
+    // prompt — in the console, and captured to eval/runs.jsonl for later review.
     console.log('[generate] raw model reply:\n', raw)
   }
+  captureRun(brief, raw)
 
   const result = parseModelResponse(raw)
   if (result.palettes.length === 0) {

@@ -12,3 +12,7 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+
+# Local dev eval capture (the capability is committed; the runs are local data)
+eval/runs.jsonl
+eval/latest.json
