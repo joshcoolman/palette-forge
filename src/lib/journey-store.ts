@@ -13,6 +13,7 @@ import { useSyncExternalStore } from 'react'
 
 import type { ScoredPalette, Source } from '#/features/palette/types'
 import { getEngine } from '#/features/agent/get-engine'
+import { deriveRound } from '#/features/agent/derive'
 import { deletePalette, savePalette } from '#/features/palette/palette-repo'
 import { STORE_JOURNEYS, idbDelete, idbGet, idbPut } from '#/lib/db'
 import { ensureHydrated } from '#/lib/settings'
@@ -210,19 +211,38 @@ export async function hydrateJourney(id: string): Promise<void> {
   }
 }
 
-/** Re-run: append another fresh four — keep everything already generated. */
+/** Re-run: append another fresh round — keep everything already generated. */
 export async function rerunJourney(id: string): Promise<void> {
   const state = getState(id)
   if (!state.source) return
-  const roundId = makeId()
-  // The new round's index is the variation seed, so each re-run differs from
-  // the opening (and from prior re-runs) in the deterministic engine.
+  // The new round's index is the variation seed, so each re-run differs from the
+  // opening (and from prior re-runs).
   const variation = state.rounds.length
+
+  // AI journeys: the opening round was a paid model call; re-runs are instant,
+  // free algorithmic variations *of* that output (rotate the colorway) — so
+  // smashing regen stays the fast wall-of-color it is for deterministic seeds,
+  // not a model call each time. Falls back to a fresh AI compose if there's no
+  // settled base yet (e.g. the opening round failed).
+  if (state.source.type === 'prompt') {
+    const base = state.rounds[0]?.variations ?? []
+    if (base.length > 0) {
+      const seen = new Set<string>(
+        state.rounds.flatMap((r) => r.variations.map((v) => v.name)),
+      )
+      patch(id, {
+        rounds: [
+          ...state.rounds,
+          { id: makeId(), variations: deriveRound(base, variation, seen), phase: 'done' },
+        ],
+      })
+      return
+    }
+  }
+
+  const roundId = makeId()
   patch(id, {
-    rounds: [
-      ...state.rounds,
-      { id: roundId, variations: [], phase: 'running' },
-    ],
+    rounds: [...state.rounds, { id: roundId, variations: [], phase: 'running' }],
   })
   await runSurprise(id, roundId, state.source, variation)
 }
