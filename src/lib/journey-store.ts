@@ -119,14 +119,19 @@ function schedulePersist(id: string): void {
     delete persistTimers[id]
     const s = getState(id)
     if (!settled(s) || !s.source) return
+    // Stripping the per-take seed only pays off for images (one shared dataURL,
+    // else stored N times). Color/prompt seeds are tiny — and a prompt journey's
+    // takes each carry their OWN seed, so stripping + reinjecting one source value
+    // would flatten them. Leave non-image seeds intact.
+    const strip = s.source.type === 'image'
     const record: PersistedJourney = {
       id,
       source: s.source,
       rounds: s.rounds.map((r) => ({
         ...r,
-        variations: r.variations.map(stripSeed),
+        variations: strip ? r.variations.map(stripSeed) : r.variations,
       })),
-      chosen: s.chosen ? stripSeed(s.chosen) : null,
+      chosen: s.chosen ? (strip ? stripSeed(s.chosen) : s.chosen) : null,
       saved: s.saved,
     }
     void idbPut(STORE_JOURNEYS, record)
@@ -183,13 +188,19 @@ export async function hydrateJourney(id: string): Promise<void> {
   if (id in sessions) return
   if (stored?.source) {
     const value = stored.source.value
+    // Mirror the persist side: only image takes had their seed stripped, so only
+    // they need it reinjected. Non-image seeds were stored whole.
+    const reinject =
+      stored.source.type === 'image'
+        ? (v: ScoredPalette): ScoredPalette => reinjectSeed(v, value)
+        : (v: ScoredPalette): ScoredPalette => v
     patch(id, {
       source: stored.source,
       rounds: stored.rounds.map((r) => ({
         ...r,
-        variations: r.variations.map((v) => reinjectSeed(v, value)),
+        variations: r.variations.map(reinject),
       })),
-      chosen: stored.chosen ? reinjectSeed(stored.chosen, value) : null,
+      chosen: stored.chosen ? reinject(stored.chosen) : null,
       saved: stored.saved,
       progress: '',
       hydrated: true,

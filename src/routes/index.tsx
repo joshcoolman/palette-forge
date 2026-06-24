@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { RefreshCw, X } from 'lucide-react'
+import { RefreshCw, Sparkles, X } from 'lucide-react'
 
 import type {
   Mode,
@@ -88,6 +88,21 @@ function SourceThumb({
         className="h-auto max-h-24 w-auto max-w-[160px] rounded-[var(--app-radius)]"
         style={{ outline: '1px solid var(--app-border)' }}
       />
+    )
+  }
+  if (source.type === 'prompt') {
+    // A worded brief has no color to edit — a quiet, non-interactive marker.
+    return (
+      <div
+        className="flex h-10 w-10 items-center justify-center rounded-[var(--app-radius)]"
+        style={{
+          background: 'var(--app-surface)',
+          outline: '1px solid var(--app-border)',
+          color: 'var(--app-muted)',
+        }}
+      >
+        <Sparkles size={16} />
+      </div>
     )
   }
   // A color source is editable: click the swatch to open the picker, then Done
@@ -330,7 +345,9 @@ function Home() {
                   >
                     {journey.source.type === 'image'
                       ? 'From an image'
-                      : `From ${journey.source.value}`}
+                      : journey.source.type === 'prompt'
+                        ? 'From your description'
+                        : `From ${journey.source.value}`}
                   </p>
                 </div>
               </div>

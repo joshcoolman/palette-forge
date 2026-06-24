@@ -241,7 +241,9 @@ function rotateAnchor(a: Anchor, deg: number): Anchor {
 }
 
 function toSeed(source: Source): Seed {
-  return { type: source.type, value: source.value }
+  // This engine only ever receives image/color sources (the router sends prompt
+  // briefs to the model engine); the coercion just keeps Seed's type honest.
+  return { type: source.type === 'image' ? 'image' : 'color', value: source.value }
 }
 
 export class SimulatedEngine implements PaletteEngine {

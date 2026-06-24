@@ -58,9 +58,12 @@ export type Seed = { type: 'image' | 'color'; value: string }
  * step (N inspiration images + an optional color-related prompt). v1 ships
  * single-image and leaves them unset; the engine reads them when present, so
  * mood-board is additive — not a reshape of `Source` and every consumer.
+ *
+ * A `prompt` source carries the user's brief in `value` (and has no `extracted`
+ * colors); it routes to the model engine, which authors the palettes from the words.
  */
 export type Source = {
-  type: 'image' | 'color'
+  type: 'image' | 'color' | 'prompt'
   value: string
   extracted: string[]
   /** Additional inspiration images (mood board). v1 unset; reserved. */
