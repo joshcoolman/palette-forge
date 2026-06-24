@@ -45,6 +45,7 @@ import { ViewModeToggle } from '#/components/favorites/view-mode-toggle'
 import { ExportModal } from '#/components/favorites/export-modal'
 import { DeleteConfirm } from '#/components/favorites/delete-confirm'
 import { RenameDialog } from '#/components/favorites/rename-dialog'
+import { EvalRunner } from '#/components/dev/eval-runner'
 
 export const Route = createFileRoute('/')({ component: Home })
 
@@ -315,7 +316,16 @@ function Home() {
           ) : (
             <span />
           )}
-          <SourcePopover onStart={handleStart} aiEnabled={aiEnabled} />
+          <div className="flex items-center gap-2">
+            {import.meta.env.DEV && (
+              <EvalRunner
+                onRun={(brief) =>
+                  handleStart({ type: 'prompt', value: brief, extracted: [] })
+                }
+              />
+            )}
+            <SourcePopover onStart={handleStart} aiEnabled={aiEnabled} />
+          </div>
         </header>
 
         {active && journey.source && (
