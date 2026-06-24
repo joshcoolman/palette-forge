@@ -74,7 +74,7 @@ export function SourcePopover({
     setBusy(true)
     try {
       const dataUrl = await readAsDataURL(file)
-      const extracted = await extractDominantColors(dataUrl, 6)
+      const extracted = await extractDominantColors(dataUrl, 12)
       setOpen(false)
       onStart({
         type: 'image',

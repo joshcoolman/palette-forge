@@ -49,7 +49,7 @@ export function SceneSource({
     setBusy(true)
     try {
       const dataUrl = await readAsDataURL(file)
-      const extracted = await extractDominantColors(dataUrl, 6)
+      const extracted = await extractDominantColors(dataUrl, 12)
       onStart({
         type: 'image',
         value: dataUrl,

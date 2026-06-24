@@ -62,11 +62,14 @@ function SourceThumb({
   onEdit?: () => void
 }) {
   if (source.type === 'image') {
+    // Show the actual upload at its natural aspect ratio (the browser preserves
+    // intrinsic w/h), capped so a tall portrait or wide landscape both stay tidy
+    // in the header — no square crop.
     return (
       <img
         src={source.value}
         alt=""
-        className="h-10 w-10 rounded-[var(--app-radius)] object-cover"
+        className="h-auto max-h-24 w-auto max-w-[160px] rounded-[var(--app-radius)]"
         style={{ outline: '1px solid var(--app-border)' }}
       />
     )
@@ -213,8 +216,8 @@ function Home() {
               background: 'var(--app-surface)',
             }}
           >
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
                 <SourceThumb
                   source={journey.source}
                   onEdit={() => setEditingColor(true)}

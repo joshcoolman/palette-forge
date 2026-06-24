@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { motion } from 'motion/react'
 
 import type { ScoredPalette } from '#/features/palette/types'
@@ -5,10 +6,10 @@ import type { VariationRound } from '#/lib/journey-store'
 import { PaletteCard } from '#/components/journey/palette-card'
 
 /**
- * Scene 2 — composed treatment takes as a stack of rounds (newest first). Every
- * round is one grid row of takes; the section gap matches the grid gap so the
- * rows are evenly spaced whether they sit inside a round or across the boundary
- * between two re-runs (no alternating wide/narrow gap).
+ * Scene 2 — composed treatment takes as a stack of rounds. The opening round (the
+ * faithful first read) is pinned at the top; re-runs — the surprise game — stack
+ * newest-first below it. The section gap matches the grid gap so rows stay evenly
+ * spaced across round boundaries (no alternating wide/narrow gap).
  */
 export function SceneVariations({
   rounds,
@@ -27,14 +28,19 @@ export function SceneVariations({
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col gap-3"
     >
-      {rounds
-        .map((round, roundIndex) => ({ round, roundIndex }))
-        .reverse()
-        .map(({ round, roundIndex }) => {
+      {(() => {
+        // Pin the opening round (the faithful first read) at the top; stack the
+        // re-runs newest-first below it. roundIndex stays the original index so
+        // the opening-round "Try again" still targets round 0.
+        const items = rounds.map((round, roundIndex) => ({ round, roundIndex }))
+        const [first, ...rest] = items
+        const ordered = first ? [first, ...rest.reverse()] : []
+        return ordered.map(({ round, roundIndex }) => {
         const running = round.phase === 'running'
         const errored = round.phase === 'error'
         return (
-          <div key={round.id} className="flex flex-col gap-3">
+          <Fragment key={round.id}>
+          <div className="flex flex-col gap-3">
             {errored ? (
               <div
                 className="flex flex-col items-start gap-3 rounded-[var(--app-radius)] border border-dashed p-5"
@@ -78,8 +84,24 @@ export function SceneVariations({
               </div>
             )}
           </div>
+          {roundIndex === 0 && ordered.length > 1 && (
+            <div className="flex items-center gap-3 py-1" aria-hidden>
+              <span
+                className="text-[10px] uppercase tracking-wide"
+                style={{ color: 'var(--app-muted)' }}
+              >
+                variants
+              </span>
+              <span
+                className="h-px flex-1"
+                style={{ background: 'var(--app-border)' }}
+              />
+            </div>
+          )}
+          </Fragment>
         )
-      })}
+      })
+      })()}
     </motion.section>
   )
 }
