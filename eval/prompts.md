@@ -33,6 +33,22 @@ engine chose the accent — see `docs/plan-ai-model-direct.md` for why, and the 
   and the user called it out directly. This is the motivating case for model-authored
   palettes (the model controls every hue, so it can simply obey "nothing girly").
 
+## wellness-yoga — calm / professional / older clients
+
+> So I'm a personal trainer. I do yoga training for people over 60 who are doing
+> rehabilitation, so I focus on mobility and wellness. I'm in the Pacific Northwest. My
+> clients are active but older.
+
+- **Intent:** calm, trustworthy, professional wellness; soft naturals (forest, stone, mist,
+  still water); approachable and easy on older eyes; suitable for a real website.
+- **Must-not:** nothing loud, clinical, or harsh; legible at a glance (older audience).
+- **Tuning note (model-direct, 2026-06-24):** good, clearly-considered output — but several
+  takes ran the **grounds too dark** (backgrounds ~`#191419`, near-black) for a professional
+  wellness site. The darks carry a hue (not pure black) but read heavier than the brief
+  wants. Candidate fix: guide ground lightness in `knowledge/color-theorist.md` (deep, not
+  near-black) — the test case for that prompt tweak. (The Minecraft brief, by contrast, ran
+  great — so this is taste-tuning, not a contract bug.)
+
 ---
 
 ## How to use (for now)
