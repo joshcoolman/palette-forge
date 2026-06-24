@@ -2,10 +2,27 @@ import { motion } from 'motion/react'
 import { Heart } from 'lucide-react'
 
 import type { Mode, Role, ScoredPalette } from '#/features/palette/types'
+import { contrastRatio } from '#/features/color/contrast'
 import { ROW_ROLES, SwatchRow } from '#/components/swatch-row'
 
 function roleHex(palette: ScoredPalette, role: Role, mode: Mode): string {
   return palette.colors.find((c) => c.role === role)?.[mode] ?? '#888888'
+}
+
+// The heart wants the palette's own secondary color (drawn on the accent swatch)
+// — but when secondary and accent are too close, the mark goes near-invisible.
+// Keep secondary whenever it clears this gentle floor; otherwise fall back to
+// whichever deep anchor (ground or text) reads most clearly on the accent. Low
+// threshold on purpose: the outline already does a lot, so only the worst cases
+// flip away from the preferred secondary look.
+const MIN_HEART_CONTRAST = 2.2
+
+function heartInk(palette: ScoredPalette): string {
+  const accent = roleHex(palette, 'accent', 'dark')
+  const secondary = roleHex(palette, 'secondary', 'dark')
+  if (contrastRatio(secondary, accent) >= MIN_HEART_CONTRAST) return secondary
+  return [roleHex(palette, 'background', 'dark'), roleHex(palette, 'text', 'dark')]
+    .sort((a, b) => contrastRatio(b, accent) - contrastRatio(a, accent))[0]
 }
 
 /**
@@ -26,7 +43,7 @@ export function PaletteCard({
   saved?: boolean
   onToggleSave: () => void
 }) {
-  const heartInk = roleHex(palette, 'secondary', 'dark')
+  const ink = heartInk(palette)
   return (
     <motion.button
       layout
@@ -49,7 +66,7 @@ export function PaletteCard({
 
       <motion.span
         className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center"
-        style={{ width: `${100 / ROW_ROLES.length}%`, color: heartInk }}
+        style={{ width: `${100 / ROW_ROLES.length}%`, color: ink }}
         animate={{ scale: saved ? [1, 1.4, 1] : 1 }}
         transition={{ duration: 0.32, ease: 'easeOut' }}
       >
