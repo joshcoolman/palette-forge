@@ -20,7 +20,6 @@ export function KeyEntry({
   onRemove: () => void
 }) {
   const [revealed, setRevealed] = useState(false)
-  const [confirmingRemove, setConfirmingRemove] = useState(false)
   const hasKey = value.trim().length > 0
 
   return (
@@ -61,44 +60,16 @@ export function KeyEntry({
       </p>
 
       {hasKey && (
-        <div className="flex items-center justify-end gap-3">
-          {confirmingRemove ? (
-            <>
-              <span className="text-xs" style={{ color: 'var(--app-muted)' }}>
-                Remove the stored key?
-              </span>
-              <button
-                type="button"
-                onClick={() => setConfirmingRemove(false)}
-                className="rounded-full border px-3 py-1.5 text-xs transition hover:opacity-70"
-                style={{ borderColor: 'var(--app-border)', color: 'var(--app-text)' }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => {
-                  setConfirmingRemove(false)
-                  onRemove()
-                }}
-                className="rounded-full px-3 py-1.5 text-xs font-medium text-white transition hover:opacity-70 disabled:opacity-50"
-                style={{ background: '#e5484d' }}
-              >
-                Remove key
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => setConfirmingRemove(true)}
-              className="rounded-full border px-4 py-1.5 text-xs font-medium transition hover:opacity-70 disabled:opacity-50"
-              style={{ borderColor: '#e5484d', color: '#e5484d' }}
-            >
-              Remove key
-            </button>
-          )}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={onRemove}
+            className="rounded-full border px-4 py-1.5 text-xs font-medium transition hover:opacity-70 disabled:opacity-50"
+            style={{ borderColor: '#e5484d', color: '#e5484d' }}
+          >
+            Remove key
+          </button>
         </div>
       )}
     </div>
