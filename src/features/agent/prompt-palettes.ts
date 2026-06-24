@@ -101,6 +101,43 @@ export function parseModelPalettes(raw: string): ModelPalette[] {
     .filter((p): p is ModelPalette => p !== null)
 }
 
+export type ModelResponse = { message?: string; palettes: ModelPalette[] }
+
+/**
+ * Parse the full reply into the model's friendly message + the validated palettes.
+ * The contract is `{ "message": "…", "palettes": [ … ] }`; tolerant of a bare array
+ * (no message) and of a malformed object wrapper (falls back to scanning for the
+ * palettes array). The message is the model talking to the user; palettes are the goods.
+ */
+export function parseModelResponse(raw: string): ModelResponse {
+  const objStart = raw.indexOf('{')
+  const arrStart = raw.indexOf('[')
+  // Object form leads when a `{` precedes any `[` — try it for the message; a bad
+  // wrapper falls through to the bare-array scan below (which still finds the palettes).
+  if (objStart !== -1 && (arrStart === -1 || objStart < arrStart)) {
+    try {
+      const o: unknown = JSON.parse(raw.slice(objStart, raw.lastIndexOf('}') + 1))
+      if (o && typeof o === 'object') {
+        const rec = o as Record<string, unknown>
+        const message =
+          typeof rec.message === 'string' && rec.message.trim()
+            ? rec.message.trim()
+            : undefined
+        const arr = Array.isArray(rec.palettes) ? rec.palettes : []
+        return {
+          message,
+          palettes: arr
+            .map(toModelPalette)
+            .filter((p): p is ModelPalette => p !== null),
+        }
+      }
+    } catch {
+      // fall through
+    }
+  }
+  return { palettes: parseModelPalettes(raw) }
+}
+
 /** A model palette as the engine's `ColorRow[]` (all seven roles), ready for
  *  `finalizePalette`. */
 export function toColorRows(p: ModelPalette): ColorRow[] {
@@ -121,7 +158,7 @@ export function toColorRows(p: ModelPalette): ColorRow[] {
  * be A/B'd in an eval. Sonnet is the recommended pick — six palettes is 84 hexes plus
  * strict JSON, which haiku is likelier to malform.
  */
-export async function promptToPalettes(brief: string): Promise<ModelPalette[]> {
+export async function promptToPalettes(brief: string): Promise<ModelResponse> {
   const raw = await collect({
     system: generationSystemPrompt(),
     maxTokens: 4096,
@@ -133,12 +170,12 @@ export async function promptToPalettes(brief: string): Promise<ModelPalette[]> {
     console.log('[generate] raw model reply:\n', raw)
   }
 
-  const palettes = parseModelPalettes(raw)
-  if (palettes.length === 0) {
+  const result = parseModelResponse(raw)
+  if (result.palettes.length === 0) {
     console.warn(
       '[generate] no usable palettes parsed from reply:',
       JSON.stringify(raw.slice(0, 500)),
     )
   }
-  return palettes
+  return result
 }

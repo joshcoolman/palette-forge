@@ -9,10 +9,14 @@
  * "no usable palettes" round the deterministic engine uses). No silent grey round.
  */
 
-import type { ColorRow, ScoredPalette, Source } from '#/features/palette/types'
+import type { ColorRow, Source } from '#/features/palette/types'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
 import { nameFor } from '#/features/palette/namer'
-import type { PaletteEngine, ProgressFn } from '#/features/agent/engine'
+import type {
+  ComposeResult,
+  PaletteEngine,
+  ProgressFn,
+} from '#/features/agent/engine'
 import { finalizePalette } from '#/features/agent/engine'
 import { promptToPalettes, toColorRows } from '#/features/agent/prompt-palettes'
 
@@ -32,23 +36,26 @@ export class ModelEngine implements PaletteEngine {
     onProgress?: ProgressFn,
     _variation = 0,
     usedNames?: Iterable<string>,
-  ): Promise<ScoredPalette[]> {
+  ): Promise<ComposeResult> {
     onProgress?.('Asking the color theorist…')
     const policy = loadContrastPolicy()
     const seen = new Set<string>(usedNames)
 
-    const palettes = await promptToPalettes(source.value)
-    return palettes.map((p) => {
-      const colors = toColorRows(p)
-      return finalizePalette({
-        // The palette's own accent is its signature color — a sensible seed for a
-        // record that was authored from words, not seeded from a single color.
-        seed: { type: 'color', value: p.roles.accent.dark },
-        name: uniqueName(p.name, colors, seen),
-        character: p.rationale,
-        colors,
-        policy,
-      })
-    })
+    const { message, palettes } = await promptToPalettes(source.value)
+    return {
+      message,
+      palettes: palettes.map((p) => {
+        const colors = toColorRows(p)
+        return finalizePalette({
+          // The palette's own accent is its signature color — a sensible seed for a
+          // record authored from words, not seeded from a single color.
+          seed: { type: 'color', value: p.roles.accent.dark },
+          name: uniqueName(p.name, colors, seen),
+          character: p.rationale,
+          colors,
+          policy,
+        })
+      }),
+    }
   }
 }

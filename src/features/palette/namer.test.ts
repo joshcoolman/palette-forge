@@ -25,7 +25,7 @@ function colorsWithAccent(hex: string): ColorRow[] {
 
 describe('palette namer', () => {
   it('names the takes of a round distinctly', async () => {
-    const takes = await engine.compose(SOURCE)
+    const takes = (await engine.compose(SOURCE)).palettes
     const names = takes.map((p) => p.name)
     expect(new Set(names).size).toBe(takes.length)
     // `<Word> <Word>` shape, both capitalized.
@@ -33,8 +33,8 @@ describe('palette namer', () => {
   })
 
   it('is deterministic — same source yields the same names', async () => {
-    const a = (await engine.compose(SOURCE)).map((p) => p.name)
-    const b = (await engine.compose(SOURCE)).map((p) => p.name)
+    const a = (await engine.compose(SOURCE)).palettes.map((p) => p.name)
+    const b = (await engine.compose(SOURCE)).palettes.map((p) => p.name)
     expect(a).toEqual(b)
   })
 

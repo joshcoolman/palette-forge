@@ -26,6 +26,8 @@ export type VariationRound = {
   variations: ScoredPalette[]
   phase: Phase
   error?: string
+  /** The model's friendly note for this round (AI engine only; unset otherwise). */
+  message?: string
 }
 
 export type JourneyState = {
@@ -261,17 +263,17 @@ async function runSurprise(
     const usedNames = getState(id).rounds.flatMap((r) =>
       r.variations.map((v) => v.name),
     )
-    const variations = await getEngine().compose(
+    const { palettes, message } = await getEngine().compose(
       source,
       (m) => patch(id, { progress: m }),
       variation,
       usedNames,
     )
     if (getState(id).source !== source) return
-    if (variations.length === 0) {
+    if (palettes.length === 0) {
       patchRound(id, roundId, { phase: 'error', error: EMPTY_RESULT })
     } else {
-      patchRound(id, roundId, { variations, phase: 'done' })
+      patchRound(id, roundId, { variations: palettes, message, phase: 'done' })
     }
     patch(id, { progress: '' })
   } catch (e) {

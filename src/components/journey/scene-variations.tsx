@@ -135,6 +135,14 @@ export function SceneVariations({
       {ordered.map(({ round, roundIndex }) => (
         <Fragment key={round.id}>
           <div className="flex flex-col gap-3">
+            {round.message && (
+              <p
+                className="pf-body text-sm leading-relaxed"
+                style={{ color: 'var(--app-text)' }}
+              >
+                {round.message}
+              </p>
+            )}
             <RoundStrips
               round={round}
               roundIndex={roundIndex}

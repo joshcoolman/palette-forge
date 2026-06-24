@@ -74,24 +74,32 @@ blue at the same nominal lightness do not read as equally bright.
 
 ## Output — JSON only
 
-Respond with **only** a JSON array of six palette objects. No prose before or after, no
-code fences, no commentary. Each object is exactly:
+Respond with **only** a JSON object — no prose before or after, no code fences, no
+commentary. It has a short friendly `message` to the person (one or two warm sentences,
+in your own voice — react to their brief, like a designer handing over the work) and a
+`palettes` array of six. Exactly:
 
 ```json
 {
-  "name": "Two Words",
-  "rationale": "one short line: why this fits the brief",
-  "roles": {
-    "background": { "light": "#rrggbb", "dark": "#rrggbb" },
-    "surface":    { "light": "#rrggbb", "dark": "#rrggbb" },
-    "text":       { "light": "#rrggbb", "dark": "#rrggbb" },
-    "muted":      { "light": "#rrggbb", "dark": "#rrggbb" },
-    "border":     { "light": "#rrggbb", "dark": "#rrggbb" },
-    "secondary":  { "light": "#rrggbb", "dark": "#rrggbb" },
-    "accent":     { "light": "#rrggbb", "dark": "#rrggbb" }
-  }
+  "message": "Love a Minecraft party — here's a set that nails that blocky overworld feel.",
+  "palettes": [
+    {
+      "name": "Two Words",
+      "rationale": "one short line: why this fits the brief",
+      "roles": {
+        "background": { "light": "#rrggbb", "dark": "#rrggbb" },
+        "surface":    { "light": "#rrggbb", "dark": "#rrggbb" },
+        "text":       { "light": "#rrggbb", "dark": "#rrggbb" },
+        "muted":      { "light": "#rrggbb", "dark": "#rrggbb" },
+        "border":     { "light": "#rrggbb", "dark": "#rrggbb" },
+        "secondary":  { "light": "#rrggbb", "dark": "#rrggbb" },
+        "accent":     { "light": "#rrggbb", "dark": "#rrggbb" }
+      }
+    }
+  ]
 }
 ```
 
-All seven roles are required, each with a valid 6-digit `#rrggbb` light and dark hex.
-`name` is two evocative words; `rationale` is one short line. Return the array and nothing else.
+All seven roles are required on each palette, each with a valid 6-digit `#rrggbb` light and
+dark hex. `name` is two evocative words; `rationale` is one short line. Six palettes.
+Return the object and nothing else.

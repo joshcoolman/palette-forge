@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   extractJsonArray,
   parseModelPalettes,
+  parseModelResponse,
   toColorRows,
   toModelPalette,
 } from '#/features/agent/prompt-palettes'
@@ -88,6 +89,28 @@ describe('parseModelPalettes', () => {
 
   it('returns an empty list for an unusable reply', () => {
     expect(parseModelPalettes('the model refused')).toEqual([])
+  })
+})
+
+describe('parseModelResponse', () => {
+  it('pulls the friendly message + palettes from the object form', () => {
+    const raw = JSON.stringify({
+      message: 'Here you go — hope the party rocks!',
+      palettes: [paletteObj(), paletteObj({ name: 'Apex Steel' })],
+    })
+    const out = parseModelResponse(raw)
+    expect(out.message).toBe('Here you go — hope the party rocks!')
+    expect(out.palettes.map((p) => p.name)).toEqual(['Pit Lane', 'Apex Steel'])
+  })
+
+  it('tolerates a bare array (no message)', () => {
+    const out = parseModelResponse(JSON.stringify([paletteObj()]))
+    expect(out.message).toBeUndefined()
+    expect(out.palettes).toHaveLength(1)
+  })
+
+  it('returns no palettes for an unusable reply', () => {
+    expect(parseModelResponse('the model refused').palettes).toEqual([])
   })
 })
 
