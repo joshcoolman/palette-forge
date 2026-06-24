@@ -9,7 +9,12 @@ import type {
   Source,
 } from '#/features/palette/types'
 import { isValidHex, withLightness } from '#/features/color/color-utils'
-import { deletePalette, listPalettes } from '#/features/palette/palette-repo'
+import {
+  deletePalette,
+  listPalettes,
+  savePalette,
+} from '#/features/palette/palette-repo'
+import { hasKey } from '#/features/agent/client'
 import { createSamplePalettes } from '#/features/palette/samples'
 import {
   chooseVariation,
@@ -39,6 +44,7 @@ import { CompactCard } from '#/components/favorites/compact-card'
 import { ViewModeToggle } from '#/components/favorites/view-mode-toggle'
 import { ExportModal } from '#/components/favorites/export-modal'
 import { DeleteConfirm } from '#/components/favorites/delete-confirm'
+import { RenameDialog } from '#/components/favorites/rename-dialog'
 
 export const Route = createFileRoute('/')({ component: Home })
 
@@ -108,6 +114,7 @@ function Home() {
   const [loaded, setLoaded] = useState(false)
   const [open, setOpen] = useState<Palette | null>(null)
   const [confirming, setConfirming] = useState<Palette | null>(null)
+  const [renaming, setRenaming] = useState<Palette | null>(null)
   const [seeding, setSeeding] = useState(false)
   const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false)
   const [defaultMode, setDefaultMode] = useState<Mode>('dark')
@@ -119,6 +126,10 @@ function Home() {
   // (find-and-share) instead of revealing the mobile accordion controls.
   const [isDesktop, setIsDesktop] = useState(false)
   const [editingColor, setEditingColor] = useState(false)
+  // Whether the optional AI layer is available. Resolved after prefs hydrate, so
+  // AI affordances are absent on first paint and appear only once a key is known —
+  // never a flash of AI UI. False = the rename button does not render at all.
+  const [aiEnabled, setAiEnabled] = useState(false)
 
   const active = !!journey.source
   const savedKey = journey.saved.join(',')
@@ -146,6 +157,7 @@ function Home() {
       setSkipDeleteConfirm(s.skipDeleteConfirm)
       setDefaultMode(s.defaultPaletteMode)
       setViewMode(s.savedView)
+      setAiEnabled(hasKey())
       const existing = await listPalettes()
       if (!alive || existing.length > 0) return
       setSeeding(true)
@@ -215,6 +227,17 @@ function Home() {
   async function remove(id: string) {
     await deletePalette(id)
     await refresh()
+  }
+
+  // Rename: persist the chosen name (manual or AI-suggested) to the addressable
+  // record and re-list so the card shows it. Driven by the RenameDialog.
+  async function applyRename(palette: Palette, name: string) {
+    const next = name.trim()
+    if (next && next !== palette.name) {
+      await savePalette({ ...palette, name: next })
+      await refresh()
+    }
+    setRenaming(null)
   }
 
   // Delete a favorite: straight through if the user opted out of the popup,
@@ -380,6 +403,9 @@ function Home() {
                 defaultMode,
                 onOpen: () => setOpen(p),
                 onDelete: () => requestDelete(p),
+                // Rename is a base feature for everyone — opens the dialog, where
+                // manual edit always works and AI suggestions appear only with a key.
+                onRename: () => setRenaming(p),
               }
               return viewMode === 'compact' ? (
                 <CompactCard
@@ -423,6 +449,14 @@ function Home() {
           palette={confirming}
           onCancel={() => setConfirming(null)}
           onConfirm={confirmDelete}
+        />
+      )}
+      {renaming && (
+        <RenameDialog
+          palette={renaming}
+          aiEnabled={aiEnabled}
+          onClose={() => setRenaming(null)}
+          onApply={(name) => void applyRename(renaming, name)}
         />
       )}
     </>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useLocation } from '@tanstack/react-router'
 import { motion } from 'motion/react'
 import { ChevronDown, Heart, Settings } from 'lucide-react'
 
@@ -33,6 +33,9 @@ export function GlobalNav() {
   // palette-card heart). Click still just navigates home — the bounce is decor.
   const [bump, setBump] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
+  // The gear toggles: it opens Settings, but while you're on Settings it sends you
+  // back home — so it's a quick there-and-back, not a one-way trip.
+  const onSettings = useLocation({ select: (l) => l.pathname === '/settings' })
 
   // Apply the persisted pairing on first client paint, and warm the previews.
   useEffect(() => {
@@ -156,9 +159,9 @@ export function GlobalNav() {
         </div>
 
         <Link
-          to="/settings"
-          aria-label="Settings"
-          title="Settings"
+          to={onSettings ? '/' : '/settings'}
+          aria-label={onSettings ? 'Back to home' : 'Settings'}
+          title={onSettings ? 'Back to home' : 'Settings'}
           className="flex h-8 w-8 items-center justify-center rounded-lg border transition hover:opacity-70"
           style={{ borderColor: 'var(--app-border)', color: 'var(--app-muted)' }}
         >

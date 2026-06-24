@@ -2,7 +2,7 @@
 
 > A focused, fully-local utility that turns an image or seed color into refined, accessible color palettes. Tuned for design out of the box — its expertise lives in `/knowledge` as plain markdown you can read and rewrite.
 
-Reference spec for what shipped. It started as a BYO-key, vision-agent tool; building it revealed the deterministic engine was the product, so the in-app LLM was removed. This describes the result.
+Reference spec for what shipped. It started as a BYO-key, vision-agent tool; building it revealed the deterministic engine was the product, so the in-app LLM was removed. AI has since returned as an **optional, light layer at the boundary** (BYO-key; today, palette name suggestions) — the generation core stays fully deterministic and model-free. This describes the result. AI-layer detail: [`epic-ai-layer.md`](epic-ai-layer.md).
 
 ---
 
@@ -34,9 +34,9 @@ A color picker gives you one swatch. This composes a whole round of **finished, 
 4. **Re-run** explores — color seeds walk color-theory relationships to the seed (complementary, triadic, …), image seeds rotate around the wheel — so each round is genuinely different yet still seed-coherent.
 5. **You** are the oracle for taste — switch, retune the source color, heart what's right.
 
-The loop is deterministic — no model, no key, instant, free to host. (Contrast ratios are still computed onto each record for reference, but never enforced or shown.)
+The generation loop is deterministic — no model, no key, instant, free to host. (Contrast ratios are still computed onto each record for reference, but never enforced or shown.)
 
-> **AI at the boundary, not in the loop.** The in-app LLM was removed because the deterministic engine + a deterministic namer deliver the whole loop better (instant, predictable, no key wall). The `PaletteEngine` seam and the clean records stay so the engine can be exposed as an **agent-callable capability (MCP/API)** later — AI returns at the boundary, driving the tool, rather than living inside it.
+> **AI at the boundary, not in the loop.** The in-app LLM was removed from the *generation* loop because the deterministic engine + a deterministic namer deliver it better (instant, predictable, no key wall) — and it stays out. AI has returned only **at the boundary**, as an opt-in BYO-key layer: today it *suggests* names for a saved palette; it never computes color and is entirely absent without a key. The `PaletteEngine` seam and clean records also keep the door open to exposing the engine as an **agent-callable capability (MCP/API)** later.
 
 ---
 
@@ -95,9 +95,9 @@ type Palette = {
 
 Stored in IndexedDB (ages better than localStorage).
 
-## Fully local, no key
+## Fully local by default; AI is opt-in
 
-No API key, no account, nothing sent anywhere — generation is deterministic and runs entirely in the browser. That's what makes it free to host and instant to use.
+No account, and out of the box nothing is sent anywhere — generation is deterministic and runs entirely in the browser, which is what makes it free to host and instant to use. The **only** thing that leaves the browser is the optional AI layer: if you add an Anthropic key in Settings, palette colors are sent to Anthropic (directly, no backend) to suggest names. With no key, that path doesn't exist.
 
 ## Stack
 
@@ -105,9 +105,9 @@ TanStack Start + React + TypeScript + Tailwind, Vercel.
 
 ## v1 cut
 
-1. Input: image or seed color (a `+` popover — upload / curated seeds / picker). 2. Compose a round of named treatment takes (hero ground + cross-hue accent) with light/dark mock. 3. Re-run for varied rounds; retune the seed color and re-run. 4. Heart to the local library; copy/download as JSON + CSS vars. 5. Settings = a single delete-confirm preference.
+1. Input: image or seed color (a `+` popover — upload / curated seeds / picker). 2. Compose a round of named treatment takes (hero ground + cross-hue accent) with light/dark mock. 3. Re-run for varied rounds; retune the seed color and re-run. 4. Heart to the local library; rename (manual, or AI-suggested with a key), copy/download as JSON + CSS vars. 5. Settings = display prefs + the optional AI-touches panel (BYO key + model).
 
-Deferred (so they stop nagging): the mood-board input, MCP/API exposure, a knowledge-authoring mode, the color "comfort band" as explicit constants.
+Deferred (so they stop nagging): the mood-board input, MCP/API exposure, a knowledge-authoring mode, the color "comfort band" as explicit constants, and the rest of the AI epic (prompt-to-palette, thinking feed, conversational refine — [`epic-ai-layer.md`](epic-ai-layer.md) phases 2–4).
 
 ## The thesis
 

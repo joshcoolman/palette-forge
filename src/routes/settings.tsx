@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react'
 
 import { Backdrop } from '#/components/journey/backdrop'
 import { Preferences } from '#/components/settings/preferences'
+import { AiAccess } from '#/components/settings/ai-access'
 
 export const Route = createFileRoute('/settings')({ component: SettingsPage })
 
@@ -28,6 +29,7 @@ function SettingsPage() {
         </h1>
       </header>
       <Preferences />
+      <AiAccess />
     </main>
   )
 }

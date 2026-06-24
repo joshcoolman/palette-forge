@@ -17,6 +17,7 @@ export function IconButton({
   foreground = 'var(--app-muted)',
   background = 'transparent',
   border = true,
+  title,
 }: {
   label: string
   onClick: () => void
@@ -27,12 +28,16 @@ export function IconButton({
   foreground?: string
   background?: string
   border?: boolean
+  /** Visible hover tooltip. Defaults to `label` so the accessible name and the
+   *  tooltip stay in sync unless a caller needs them to differ. */
+  title?: string
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
+      title={title ?? label}
       aria-pressed={pressed}
       className={`flex shrink-0 items-center justify-center rounded-full transition hover:opacity-70 ${border ? 'border' : ''} ${className ?? ''}`}
       style={{
