@@ -23,7 +23,9 @@ Full brief: [`docs/SPEC.md`](docs/SPEC.md).
 The AI flow is a *prompt-craft* problem, so the repo is set up to tune it like one — this is a property of the repo, not a feature of the app:
 
 - **Steer:** [`knowledge/color-theorist.md`](knowledge/color-theorist.md) is the model's system prompt, sent verbatim. Edit it, re-run, watch the output change.
-- **Evaluate:** a stable set of briefs ([`eval/prompts.md`](eval/prompts.md)) and a **local, dev-only run capture** — every generation appends its full JSON reply to `eval/runs.jsonl`, so you can judge a prompt change against real output instead of vibes. It's a tiny, self-rolled tracing/eval layer; the method is written up in [`eval/README.md`](eval/README.md).
+- **Evaluate:** a stable set of briefs ([`eval/prompts.md`](eval/prompts.md)) and a **local, dev-only run capture** — every generation appends its full JSON reply to `eval/runs.jsonl`, so you can judge a prompt change against real output instead of vibes. It's a tiny, self-rolled tracing/eval layer; the method is in [`eval/README.md`](eval/README.md).
+
+For the concepts behind it — engineering an app with a model at its core (spec, contract, observability, evals, guardrails) — see [`docs/poor-mans-evals.md`](docs/poor-mans-evals.md).
 
 ## Deterministic, not enforced
 

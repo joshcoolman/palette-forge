@@ -10,6 +10,9 @@ quality is a *prompt-craft* problem, and prompt-craft needs a feedback loop:
 Everything here serves that loop. None of it ships in the app — it's a property of the
 repo, for whoever is tuning the model's taste.
 
+For the *why* behind all of this — the discipline of building an app with a model at its
+core — see [`docs/poor-mans-evals.md`](../docs/poor-mans-evals.md). This file is the how.
+
 ## The pieces
 
 - **[`prompts.md`](prompts.md)** — a stable set of real briefs (the "golden set"), each
