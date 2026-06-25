@@ -10,11 +10,23 @@ import { nitro } from 'nitro/vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+// Dev-only: capture AI palette runs to eval/runs.jsonl (no production surface).
+import { evalCapture } from './vite/eval-capture'
+
 const config = defineConfig({
   // Honor a PORT env var (preview/CI assign one) and fall back to 3000.
   server: { port: process.env.PORT ? Number(process.env.PORT) : 3000 },
   resolve: { tsconfigPaths: true },
-  plugins: [devtools(), tailwindcss(), tanstackStart(), nitro(), viteReact()],
+  // evalCapture first so its `/__eval/run` middleware is matched before the app's
+  // SSR catch-all.
+  plugins: [
+    evalCapture(),
+    devtools(),
+    tailwindcss(),
+    tanstackStart(),
+    nitro(),
+    viteReact(),
+  ],
 })
 
 export default config

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'motion/react'
 import { Code, Moon, Pencil, Sun, Trash2 } from 'lucide-react'
 
-import type { Mode, Palette, Role } from '#/features/palette/types'
+import type { Mode, Palette, Role, ScoredPalette } from '#/features/palette/types'
 import { hexToRgb } from '#/features/color/color-utils'
 import { relativeLuminance } from '#/features/color/contrast'
 import { IconButton } from '#/components/ui/icon-button'
@@ -105,7 +105,9 @@ export function FavoriteCard({
   onRename,
   defaultMode = 'dark',
 }: {
-  palette: Palette
+  /** ScoredPalette so the saved record's `character` (the model's rationale, or the
+   *  archetype line) can show under the name. A plain Palette is assignable. */
+  palette: ScoredPalette
   onOpen: () => void
   onDelete: () => void
   /** Open the rename dialog (manual edit always; AI suggestions inside it are
@@ -180,13 +182,24 @@ export function FavoriteCard({
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <span
-          className="pf-heading truncate text-sm"
-          style={{ color: 'var(--app-text)' }}
-        >
-          {palette.name}
-        </span>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-col">
+          <span
+            className="pf-heading truncate text-sm"
+            style={{ color: 'var(--app-text)' }}
+          >
+            {palette.name}
+          </span>
+          {palette.character && (
+            <span
+              className="truncate text-xs"
+              style={{ color: 'var(--app-muted)' }}
+              title={palette.character}
+            >
+              {palette.character}
+            </span>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <IconButton
             label={`Rename ${palette.name}`}
             title="Rename this palette"

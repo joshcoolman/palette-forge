@@ -12,21 +12,18 @@
  * contrast repair flattening bold combinations back to "safe."
  */
 
-import type {
-  ColorRow,
-  Mode,
-  Role,
-  ScoredPalette,
-  Seed,
-  Source,
-} from '#/features/palette/types'
+import type { ColorRow, Mode, Role, Seed, Source } from '#/features/palette/types'
 import { ROLES } from '#/features/palette/types'
 import { clamp, hexToHsl, hslToHex } from '#/features/color/color-utils'
 import { loadContrastPolicy } from '#/features/knowledge/contrast-policy'
 import { nameFor } from '#/features/palette/namer'
 import { ARCHETYPES, DERIVATION } from '#/features/palette/tuning'
 import type { Archetype } from '#/features/palette/tuning'
-import type { PaletteEngine, ProgressFn } from '#/features/agent/engine'
+import type {
+  ComposeResult,
+  PaletteEngine,
+  ProgressFn,
+} from '#/features/agent/engine'
 import { finalizePalette } from '#/features/agent/engine'
 
 /** Candidate anchor hues from the source, most-saturated first. */
@@ -241,7 +238,9 @@ function rotateAnchor(a: Anchor, deg: number): Anchor {
 }
 
 function toSeed(source: Source): Seed {
-  return { type: source.type, value: source.value }
+  // This engine only ever receives image/color sources (the router sends prompt
+  // briefs to the model engine); the coercion just keeps Seed's type honest.
+  return { type: source.type === 'image' ? 'image' : 'color', value: source.value }
 }
 
 export class SimulatedEngine implements PaletteEngine {
@@ -250,7 +249,7 @@ export class SimulatedEngine implements PaletteEngine {
     onProgress?: ProgressFn,
     variation = 0,
     usedNames?: Iterable<string>,
-  ): Promise<ScoredPalette[]> {
+  ): Promise<ComposeResult> {
     onProgress?.('Composing takes…')
     const policy = loadContrastPolicy()
     const seed = toSeed(source)
@@ -273,36 +272,40 @@ export class SimulatedEngine implements PaletteEngine {
         dark: rotateAnchor(base.dark, rot),
         light: rotateAnchor(base.light, rot),
       }
-      return ARCHETYPES.map((arch, take) => {
-        // Guarded by vivids.length >= 2 above, so both modulo indices are in bounds.
-        const accent = cls.vivids[take % cls.vivids.length]!
-        let secondary = cls.vivids[(take + 1) % cls.vivids.length]!
-        // Two near-identical vivids would merge accent into secondary — split the
-        // secondary off to an analogous hue so the 60-30-10 stays legible.
-        if (hueGap(accent.h, secondary.h) < 25) {
-          secondary = { h: (accent.h + 35) % 360, s: accent.s, l: accent.l }
-        }
-        const colors = composeImageColors(cls, accent, secondary, take)
-        return finalizePalette({
-          seed,
-          name: nameFor(colors, arch.key, seen),
-          character: 'Drawn from your image.',
-          colors,
-          policy,
-        })
-      })
+      return {
+        palettes: ARCHETYPES.map((arch, take) => {
+          // Guarded by vivids.length >= 2 above, so both modulo indices are in bounds.
+          const accent = cls.vivids[take % cls.vivids.length]!
+          let secondary = cls.vivids[(take + 1) % cls.vivids.length]!
+          // Two near-identical vivids would merge accent into secondary — split the
+          // secondary off to an analogous hue so the 60-30-10 stays legible.
+          if (hueGap(accent.h, secondary.h) < 25) {
+            secondary = { h: (accent.h + 35) % 360, s: accent.s, l: accent.l }
+          }
+          const colors = composeImageColors(cls, accent, secondary, take)
+          return finalizePalette({
+            seed,
+            name: nameFor(colors, arch.key, seen),
+            character: 'Drawn from your image.',
+            colors,
+            policy,
+          })
+        }),
+      }
     }
 
     const baseHue = pickBaseHue(source, variation)
-    return ARCHETYPES.map((arch) => {
-      const colors = composeColors(baseHue, arch)
-      return finalizePalette({
-        seed,
-        name: nameFor(colors, arch.key, seen),
-        character: arch.character,
-        colors,
-        policy,
-      })
-    })
+    return {
+      palettes: ARCHETYPES.map((arch) => {
+        const colors = composeColors(baseHue, arch)
+        return finalizePalette({
+          seed,
+          name: nameFor(colors, arch.key, seen),
+          character: arch.character,
+          colors,
+          policy,
+        })
+      }),
+    }
   }
 }

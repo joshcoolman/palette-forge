@@ -2,13 +2,13 @@
 
 > A focused, fully-local utility that turns an image or seed color into refined, accessible color palettes. Tuned for design out of the box — its expertise lives in `/knowledge` as plain markdown you can read and rewrite.
 
-Reference spec for what shipped. It started as a BYO-key, vision-agent tool; building it revealed the deterministic engine was the product, so the in-app LLM was removed. AI has since returned as an **optional, light layer at the boundary** (BYO-key; today, palette name suggestions) — the generation core stays fully deterministic and model-free. This describes the result. AI-layer detail: [`epic-ai-layer.md`](epic-ai-layer.md).
+Reference spec for what shipped. It started as a BYO-key, vision-agent tool; building it revealed the deterministic engine was the product, so the in-app LLM was removed. AI has since returned in two shapes: a **light boundary enrichment** (BYO-key palette name suggestions) and — for the **prompt flow** — a full **model-authored generator** (a worded brief → the model designs six palettes). Seed-color and image generation stay fully deterministic and model-free; the prompt path is the model computing color, deliberately. Two generators behind one seam. AI-layer detail: [`epic-ai-layer.md`](epic-ai-layer.md), [`plan-ai-model-direct.md`](plan-ai-model-direct.md).
 
 ---
 
 ## The one thing it does
 
-Image or seed color in → expressive palettes (light + dark) out. A round of distinct treatment takes — each a saturated hero ground with a contrasting accent, all coherent with your seed; re-run for fresh rounds; keep the ones you like.
+Image, seed color, **or a worded brief** in → expressive palettes (light + dark) out. A round of distinct treatment takes — each a saturated hero ground with a contrasting accent; for seed/image they're coherent with your input, for a brief the model authors them to the words; re-run for fresh rounds; keep the ones you like.
 
 If a feature doesn't serve that sentence, it's not v1.
 
@@ -34,9 +34,9 @@ A color picker gives you one swatch. This composes a whole round of **finished, 
 4. **Re-run** explores — color seeds walk color-theory relationships to the seed (complementary, triadic, …), image seeds rotate around the wheel — so each round is genuinely different yet still seed-coherent.
 5. **You** are the oracle for taste — switch, retune the source color, heart what's right.
 
-The generation loop is deterministic — no model, no key, instant, free to host. (Contrast ratios are still computed onto each record for reference, but never enforced or shown.)
+The seed-color and image generators are deterministic — no model, no key, instant, free to host. (Contrast ratios are still computed onto each record for reference, but never enforced or shown.)
 
-> **AI at the boundary, not in the loop.** The in-app LLM was removed from the *generation* loop because the deterministic engine + a deterministic namer deliver it better (instant, predictable, no key wall) — and it stays out. AI has returned only **at the boundary**, as an opt-in BYO-key layer: today it *suggests* names for a saved palette; it never computes color and is entirely absent without a key. The `PaletteEngine` seam and clean records also keep the door open to exposing the engine as an **agent-callable capability (MCP/API)** later.
+> **Two generators behind one seam.** The deterministic engine owns seed/image — it delivers that loop better than a model (instant, predictable, no key wall), and it stays. The **prompt flow** is a second generator: the model reads a worded brief and *authors* whole palettes (every role, both modes), so it does compute color — a deliberate reversal of the original "AI never computes color" line, because honoring worded intent ("nothing girly") and the planned refine loop both need the model to own the colors. Both sit behind the `PaletteEngine` seam (`RoutingEngine` routes by source); the model's taste is its **verbatim `/knowledge` system prompt** (`color-theorist.md`), not buried in code. With no key the prompt on-ramp is absent and the app is fully deterministic. The clean records keep the door open to exposing the engine as an **agent-callable capability (MCP/API)** later.
 
 ---
 
@@ -48,15 +48,18 @@ Knowledge and the archetype dials together define the taste. The prose in `/know
 
 ```
 knowledge/
-├── palettes.md     # hero ground, cross-hue accent, seed coherence,
-│                   # range across the set, light/dark as inversions
-├── characters.md   # the treatment archetypes and how to keep them distinct
-├── contrast.md     # legacy WCAG policy — still parsed to record contrast
-│                   # ratios for reference, but NOT enforced or shown
-└── roles.md        # what each role means: background, surface, text, muted, accent, border
+├── color-theorist.md  # THE model-generation system prompt — sent verbatim. Edit
+│                      # this and the AI's palettes change (no code, no rebuild).
+├── palettes.md        # hero ground, cross-hue accent, seed coherence,
+│                      # range across the set, light/dark as inversions
+├── characters.md      # the deterministic treatment archetypes, kept distinct
+├── naming.md          # persona for the AI rename suggestions
+├── contrast.md        # legacy WCAG policy — still parsed to record contrast
+│                      # ratios for reference, but NOT enforced or shown
+└── roles.md           # what each role means: background, surface, text, muted, accent, border, secondary
 ```
 
-Note: the taste dials live in `tuning.ts`; edit there to reshape every take, re-run, and sample card at once.
+Two taste surfaces: the **deterministic** dials live in `tuning.ts` (edit to reshape every seed/image take, re-run, and sample card at once); the **model's** taste is `color-theorist.md` prose, sent to it verbatim — fork it to change what the AI designs.
 
 **Deliberately deferred:** an in-app "talk to it and it edits its own knowledge" mode. The folder is just files — a human or an external agent can already edit it.
 
@@ -97,7 +100,7 @@ Stored in IndexedDB (ages better than localStorage).
 
 ## Fully local by default; AI is opt-in
 
-No account, and out of the box nothing is sent anywhere — generation is deterministic and runs entirely in the browser, which is what makes it free to host and instant to use. The **only** thing that leaves the browser is the optional AI layer: if you add an Anthropic key in Settings, palette colors are sent to Anthropic (directly, no backend) to suggest names. With no key, that path doesn't exist.
+No account, and out of the box nothing is sent anywhere — the seed/image generators are deterministic and run entirely in the browser, which is what makes it free to host and instant to use. The **only** things that leave the browser are the opt-in AI paths: with an Anthropic key in Settings, a worded brief (and its system prompt) goes to Anthropic to author palettes, and a saved palette's colors go up to suggest names — both directly, no backend. With no key, neither path exists.
 
 ## Stack
 
@@ -105,9 +108,9 @@ TanStack Start + React + TypeScript + Tailwind, Vercel.
 
 ## v1 cut
 
-1. Input: image or seed color (a `+` popover — upload / curated seeds / picker). 2. Compose a round of named treatment takes (hero ground + cross-hue accent) with light/dark mock. 3. Re-run for varied rounds; retune the seed color and re-run. 4. Heart to the local library; rename (manual, or AI-suggested with a key), copy/download as JSON + CSS vars. 5. Settings = display prefs + the optional AI-touches panel (BYO key + model).
+1. Input: image, seed color, **or a worded brief** (a `+` popover — upload / curated seeds / picker / Chat-with-AI, the brief key-gated). 2. Compose a round of named treatment takes (hero ground + cross-hue accent) with light/dark mock — deterministic for seed/image, model-authored for a brief (with the model's friendly note). 3. Re-run for varied rounds (instant for all, including AI); retune the seed color and re-run. 4. Heart to the local library; rename (manual, or AI-suggested with a key), copy/download as JSON + CSS vars. 5. Settings = display prefs + the optional AI-touches panel (BYO key + model).
 
-Deferred (so they stop nagging): the mood-board input, MCP/API exposure, a knowledge-authoring mode, the color "comfort band" as explicit constants, and the rest of the AI epic (prompt-to-palette, thinking feed, conversational refine — [`epic-ai-layer.md`](epic-ai-layer.md) phases 2–4).
+Deferred (so they stop nagging): the mood-board input, MCP/API exposure, a knowledge-authoring mode, the color "comfort band" as explicit constants, and the rest of the AI epic (thinking feed, conversational refine — [`epic-ai-layer.md`](epic-ai-layer.md) phases 3–4).
 
 ## The thesis
 

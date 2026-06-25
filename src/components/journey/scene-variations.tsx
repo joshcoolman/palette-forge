@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import { motion } from 'motion/react'
+import { Loader2 } from 'lucide-react'
 
 import type { ScoredPalette } from '#/features/palette/types'
 import type { VariationRound } from '#/lib/journey-store'
@@ -20,12 +21,19 @@ function RoundStrips({
   round,
   roundIndex,
   savedIds,
+  progress,
+  showCharacter,
   onToggleSave,
   onRegenerate,
 }: {
   round: VariationRound
   roundIndex: number
   savedIds: string[]
+  /** Live status while this round runs — shown so a multi-second model call reads
+   *  as working, not stuck. */
+  progress?: string
+  /** Show the palette's character label below each strip — only for AI journeys. */
+  showCharacter?: boolean
   onToggleSave: (palette: ScoredPalette) => void
   onRegenerate?: () => void
 }) {
@@ -52,25 +60,51 @@ function RoundStrips({
     )
   }
 
-  const running = round.phase === 'running'
-  return (
-    <div className={`grid ${ROUND_GRID}`}>
-      {running && round.variations.length === 0
-        ? Array.from({ length: 6 }).map((_, i) => (
+  // Running with nothing yet: a labelled, clearly-animated state. The bare
+  // app-surface skeletons were invisible on the dark ground (read as broken), so
+  // they carry a border, and the live progress sits above them.
+  if (round.phase === 'running' && round.variations.length === 0) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div
+          className="flex items-center gap-2 text-sm"
+          style={{ color: 'var(--app-muted)' }}
+        >
+          <Loader2 size={15} className="animate-spin" />
+          {progress || 'Designing your palettes…'}
+        </div>
+        <div className={`grid ${ROUND_GRID}`}>
+          {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-[7/1] animate-pulse rounded-[var(--app-radius)]"
-              style={{ background: 'var(--app-surface)' }}
-            />
-          ))
-        : round.variations.map((palette) => (
-            <PaletteCard
-              key={palette.id}
-              palette={palette}
-              saved={savedIds.includes(palette.id)}
-              onToggleSave={() => onToggleSave(palette)}
+              className="aspect-[7/1] animate-pulse rounded-[var(--app-radius)] border"
+              style={{
+                background: 'var(--app-surface)',
+                borderColor: 'var(--app-border)',
+              }}
             />
           ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`grid ${ROUND_GRID}`}>
+      {round.variations.map((palette) => (
+        <div key={palette.id} className="flex flex-col gap-1">
+          <PaletteCard
+            palette={palette}
+            saved={savedIds.includes(palette.id)}
+            onToggleSave={() => onToggleSave(palette)}
+          />
+          {showCharacter && palette.character && (
+            <p className="truncate text-xs" style={{ color: 'var(--app-muted)' }}>
+              {palette.character}
+            </p>
+          )}
+        </div>
+      ))}
     </div>
   )
 }
@@ -84,11 +118,15 @@ function RoundStrips({
 export function SceneVariations({
   rounds,
   savedIds,
+  progress,
+  showCharacter,
   onToggleSave,
   onRegenerate,
 }: {
   rounds: VariationRound[]
   savedIds: string[]
+  progress?: string
+  showCharacter?: boolean
   onToggleSave: (palette: ScoredPalette) => void
   onRegenerate?: () => void
 }) {
@@ -108,10 +146,20 @@ export function SceneVariations({
       {ordered.map(({ round, roundIndex }) => (
         <Fragment key={round.id}>
           <div className="flex flex-col gap-3">
+            {round.message && (
+              <p
+                className="pf-body text-sm leading-relaxed"
+                style={{ color: 'var(--app-text)' }}
+              >
+                {round.message}
+              </p>
+            )}
             <RoundStrips
               round={round}
               roundIndex={roundIndex}
               savedIds={savedIds}
+              progress={progress}
+              showCharacter={showCharacter}
               onToggleSave={onToggleSave}
               onRegenerate={onRegenerate}
             />

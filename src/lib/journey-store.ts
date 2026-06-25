@@ -13,6 +13,7 @@ import { useSyncExternalStore } from 'react'
 
 import type { ScoredPalette, Source } from '#/features/palette/types'
 import { getEngine } from '#/features/agent/get-engine'
+import { deriveRound } from '#/features/agent/derive'
 import { deletePalette, savePalette } from '#/features/palette/palette-repo'
 import { STORE_JOURNEYS, idbDelete, idbGet, idbPut } from '#/lib/db'
 import { ensureHydrated } from '#/lib/settings'
@@ -25,6 +26,8 @@ export type VariationRound = {
   variations: ScoredPalette[]
   phase: Phase
   error?: string
+  /** The model's friendly note for this round (AI engine only; unset otherwise). */
+  message?: string
 }
 
 export type JourneyState = {
@@ -102,31 +105,37 @@ function reinjectSeed(p: ScoredPalette, value: string): ScoredPalette {
   return { ...p, seed: { ...p.seed, value } }
 }
 
-function settled(state: JourneyState): boolean {
-  return !!state.source && !state.rounds.some((r) => r.phase === 'running')
-}
-
 const persistTimers: Record<string, ReturnType<typeof setTimeout>> = {}
 
 /**
- * Mirror a settled journey to IndexedDB (debounced). Never persists while a round
- * is running, so a refresh can't rehydrate a row stuck mid-compose.
+ * Mirror a journey to IndexedDB (debounced). The source persists as soon as it's set
+ * — so a refresh mid-generation keeps the brief instead of losing everything — but a
+ * **running** round is never persisted (it would rehydrate as stuck, and a model
+ * stream can't resume across a reload). An interrupted journey therefore restores as
+ * "source present, no rounds", which the UI offers to regenerate.
  */
 function schedulePersist(id: string): void {
-  if (!settled(getState(id))) return
+  if (!getState(id).source) return
   clearTimeout(persistTimers[id]) // no-op when absent
   persistTimers[id] = setTimeout(() => {
     delete persistTimers[id]
     const s = getState(id)
-    if (!settled(s) || !s.source) return
+    if (!s.source) return
+    // Stripping the per-take seed only pays off for images (one shared dataURL,
+    // else stored N times). Color/prompt seeds are tiny — and a prompt journey's
+    // takes each carry their OWN seed, so stripping + reinjecting one source value
+    // would flatten them. Leave non-image seeds intact.
+    const strip = s.source.type === 'image'
     const record: PersistedJourney = {
       id,
       source: s.source,
-      rounds: s.rounds.map((r) => ({
-        ...r,
-        variations: r.variations.map(stripSeed),
-      })),
-      chosen: s.chosen ? stripSeed(s.chosen) : null,
+      rounds: s.rounds
+        .filter((r) => r.phase !== 'running')
+        .map((r) => ({
+          ...r,
+          variations: strip ? r.variations.map(stripSeed) : r.variations,
+        })),
+      chosen: s.chosen ? (strip ? stripSeed(s.chosen) : s.chosen) : null,
       saved: s.saved,
     }
     void idbPut(STORE_JOURNEYS, record)
@@ -183,13 +192,19 @@ export async function hydrateJourney(id: string): Promise<void> {
   if (id in sessions) return
   if (stored?.source) {
     const value = stored.source.value
+    // Mirror the persist side: only image takes had their seed stripped, so only
+    // they need it reinjected. Non-image seeds were stored whole.
+    const reinject =
+      stored.source.type === 'image'
+        ? (v: ScoredPalette): ScoredPalette => reinjectSeed(v, value)
+        : (v: ScoredPalette): ScoredPalette => v
     patch(id, {
       source: stored.source,
       rounds: stored.rounds.map((r) => ({
         ...r,
-        variations: r.variations.map((v) => reinjectSeed(v, value)),
+        variations: r.variations.map(reinject),
       })),
-      chosen: stored.chosen ? reinjectSeed(stored.chosen, value) : null,
+      chosen: stored.chosen ? reinject(stored.chosen) : null,
       saved: stored.saved,
       progress: '',
       hydrated: true,
@@ -199,19 +214,38 @@ export async function hydrateJourney(id: string): Promise<void> {
   }
 }
 
-/** Re-run: append another fresh four — keep everything already generated. */
+/** Re-run: append another fresh round — keep everything already generated. */
 export async function rerunJourney(id: string): Promise<void> {
   const state = getState(id)
   if (!state.source) return
-  const roundId = makeId()
-  // The new round's index is the variation seed, so each re-run differs from
-  // the opening (and from prior re-runs) in the deterministic engine.
+  // The new round's index is the variation seed, so each re-run differs from the
+  // opening (and from prior re-runs).
   const variation = state.rounds.length
+
+  // AI journeys: the opening round was a paid model call; re-runs are instant,
+  // free algorithmic variations *of* that output (rotate the colorway) — so
+  // smashing regen stays the fast wall-of-color it is for deterministic seeds,
+  // not a model call each time. Falls back to a fresh AI compose if there's no
+  // settled base yet (e.g. the opening round failed).
+  if (state.source.type === 'prompt') {
+    const base = state.rounds[0]?.variations ?? []
+    if (base.length > 0) {
+      const seen = new Set<string>(
+        state.rounds.flatMap((r) => r.variations.map((v) => v.name)),
+      )
+      patch(id, {
+        rounds: [
+          ...state.rounds,
+          { id: makeId(), variations: deriveRound(base, variation, seen), phase: 'done' },
+        ],
+      })
+      return
+    }
+  }
+
+  const roundId = makeId()
   patch(id, {
-    rounds: [
-      ...state.rounds,
-      { id: roundId, variations: [], phase: 'running' },
-    ],
+    rounds: [...state.rounds, { id: roundId, variations: [], phase: 'running' }],
   })
   await runSurprise(id, roundId, state.source, variation)
 }
@@ -230,17 +264,17 @@ async function runSurprise(
     const usedNames = getState(id).rounds.flatMap((r) =>
       r.variations.map((v) => v.name),
     )
-    const variations = await getEngine().compose(
+    const { palettes, message } = await getEngine().compose(
       source,
       (m) => patch(id, { progress: m }),
       variation,
       usedNames,
     )
     if (getState(id).source !== source) return
-    if (variations.length === 0) {
+    if (palettes.length === 0) {
       patchRound(id, roundId, { phase: 'error', error: EMPTY_RESULT })
     } else {
-      patchRound(id, roundId, { variations, phase: 'done' })
+      patchRound(id, roundId, { variations: palettes, message, phase: 'done' })
     }
     patch(id, { progress: '' })
   } catch (e) {

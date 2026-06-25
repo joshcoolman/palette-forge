@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { RefreshCw, X } from 'lucide-react'
+import { RefreshCw, Sparkles, X } from 'lucide-react'
 
 import type {
   Mode,
@@ -45,6 +45,7 @@ import { ViewModeToggle } from '#/components/favorites/view-mode-toggle'
 import { ExportModal } from '#/components/favorites/export-modal'
 import { DeleteConfirm } from '#/components/favorites/delete-confirm'
 import { RenameDialog } from '#/components/favorites/rename-dialog'
+import { EvalRunner } from '#/components/dev/eval-runner'
 
 export const Route = createFileRoute('/')({ component: Home })
 
@@ -88,6 +89,21 @@ function SourceThumb({
         className="h-auto max-h-24 w-auto max-w-[160px] rounded-[var(--app-radius)]"
         style={{ outline: '1px solid var(--app-border)' }}
       />
+    )
+  }
+  if (source.type === 'prompt') {
+    // A worded brief has no color to edit — a quiet, non-interactive marker.
+    return (
+      <div
+        className="flex h-10 w-10 items-center justify-center rounded-[var(--app-radius)]"
+        style={{
+          background: 'var(--app-surface)',
+          outline: '1px solid var(--app-border)',
+          color: 'var(--app-muted)',
+        }}
+      >
+        <Sparkles size={16} />
+      </div>
     )
   }
   // A color source is editable: click the swatch to open the picker, then Done
@@ -282,6 +298,17 @@ function Home() {
         )}
       />
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-5 px-4 py-12">
+        {/* Dev-only eval bar — a burnt-orange strip spanning the content column,
+            above the app's own header, so it never reads as part of the product.
+            Also gated on a key (`aiEnabled`): with no key, running does nothing, so
+            it shouldn't show at all. */}
+        {import.meta.env.DEV && aiEnabled && (
+          <EvalRunner
+            onRun={(brief) =>
+              handleStart({ type: 'prompt', value: brief, extracted: [] })
+            }
+          />
+        )}
         {/* Brand lives in the global nav now; the homepage stays clean — just the
             forge button, the working area, and the colorful grid. The view toggle
             sits opposite the "+" (only meaningful once there are saved palettes).
@@ -300,7 +327,7 @@ function Home() {
           ) : (
             <span />
           )}
-          <SourcePopover onStart={handleStart} />
+          <SourcePopover onStart={handleStart} aiEnabled={aiEnabled} />
         </header>
 
         {active && journey.source && (
@@ -328,9 +355,21 @@ function Home() {
                     className="text-xs"
                     style={{ color: 'var(--app-muted)' }}
                   >
-                    {journey.source.type === 'image'
-                      ? 'From an image'
-                      : `From ${journey.source.value}`}
+                    {journey.source.type === 'image' ? (
+                      'From an image'
+                    ) : journey.source.type === 'prompt' ? (
+                      <>
+                        From your description:{' '}
+                        <span
+                          className="italic"
+                          style={{ color: 'var(--app-text)' }}
+                        >
+                          “{journey.source.value}”
+                        </span>
+                      </>
+                    ) : (
+                      `From ${journey.source.value}`
+                    )}
                   </p>
                 </div>
               </div>
@@ -356,18 +395,42 @@ function Home() {
               </div>
             </div>
 
-            <SceneVariations
-              rounds={journey.rounds}
-              savedIds={journey.saved}
-              onToggleSave={(palette) => {
-                const wasSaved = journey.saved.includes(palette.id)
-                toggleSaved(ACTIVE, palette)
-                // Hearting re-themes the page to this palette (the backdrop keys
-                // off `chosen`); un-hearting leaves the current theme as-is.
-                if (!wasSaved) chooseVariation(ACTIVE, palette)
-              }}
-              onRegenerate={() => void rerunJourney(ACTIVE)}
-            />
+            {journey.rounds.length === 0 ? (
+              // Interrupted hydrate: the source survived a mid-generation refresh but
+              // the round didn't (a model stream can't resume). Offer to regenerate
+              // rather than show a blank area — the brief isn't lost.
+              <div
+                className="flex flex-col items-start gap-3 rounded-[var(--app-radius)] border border-dashed p-5"
+                style={{ borderColor: 'var(--app-border)' }}
+              >
+                <p className="text-sm" style={{ color: 'var(--app-muted)' }}>
+                  That run was interrupted — your description is saved.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleStart(journey.source!)}
+                  className="rounded-md px-3 py-1.5 text-sm font-medium"
+                  style={{ background: 'var(--app-text)', color: 'var(--app-bg)' }}
+                >
+                  Generate again
+                </button>
+              </div>
+            ) : (
+              <SceneVariations
+                rounds={journey.rounds}
+                savedIds={journey.saved}
+                progress={journey.progress}
+                showCharacter={journey.source.type === 'prompt'}
+                onToggleSave={(palette) => {
+                  const wasSaved = journey.saved.includes(palette.id)
+                  toggleSaved(ACTIVE, palette)
+                  // Hearting re-themes the page to this palette (the backdrop keys
+                  // off `chosen`); un-hearting leaves the current theme as-is.
+                  if (!wasSaved) chooseVariation(ACTIVE, palette)
+                }}
+                onRegenerate={() => void rerunJourney(ACTIVE)}
+              />
+            )}
           </section>
         )}
 

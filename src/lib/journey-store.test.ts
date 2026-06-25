@@ -40,7 +40,7 @@ describe('journey-store surfaces compose failures', () => {
 
   it('marks an empty surprise as an error round, not a silent blank', async () => {
     const id = 'empty'
-    compose.mockResolvedValueOnce([])
+    compose.mockResolvedValueOnce({ palettes: [] })
     const { result } = renderHook(() => useJourney(id))
     await act(async () => {
       await startJourney(id, SOURCE)
@@ -67,7 +67,10 @@ describe('journey-store surfaces compose failures', () => {
 
   it('resolves a non-empty surprise to a done round', async () => {
     const id = 'ok'
-    compose.mockResolvedValueOnce([{ id: 'p1', character: 'a take' }])
+    compose.mockResolvedValueOnce({
+      palettes: [{ id: 'p1', character: 'a take' }],
+      message: 'here you go',
+    })
     const { result } = renderHook(() => useJourney(id))
     await act(async () => {
       await startJourney(id, SOURCE)
@@ -75,6 +78,7 @@ describe('journey-store surfaces compose failures', () => {
     const round = result.current.rounds.at(-1)
     expect(round?.phase).toBe('done')
     expect(round?.variations).toHaveLength(1)
+    expect(round?.message).toBe('here you go') // the model's note flows to the round
     resetJourney(id)
   })
 })

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
-import { ImageUp, Pipette, Plus } from 'lucide-react'
+import { ImageUp, Pipette, Plus, Sparkles } from 'lucide-react'
 
 import { extractDominantColors } from '#/features/color/dominant-color'
 import { normalizeHex } from '#/features/color/color-utils'
 import type { Source } from '#/features/palette/types'
 import { IconButton } from '#/components/ui/icon-button'
 import { ColorPicker } from '#/components/journey/color-picker'
+import { PromptDialog } from '#/components/journey/prompt-dialog'
 
 function readAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -45,11 +46,15 @@ const CURATED = [
  */
 export function SourcePopover({
   onStart,
+  aiEnabled,
 }: {
   onStart: (source: Source) => void
+  /** Whether a key is present — gates the "describe it" prompt section's existence. */
+  aiEnabled: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [picking, setPicking] = useState(false)
+  const [chatting, setChatting] = useState(false)
   const [busy, setBusy] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -177,6 +182,33 @@ export function SourcePopover({
               <Pipette size={15} />
             </button>
           </div>
+
+          {/* Chat with AI — additive, only with a key (no nag otherwise). A worded
+              brief is a focused task, so it leaves the popover for its own overlay
+              rather than crowding the quick picks above. */}
+          {aiEnabled && (
+            <>
+              <hr
+                className="mt-3 mb-3 border-0 border-t"
+                style={{ borderColor: 'var(--app-border)' }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false)
+                  setChatting(true)
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:opacity-70"
+                style={{
+                  borderColor: 'var(--app-border)',
+                  color: 'var(--app-text)',
+                }}
+              >
+                <Sparkles size={14} />
+                Chat with AI
+              </button>
+            </>
+          )}
         </motion.div>
       )}
 
@@ -189,6 +221,10 @@ export function SourcePopover({
           }}
           onCancel={() => setPicking(false)}
         />
+      )}
+
+      {chatting && (
+        <PromptDialog onStart={onStart} onClose={() => setChatting(false)} />
       )}
     </div>
   )

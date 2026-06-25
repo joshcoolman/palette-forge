@@ -19,6 +19,12 @@ import { makeId } from '#/lib/id'
 /** Live, human-readable status of the agent's current move, in its own voice. */
 export type ProgressFn = (message: string) => void
 
+/**
+ * A composed round: the palettes, plus an optional `message` — the model talking
+ * to the user (the AI engine sets it; the deterministic engine leaves it unset).
+ */
+export type ComposeResult = { palettes: ScoredPalette[]; message?: string }
+
 export interface PaletteEngine {
   /**
    * The surprise: from a source, a set of genuinely distinct, seed-coherent,
@@ -29,14 +35,15 @@ export interface PaletteEngine {
    *
    * This is the one seam between everything above (UI, store, verifier, repo)
    * and palette generation — kept clean and addressable so the engine could be
-   * driven by an external agent (MCP/API) later. Today: one deterministic impl.
+   * driven by an external agent (MCP/API) later. Two impls today: deterministic
+   * and model-authored.
    */
   compose: (
     source: Source,
     onProgress?: ProgressFn,
     variation?: number,
     usedNames?: Iterable<string>,
-  ) => Promise<ScoredPalette[]>
+  ) => Promise<ComposeResult>
 }
 
 /**

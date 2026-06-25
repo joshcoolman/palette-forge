@@ -12,6 +12,14 @@ The model routes and converses. It never computes a color.
 
 A row of fixed pills ("more saturated", "cooler") felt like a normal app. This is something else: a thoughtful collaborator that asks "in what way?" before pulling a lever. The surprise is that it holds back. That's the character.
 
+### Motivating scenario (from real use)
+
+A user briefed Prompt-to-Palette with: *"I need a palette for a Pacific Northwest roofing company. We're in Portland. We work on small residential houses, something professional but sort of nature-oriented."* It produced a result and stopped — one shot, no recourse. The user's reaction names exactly the gap this phase fills:
+
+> "Oh, you chose pink. I don't like pink, I'd rather red." — *people react to what they see; they don't spec it up front.*
+
+Two things this phase owes that scenario: (1) a way to **react to the produced palette** in plain language and have it adjust, and (2) the model **clarifying** ("warmer red, or a deeper brick?") rather than taking the first reading and running. The point is that the AI feels like it's *listening*, not just consuming a prompt. Until this phase ships, Prompt-to-Palette is deliberately one-shot — see the v1.1 note in [plan-ai-prompt-to-palette.md](plan-ai-prompt-to-palette.md).
+
 ## How it works
 
 1. Keyed users see a refine input below the palette card (open text, not chips)

@@ -21,6 +21,14 @@ function accentHue(take: ScoredPalette): number {
 
 const engine = new SimulatedEngine()
 
+/** Just the palettes from a compose — these tests predate the `{palettes, message}`
+ *  result shape and assert on the array. */
+function roundOf(
+  ...args: Parameters<typeof engine.compose>
+): Promise<ScoredPalette[]> {
+  return engine.compose(...args).then((r) => r.palettes)
+}
+
 const COLOR: Source = { type: 'color', value: '#34596e', extracted: ['#34596e'] }
 
 // A vivid, multi-color image (yellow field + red blocks + black + white, à la a
@@ -42,7 +50,7 @@ const GREY_IMAGE: Source = {
 
 describe('image-native composition', () => {
   it('builds takes from the image’s own colors (accent hue is a real anchor)', async () => {
-    const takes = await engine.compose(VIVID_IMAGE)
+    const takes = await roundOf(VIVID_IMAGE)
     const anchorHues = VIVID_IMAGE.extracted.map((h) => hexToHsl(h).h)
     for (const take of takes) {
       const a = accentHue(take)
@@ -52,15 +60,15 @@ describe('image-native composition', () => {
   })
 
   it('is deterministic for the same input', async () => {
-    const a = await engine.compose(VIVID_IMAGE, undefined, 1)
-    const b = await engine.compose(VIVID_IMAGE, undefined, 1)
+    const a = await roundOf(VIVID_IMAGE, undefined, 1)
+    const b = await roundOf(VIVID_IMAGE, undefined, 1)
     expect(a.map((t) => t.colors)).toEqual(b.map((t) => t.colors))
   })
 
   it('re-runs drift the whole palette around the wheel (surprise game)', async () => {
-    const r0 = await engine.compose(VIVID_IMAGE, undefined, 0)
-    const r1 = await engine.compose(VIVID_IMAGE, undefined, 1)
-    const r2 = await engine.compose(VIVID_IMAGE, undefined, 2)
+    const r0 = await roundOf(VIVID_IMAGE, undefined, 0)
+    const r1 = await roundOf(VIVID_IMAGE, undefined, 1)
+    const r2 = await roundOf(VIVID_IMAGE, undefined, 2)
     // Not just the accent selection — a vivid role (secondary) shifts hue, i.e.
     // the colorway rotated, and each re-run is a distinct move from the last.
     const sec = (t: ScoredPalette) => roleHsl(t, 'secondary', 'dark').h
@@ -70,7 +78,7 @@ describe('image-native composition', () => {
   })
 
   it('light and dark are genuine inversions', async () => {
-    const take = (await engine.compose(VIVID_IMAGE))[0]!
+    const take = (await roundOf(VIVID_IMAGE))[0]!
     expect(roleHsl(take, 'background', 'dark').l).toBeLessThan(0.3)
     expect(roleHsl(take, 'background', 'light').l).toBeGreaterThan(0.8)
     expect(roleHsl(take, 'text', 'dark').l).toBeGreaterThan(0.7)
@@ -78,7 +86,7 @@ describe('image-native composition', () => {
   })
 
   it('stays in the comfort band (no pure black/white, sat-capped, muted < text)', async () => {
-    const takes = await engine.compose(VIVID_IMAGE)
+    const takes = await roundOf(VIVID_IMAGE)
     for (const take of takes) {
       for (const mode of ['light', 'dark'] as Mode[]) {
         for (const c of take.colors) {
@@ -96,8 +104,8 @@ describe('image-native composition', () => {
   })
 
   it('a flat grey image falls back to the archetype path and still varies', async () => {
-    const r0 = await engine.compose(GREY_IMAGE, undefined, 0)
-    const r1 = await engine.compose(GREY_IMAGE, undefined, 1)
+    const r0 = await roundOf(GREY_IMAGE, undefined, 0)
+    const r1 = await roundOf(GREY_IMAGE, undefined, 1)
     expect(r0).toHaveLength(6)
     expect(hueGap(accentHue(r0[0]!), accentHue(r1[0]!))).toBeGreaterThan(30)
   })
@@ -105,20 +113,20 @@ describe('image-native composition', () => {
 
 describe('color-seed re-run variety', () => {
   it('opening round (variation 0) is unchanged on re-compose', async () => {
-    const a = (await engine.compose(COLOR, undefined, 0))[0]!
-    const b = (await engine.compose(COLOR, undefined, 0))[0]!
+    const a = (await roundOf(COLOR, undefined, 0))[0]!
+    const b = (await roundOf(COLOR, undefined, 0))[0]!
     expect(accentHue(a)).toBeCloseTo(accentHue(b), 5)
   })
 
   it('color-seed re-runs explore harmonic relationships to the seed', async () => {
-    const base = accentHue((await engine.compose(COLOR, undefined, 0))[0]!)
+    const base = accentHue((await roundOf(COLOR, undefined, 0))[0]!)
     // Round 1 is the complementary scheme (~180° off the seed); every re-run is
     // a big move, not the old "stay close" wobble. (±25° absorbs the recipe
     // jitter and rounding.)
-    const v1 = accentHue((await engine.compose(COLOR, undefined, 1))[0]!)
+    const v1 = accentHue((await roundOf(COLOR, undefined, 1))[0]!)
     expect(hueGap(v1, (base + 180) % 360)).toBeLessThan(25)
     for (const v of [1, 2, 3]) {
-      const h = accentHue((await engine.compose(COLOR, undefined, v))[0]!)
+      const h = accentHue((await roundOf(COLOR, undefined, v))[0]!)
       expect(hueGap(h, base)).toBeGreaterThan(60)
     }
   })
