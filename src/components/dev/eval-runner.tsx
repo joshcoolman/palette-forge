@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
+import { ROLE_FILES } from '#/features/knowledge/knowledge-loader'
+import { setGenerationRoleOverride } from '#/features/agent/prompt-palettes'
 
 type Prompt = { id: string; label: string; brief: string }
 
@@ -13,10 +15,16 @@ type Prompt = { id: string; label: string; brief: string }
  * `eval/runs.jsonl`. A trigger + a way to grow the test set, not a new flow.
  */
 const BURNT = '#b5491f'
+const DEFAULT_ROLE = 'color-theorist.md'
+/** Selectable roles: the shipped default first, then the dev-only personas from
+ *  `knowledge/roles/`. The picker is DEV-only, so it never reaches production. */
+const ROLES = [DEFAULT_ROLE, ...ROLE_FILES]
+const roleLabel = (file: string): string => file.replace(/\.md$/, '')
 
 export function EvalRunner({ onRun }: { onRun: (brief: string) => void }) {
   const [prompts, setPrompts] = useState<Prompt[]>([])
   const [selected, setSelected] = useState('')
+  const [role, setRole] = useState(DEFAULT_ROLE)
   const [adding, setAdding] = useState(false)
   const [label, setLabel] = useState('')
   const [brief, setBrief] = useState('')
@@ -36,7 +44,9 @@ export function EvalRunner({ onRun }: { onRun: (brief: string) => void }) {
 
   function run() {
     const p = prompts.find((x) => x.id === selected)
-    if (p) onRun(p.brief)
+    if (!p) return
+    setGenerationRoleOverride(role === DEFAULT_ROLE ? null : role)
+    onRun(p.brief)
   }
 
   async function saveAndRun() {
@@ -52,6 +62,7 @@ export function EvalRunner({ onRun }: { onRun: (brief: string) => void }) {
     } catch {
       /* best-effort save */
     }
+    setGenerationRoleOverride(role === DEFAULT_ROLE ? null : role)
     onRun(b) // run it now …
     setLabel('')
     setBrief('')
@@ -72,6 +83,18 @@ export function EvalRunner({ onRun }: { onRun: (brief: string) => void }) {
         <span className="font-mono font-semibold uppercase tracking-wide">
           eval · dev
         </span>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          aria-label="Role"
+          className={`min-w-[150px] ${field}`}
+        >
+          {ROLES.map((r) => (
+            <option key={r} value={r} className="text-black">
+              {roleLabel(r)}
+            </option>
+          ))}
+        </select>
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}

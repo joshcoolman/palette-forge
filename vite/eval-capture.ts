@@ -103,13 +103,16 @@ export function evalCapture(): Plugin {
         req.on('data', (chunk) => (body += chunk))
         req.on('end', () => {
           try {
-            const { brief, model, raw } = JSON.parse(body) as {
+            const { brief, model, role, raw } = JSON.parse(body) as {
               brief: string
               model: string
+              role?: string
               raw: string
             }
-            // Stamp server-side so the log is ordered by when it landed.
-            const record = { at: new Date().toISOString(), model, brief, raw }
+            // Stamp server-side so the log is ordered by when it landed; `role` records
+            // which persona authored it (the eval bar's role picker), so each run is
+            // self-describing — role × brief.
+            const record = { at: new Date().toISOString(), model, role, brief, raw }
             mkdirSync(dirname(RUNS), { recursive: true })
             appendFileSync(RUNS, JSON.stringify(record) + '\n') // durable history
             writeFileSync(LATEST, JSON.stringify(record, null, 2)) // last run, pretty
