@@ -36,8 +36,29 @@ export type ModelPalette = {
  * The verbatim system prompt: the ordered knowledge files concatenated. What you read
  * in `/knowledge` is exactly what the model receives — nothing assembled in code.
  */
+/**
+ * Dev-only role override for the eval bar's role picker. When set (DEV only), generation
+ * uses this knowledge file as the system prompt instead of the shipped default, so an
+ * alternate persona (e.g. `interior-designer.md`) can be A/B'd against `color-theorist.md`.
+ * Never set in production — the live app always uses `GENERATION_KNOWLEDGE`.
+ */
+let devRoleOverride: string | null = null
+
+export function setGenerationRoleOverride(file: string | null): void {
+  if (import.meta.env.DEV) devRoleOverride = file
+}
+
+/** The role file generation will use right now — the dev override if set, else the
+ *  shipped default. Used to stamp eval runs so each is self-describing (role × brief). */
+export function currentGenerationRole(): string {
+  return (import.meta.env.DEV && devRoleOverride) || GENERATION_KNOWLEDGE[0]
+}
+
 export function generationSystemPrompt(): string {
-  return GENERATION_KNOWLEDGE.map(getKnowledge)
+  const files =
+    import.meta.env.DEV && devRoleOverride ? [devRoleOverride] : GENERATION_KNOWLEDGE
+  return files
+    .map(getKnowledge)
     .filter(Boolean)
     .join('\n\n---\n\n')
 }
@@ -171,7 +192,7 @@ export async function promptToPalettes(brief: string): Promise<ModelResponse> {
     // prompt — in the console, and captured to eval/runs.jsonl for later review.
     console.log('[generate] raw model reply:\n', raw)
   }
-  captureRun(brief, raw)
+  captureRun(brief, raw, currentGenerationRole())
 
   const result = parseModelResponse(raw)
   if (result.palettes.length === 0) {

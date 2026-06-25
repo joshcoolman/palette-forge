@@ -19,9 +19,15 @@ core — see [`docs/poor-mans-evals.md`](../docs/poor-mans-evals.md). This file 
   with the **intent** a good result must honor and the **must-nots** it stated in words
   (e.g. *"nothing girly"* → no pink/purple). Re-runnable so a change is judged the same
   way every time, not against a moving target.
+- **Roles** — the model's system prompt is a persona file. `knowledge/color-theorist.md`
+  is the shipped default; alternate personas (dev-only experiments, e.g.
+  `interior-designer.md`) live in `knowledge/roles/` and are selectable from the eval
+  bar's **Role** dropdown — so you can A/B *role × brief*. The live app always uses the
+  default; the picker is `DEV`-only.
 - **`runs.jsonl`** *(local, git-ignored)* — every AI generation in dev, appended one
-  JSON object per line: `{ at, model, brief, raw }`, where `raw` is the model's **full
-  reply** (message + palettes). "The JSON's in our log" — no devtools required.
+  JSON object per line: `{ at, model, role, brief, raw }`, where `role` is the persona
+  that authored it and `raw` is the model's **full reply** (message + palettes). Each run
+  is self-describing. "The JSON's in our log" — no devtools required.
 - **`latest.json`** *(local, git-ignored)* — the last run, pretty-printed, for a quick eyeball.
 
 ## How the capture works
@@ -65,7 +71,7 @@ to the same `eval/runs.jsonl` + `eval/latest.json`. Use it to iterate on
 Each line:
 
 ```json
-{ "at": "2026-…Z", "model": "sonnet", "brief": "…the brief…", "raw": "…the model's full JSON reply…" }
+{ "at": "2026-…Z", "model": "sonnet", "role": "color-theorist.md", "brief": "…the brief…", "raw": "…the model's full JSON reply…" }
 ```
 
 ## The method (and the trap)

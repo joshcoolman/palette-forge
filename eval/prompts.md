@@ -53,6 +53,10 @@ engine chose the accent — see `docs/plan-ai-model-direct.md` for why, and the 
 
 > Teach me how to change my car battery.
 
+## Minecraft Party Theme
+
+> Hey, I'm putting together a party for my kid and his friends. They're all really into Minecraft, and I was hoping you can create some nice color palettes for some invitations I'm creating.
+
 ---
 
 ## How to use
