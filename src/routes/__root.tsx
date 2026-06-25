@@ -1,4 +1,6 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 import { appMeta } from '#/app-meta'
 import { GlobalNav } from '#/components/nav/global-nav'
@@ -87,6 +89,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         >
           <GithubMark size={16} />
         </a>
+        {/* Vercel Analytics + Speed Insights — the React variants, since this is
+            TanStack Start, not Next.js (the dashboard shows the Next snippet). */}
+        <Analytics />
+        <SpeedInsights />
         <Scripts />
       </body>
     </html>
