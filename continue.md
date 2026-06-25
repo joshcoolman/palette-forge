@@ -1,120 +1,99 @@
 # Continue — Palette Forge
 
-## Where we are
+## Where we are (2026-06-25, end of session)
 
-On branch **`feat/prompt-to-palette`** (open, **not merged** — deliberate, mid tuning
-soak). Everything committed + pushed; working tree clean except this file. Gate green on
-every commit (`tsc`, `eslint`, 73 tests, `pnpm build`). **`main`** only has a cherry-picked
-border tweak (`cf18369`) — none of the AI/eval work below.
+**Everything is on `main` and deployed.** `main` (HEAD `8ef40a9`, a merge commit) now
+contains all of yesterday's *and* today's work and was pushed → Vercel production deploy to
+**colorfordays.com**. Currently on branch **`feat/prompt-to-palette`** (HEAD `6f3cd4f`),
+**clean, fully pushed, and content-identical to `main`** — future work on the branch will
+diverge from here as normal. Gate green on every commit (`tsc`, `eslint`, 73 tests, `build`);
+CI runs on push + PR.
 
-This session shipped two big arcs on the branch: **(1) model-direct palettes** and **(2) a
-full local eval/observability setup**.
+This session shipped three things, in order:
 
-## Arc 1 — Model-direct palettes (the prompt flow is now model-authored)
+## 1. Repo-hardening quick wins (morning) — `108a2e9` via PR #7
 
-The seed-only prompt path (model picks one hex, deterministic engine builds the rest)
-couldn't honor palette-wide intent ("nothing girly" → pink accent every time) and gave a
-refine loop nothing to act on. So **for the prompt flow, the model now authors the whole
-palette** — it computes color there, deliberately reversing the old "AI never computes
-color" line *for that path only*. Seed/image stay deterministic.
+- **CI** (`.github/workflows/ci.yml`): full gate on push + PR, tailored to the stack (pnpm 11
+  via `packageManager`, Node 22, TanStack Start + Nitro).
+- **MIT LICENSE** (backs the footer's "open-source" claim).
+- **Vercel Analytics + Speed Insights** in `src/routes/__root.tsx` (React variants, NOT the
+  Next.js snippet — this is TanStack Start).
+- Merged `feat/prompt-to-palette` → `main` via **PR #7** (first time main carried the v1
+  AI/eval work) and tagged **`v1.0.0`** on the merge commit.
 
-- **Two generators behind one seam** (`src/features/agent/get-engine.ts` → `RoutingEngine`):
-  `source.type === 'prompt'` → `ModelEngine` (`model-engine.ts`), else `SimulatedEngine`.
-  `compose()` now returns `ComposeResult { palettes, message? }` (the model's friendly note).
-- **Contract is prose, not tool-use:** `knowledge/color-theorist.md` IS the system prompt,
-  sent **verbatim** (`generationSystemPrompt()` in `src/features/agent/prompt-palettes.ts`).
-  Model returns `{ message, palettes }` JSON; `parseModelResponse`/`toModelPalette` validate
-  + drop malformed; transport error → visible error round (no silent grey).
-- **`Source` gained `'prompt'`** (value = the brief). The Chat-with-AI overlay
-  (`prompt-dialog.tsx`) starts a prompt journey; `index.tsx` shows the quoted brief + a
-  Sparkles marker.
-- **Instant re-runs:** the model is paid once (opening round); re-runs are free algorithmic
-  variations of that output — `src/features/agent/derive.ts` `deriveRound()` rotates the
-  whole colorway by a harmonic offset (reuses `rotateHue` + `finalizePalette`). Preserves
-  the beloved "smash regen → wall of color" without a model call each time. `rerunJourney`
-  branches prompt→derive / color·image→deterministic.
-- **Finished-feel:** visible "Designing…" loading state (was invisible skeletons), the
-  model's friendly `message` above the round, palette `character`/rationale exposed (strip
-  hover-title + saved-card subtitle), refresh recovery (source persists eagerly; interrupted
-  → "Generate again"). Favorite cards now wear their own `border` role color.
-- **Docs reconciled** to "two generators": `CLAUDE.md`, `docs/SPEC.md`, `README.md`,
-  `docs/plan-ai-model-direct.md`, and memories (`model-direct-palettes` is the canonical record).
+## 2. Minimal Color Theorist — `ca22dbb`
 
-## Arc 2 — Local eval / observability (rolled our own, dev-only)
+Replaced the 109-line `knowledge/color-theorist.md` with a **five-sentence** system prompt
+(mission + multi-hue permission + a plain darkness/white guardrail + the verbatim JSON
+contract). Tuned live against a Minecraft brief (saved in `eval/prompts.md`) on sonnet,
+reading hue/L/S back from `eval/runs.jsonl`.
 
-The point: tune the model prompt with evidence, not vibes. All dev-only, zero prod surface.
+- **Mechanism unchanged:** `color-theorist.md` IS the system prompt, sent verbatim via
+  `generationSystemPrompt()` (`src/features/agent/prompt-palettes.ts`). The markdown file is
+  the knob — tuning = editing prose, no code.
+- Multi-hue permission ("background/surface/border/muted don't all have to be the same hue")
+  unlocked genuine cross-hue palettes where the brief invites it; serious briefs stayed
+  restrained — **the prompt self-calibrates boldness to the brief, untold.**
 
-- **Capture (tracing):** `vite/eval-capture.ts` — Vite plugin `apply: 'serve'` (dev only).
-  `POST /__eval/run` appends every generation `{ at, model, brief, raw }` to
-  **`eval/runs.jsonl`** (+ pretty `eval/latest.json`); client half `src/lib/eval-capture.ts`
-  `captureRun()` (DEV-gated) fires from `promptToPalettes`. Run files git-ignored.
-- **Eval runner (dev UI):** `src/components/dev/eval-runner.tsx` — a **burnt-orange** banner
-  (`#b5491f`) above the app header, content-width, **gated on `import.meta.env.DEV &&
-  aiEnabled`** (hidden without a key). A wide dropdown of briefs + **Run** + **+ New**
-  (label+brief form → `POST /__eval/prompts` appends to `prompts.md` + runs). `GET
-  /__eval/prompts` parses the briefs from `eval/prompts.md` server-side. Tree-shaken from prod.
-- **The golden set:** `eval/prompts.md` — briefs with intent + must-nots (lawn-care,
-  racing-brand, wellness-yoga, battery-question). The how is `eval/README.md`; the **why** is
-  the new conceptual doc **`docs/poor-mans-evals.md`** (spec/contract/observability/evals/
-  guardrails + a concept→codebase table; cross-linked from README + eval/README).
+## 3. Dev eval bar: role × brief selector — `41289f2`
 
-## Key decisions
+Turned the manual `GENERATION_KNOWLEDGE` swap into a **Role dropdown** beside the brief
+dropdown. The eval bar is now a role × brief matrix.
 
-- **Pay for AI once, explore free:** opening round = model; re-runs = algorithmic variations
-  of it. (Re-run hue-rotation can drift off intent — round 0 honors it, re-runs are the
-  playground. One-line swap to lightness/saturation-only if intent-locked re-runs wanted.)
-- **`prompts.md` is the curated golden set; `runs.jsonl` is the firehose.** Deliberately did
-  NOT pull run-history into the picker (would mix curation with noise); `+ New` is the
-  deliberate bridge that promotes a brief into the set.
-- **Steer with principles/ranges, not example palettes** (examples muzzle the model).
-- Eval tooling stays ~tiny, dev-only, single-project, no abstraction — "this is how LangChain
-  starts; we stop here." (We're in evals/observability territory, not orchestration.)
+- `knowledge/roles/` holds dev-only alternate personas; `roles/interior-designer.md` is the
+  worked example (warm Pottery-Barn persona, same shape as minimal color-theorist).
+- `knowledge-loader.ts` globs `roles/*.md`, merges into the basename map, exports `ROLE_FILES`.
+- `prompt-palettes.ts`: **DEV-gated** `setGenerationRoleOverride()` + `currentGenerationRole()`;
+  `generationSystemPrompt()` honors the override. Live app always uses `color-theorist.md`;
+  "role" never enters the shipped `Source`/journey model.
+- `eval/runs.jsonl` records now carry `role` (self-describing role × brief).
 
-## TOMORROW — do these first (repo-as-resume quick wins + analytics)
+## Key decisions / philosophy (this session)
 
-Workflow is already strong (per-commit gate, prose commits, `log/` narrative, real PRs like
-#6, focused tests — don't over-engineer past this). Three quick, high-signal gaps the user
-wants closed first, then analytics:
+- **Minimal beats verbose for a system prompt.** The test of a good prompt: a stranger feels
+  safe editing it. Forty rules hide which one carries the result (and let contradictions hide
+  across sections). Goal stated by the user: **easy on us, easy on everyone else, easy for the
+  model.**
+- **Vague guardrails don't bind** — "darks tending toward 100% black" left grounds at L 4–10%
+  (model reads near-black as "not pure black"). A concrete-ish range is the lever that bites.
+  Left as a known next step; current darkness judged expressive and good enough.
+- **One markdown file = one knob.** Personas are a folder of `.md` + the `getKnowledge` getter;
+  drop a file in `knowledge/roles/`, it appears in the picker — no framework, no LangGraph.
+- **No prompt-version archive / dating.** Single canonical `color-theorist.md`; git is the
+  silent backstop. "Open the repo, see it, it's simple, tweak it."
 
-1. **CI — the big one.** No `.github/workflows` exists, so "gate green per commit" is an
-   unverifiable claim. Add a GitHub Actions workflow running the gate (`tsc` + `eslint` +
-   `pnpm test` + `pnpm build`) on push + PR → verifiable green checks. **Tailor to this
-   stack, not a generic template:** pnpm (see the `vercel-deploy-tanstack-pnpm11` memory),
-   Node, TanStack Start + Nitro.
-2. **LICENSE — none exists**, but the app footer calls itself "open-source" (a real
-   claim/reality gap a reviewer will catch; legally meaningful too). Add one — MIT is the
-   conventional pick for a showcase repo; confirm with the user.
-3. **Tag `v1.0.0`** — "v1 shipped" with no git tag. A tiny signal that you ship deliberately.
-4. **Vercel Analytics** — the user enabled it in Vercel (org `devpdx`, project
-   `palette-forge`, live at colorfordays.com). Add `@vercel/analytics`. **GOTCHA: this is
-   TanStack Start, NOT Next.js** — the dashboard shows the Next.js snippet
-   (`@vercel/analytics/next`); use the React variant instead:
-   `import { Analytics } from '@vercel/analytics/react'` and render `<Analytics />` in the
-   root layout (`src/routes/__root.tsx`). Optional companion: `@vercel/speed-insights/react`.
+## Outstanding / next steps (nothing in flight — clean stopping point)
 
-Workflow habit notes: keep cherry-picks rare (the border tweak `cf18369` is a dup on both
-`main` and the branch — reconcile at merge); land `feat/prompt-to-palette` as a proper PR
-when ready (CI will then decorate it). Skip: e2e/component tests, conventional-commits
-(your prose messages are better), heavy branch protection.
+- **Conversational refine (the user's fresh idea, not started):** with AI enabled, react to a
+  returned round — *"I like 2 and 4, redo the rest."* Open design question raised: **replace
+  in place vs. a carousel of variations** (and keep instant algorithmic re-runs for the rest).
+  This maps to the already-deferred **epic phases 3–4** and `docs/plan-ai-conversational-refine.md`
+  — the keep-N / carousel framing should be written into that doc when picked up.
+- **Darkness concrete-floor lever** — if near-black grounds ever bug you, add a real lightness
+  range to `color-theorist.md` (e.g. "deep but breathing, ~L 12–20%, not near-black"). Known,
+  one-sentence change.
+- **Eval-tooling de-duplication (spec'd in this session's assessment, deferred):** the response
+  parser, the `prompts.md` parser, and the run-record shape are each implemented 2–3× (TS in
+  `prompt-palettes.ts` + JS mirror in `scripts/eval.mjs` + `vite/eval-capture.ts`). Consolidate
+  into one shared parser + one prompt-set parser + one record shape; convert `eval.mjs`→`.ts`
+  via `tsx` so it imports the shared TS. Net code *reduction*. Deliberately deferred until after
+  the tuning soak so the harness isn't destabilized mid-use.
+- **More personas** in `knowledge/roles/` (the pattern is proven; e.g. a "serious designer").
+- **Parked (from CLAUDE.md):** mood-board input; the agent-callable MCP/API surface; lifting the
+  color "comfort band" into explicit constants.
 
-## THEN — the prompt tuning (what the eval loop was built for)
+## How state is captured (so we don't lose the thread)
 
-Two eval paths now available: `pnpm eval [prompt-id]` (headless, key in `.env.local`,
-Claude Code can drive this autonomously) and the in-app dev banner (visual smoke test).
-`eval/latest.json` now has a `parsed` field alongside `raw` — readable in VS Code.
-
-1. **Mono-hue neutrals (relax it).** `color-theorist.md` says neutrals share one hue family
-   — that's why each Minecraft take was single-hued. One-line relax to let the model build
-   cohering multi-hue palettes ("muted pink + cyan + muted purple"). User is keen on this.
-2. **Ground-lightness range.** `wellness-yoga` brief returned grounds too dark (~`#191419`,
-   near-black) for a pro site. Add "deep but breathing, ~L 12–20%, not near-black" to
-   `color-theorist.md`. (`wellness-yoga` is the tagged test case.)
-3. **Deferred:** scope/refusal eval (the `battery-question` "pass" = graceful decline —
-   needs a prompt guard + a way to judge it); automated scorers (codify a must-not like "no
-   magenta-band hue"); epic phases 3–4 (thinking feed, conversational refine).
+- **Done-work:** prose commit messages + `log/YYYY-MM-DD.md` beats (today: `log/2026-06-25.md`).
+  Reliable and habitual.
+- **Where-we-are / next:** this file (`continue.md`) — keep it fresh at session ends, it's the
+  load-bearing handoff doc.
+- **Bigger plans:** `docs/` (e.g. `epic-ai-layer.md`, `plan-ai-conversational-refine.md`,
+  `poor-mans-evals.md`) + `CLAUDE.md`'s "Parked" list + memories.
 
 ## Git state
 
-`feat/prompt-to-palette`, clean, fully pushed (HEAD `69145b4`). Open for the tuning soak —
-no PR yet. `main` is untouched by this work except the border cherry-pick (`cf18369`).
-Real Anthropic key confirmed working — full AI happy path browser-verified this session.
+`feat/prompt-to-palette`, clean, fully pushed (HEAD `6f3cd4f`). `main` (`8ef40a9`) has
+everything and is live on colorfordays.com. Branch == main content-wise. No PR open. A real
+Anthropic key in `.env.local` (and in Settings) exercises the AI path; the dev eval bar's Role
+dropdown is the way to A/B personas locally.
