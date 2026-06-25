@@ -99,8 +99,9 @@ when ready (CI will then decorate it). Skip: e2e/component tests, conventional-c
 
 ## THEN — the prompt tuning (what the eval loop was built for)
 
-Use the EVAL bar (needs a real key): pick a brief → Run → read `eval/runs.jsonl` /
-`latest.json` → tweak `color-theorist.md` → Run again → compare.
+Two eval paths now available: `pnpm eval [prompt-id]` (headless, key in `.env.local`,
+Claude Code can drive this autonomously) and the in-app dev banner (visual smoke test).
+`eval/latest.json` now has a `parsed` field alongside `raw` — readable in VS Code.
 
 1. **Mono-hue neutrals (relax it).** `color-theorist.md` says neutrals share one hue family
    — that's why each Minecraft take was single-hued. One-line relax to let the model build
@@ -114,7 +115,6 @@ Use the EVAL bar (needs a real key): pick a brief → Run → read `eval/runs.js
 
 ## Git state
 
-`feat/prompt-to-palette`, clean, fully pushed (HEAD `f481fff`). Open for the tuning soak —
+`feat/prompt-to-palette`, clean, fully pushed (HEAD `69145b4`). Open for the tuning soak —
 no PR yet. `main` is untouched by this work except the border cherry-pick (`cf18369`).
-Needs a **real Anthropic key** to exercise the AI happy path (only fake-key/error paths
-verified live this session; everything else unit-tested + browser-verified).
+Real Anthropic key confirmed working — full AI happy path browser-verified this session.
