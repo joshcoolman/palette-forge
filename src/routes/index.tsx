@@ -420,6 +420,7 @@ function Home() {
                 rounds={journey.rounds}
                 savedIds={journey.saved}
                 progress={journey.progress}
+                showCharacter={journey.source.type === 'prompt'}
                 onToggleSave={(palette) => {
                   const wasSaved = journey.saved.includes(palette.id)
                   toggleSaved(ACTIVE, palette)

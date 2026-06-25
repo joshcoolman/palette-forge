@@ -22,6 +22,7 @@ function RoundStrips({
   roundIndex,
   savedIds,
   progress,
+  showCharacter,
   onToggleSave,
   onRegenerate,
 }: {
@@ -31,6 +32,8 @@ function RoundStrips({
   /** Live status while this round runs — shown so a multi-second model call reads
    *  as working, not stuck. */
   progress?: string
+  /** Show the palette's character label below each strip — only for AI journeys. */
+  showCharacter?: boolean
   onToggleSave: (palette: ScoredPalette) => void
   onRegenerate?: () => void
 }) {
@@ -89,12 +92,18 @@ function RoundStrips({
   return (
     <div className={`grid ${ROUND_GRID}`}>
       {round.variations.map((palette) => (
-        <PaletteCard
-          key={palette.id}
-          palette={palette}
-          saved={savedIds.includes(palette.id)}
-          onToggleSave={() => onToggleSave(palette)}
-        />
+        <div key={palette.id} className="flex flex-col gap-1">
+          <PaletteCard
+            palette={palette}
+            saved={savedIds.includes(palette.id)}
+            onToggleSave={() => onToggleSave(palette)}
+          />
+          {showCharacter && palette.character && (
+            <p className="truncate text-xs" style={{ color: 'var(--app-muted)' }}>
+              {palette.character}
+            </p>
+          )}
+        </div>
       ))}
     </div>
   )
@@ -110,12 +119,14 @@ export function SceneVariations({
   rounds,
   savedIds,
   progress,
+  showCharacter,
   onToggleSave,
   onRegenerate,
 }: {
   rounds: VariationRound[]
   savedIds: string[]
   progress?: string
+  showCharacter?: boolean
   onToggleSave: (palette: ScoredPalette) => void
   onRegenerate?: () => void
 }) {
@@ -148,6 +159,7 @@ export function SceneVariations({
               roundIndex={roundIndex}
               savedIds={savedIds}
               progress={progress}
+              showCharacter={showCharacter}
               onToggleSave={onToggleSave}
               onRegenerate={onRegenerate}
             />

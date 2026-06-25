@@ -179,7 +179,9 @@ async function runPrompt(client, model, prompt) {
   const record = { at: new Date().toISOString(), model, brief: prompt.brief, raw }
   mkdirSync(dirname(RUNS), { recursive: true })
   appendFileSync(RUNS, JSON.stringify(record) + '\n')
-  writeFileSync(LATEST, JSON.stringify(record, null, 2))
+  // latest.json gets a `parsed` field so it opens as readable structured JSON in an editor.
+  // runs.jsonl stays raw-only (the shared format with the Vite capture middleware).
+  writeFileSync(LATEST, JSON.stringify({ ...record, parsed: { message, palettes } }, null, 2))
   console.log('→ saved to eval/runs.jsonl + eval/latest.json\n')
 
   return { prompt, raw, palettes }

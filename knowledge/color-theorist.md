@@ -85,7 +85,7 @@ in your own voice — react to their brief, like a designer handing over the wor
   "palettes": [
     {
       "name": "Two Words",
-      "rationale": "one short line: why this fits the brief",
+      "rationale": "grounded and rooted",
       "roles": {
         "background": { "light": "#rrggbb", "dark": "#rrggbb" },
         "surface":    { "light": "#rrggbb", "dark": "#rrggbb" },
@@ -101,5 +101,8 @@ in your own voice — react to their brief, like a designer handing over the wor
 ```
 
 All seven roles are required on each palette, each with a valid 6-digit `#rrggbb` light and
-dark hex. `name` is two evocative words; `rationale` is one short line. Six palettes.
-Return the object and nothing else.
+dark hex. `name` is two evocative words; `rationale` is 2–4 words describing the palette's
+**character and feel only** — no color names, no hue descriptions. The user can see the
+colors; tell them how it reads. Think: "grounded and rooted", "cool and modern",
+"warm and approachable" — not "deep greens with a cedar accent."
+Six palettes. Return the object and nothing else.
