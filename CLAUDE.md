@@ -39,6 +39,10 @@ The app is **one page** (`/`, the combined source picker + working area + saved 
 - **Prime directive (as shipped):** AI is absent and unprompted **without a key**. With a key: the *prompt flow* is model-authored (the model computes color — the deliberate reversal of the old "never computes color" line), while seed/image generation stays deterministic and rename only *suggests* text. Manual rename is a base feature for all, so the no-key app isn't strictly byte-for-byte — but the *AI* surface is.
 - **Deferred (epic phases 3–4):** the thinking feed (streaming progress) and conversational refine (react-to-result, clarify-then-act — [`docs/plan-ai-conversational-refine.md`](docs/plan-ai-conversational-refine.md)). `docs/plan-remove-ai.md` is the historical record of the earlier removal.
 
+**Eval tooling (dev-only).** [`eval/README.md`](eval/README.md) is the how; [`docs/poor-mans-evals.md`](docs/poor-mans-evals.md) is the why. Two complementary paths:
+- **Dev-UI runner** — `src/components/dev/eval-runner.tsx`, the burnt-orange banner gated on `DEV && aiEnabled`. Runs briefs from `eval/prompts.md` in-app, captures every generation to `eval/runs.jsonl` via the Vite middleware (`vite/eval-capture.ts`). For visual smoke tests and adding new briefs.
+- **Headless runner** — `pnpm eval [prompt-id]` (`scripts/eval.mjs`). Calls the API directly (key from `.env.local`), no running app. Claude Code uses this to iterate on `knowledge/color-theorist.md` autonomously — edit the system prompt, run a brief, read the output, repeat. Same log format; same golden set.
+
 **Parked:** the mood-board input (N inspo images + optional prompt); lifting the color "comfort band" (never-pure-white/black, sat caps) into explicit constants / `/knowledge` (the `color-comfort-band` memory); exposing the engine as an agent-callable MCP/API surface.
 
 ## Build log

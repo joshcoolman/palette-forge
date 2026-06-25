@@ -55,12 +55,10 @@ engine chose the accent — see `docs/plan-ai-model-direct.md` for why, and the 
 
 ---
 
-## How to use (for now)
+## How to use
 
-1. Add a real Anthropic key in Settings.
-2. Open the source popover → "Chat with AI" → paste a brief above → Submit.
-3. Judge against Intent + Must-not. With observability on (`docs/plan-ai-model-direct.md`),
-   the dev console / call log shows the model, the exact prompt, and the raw response.
+**In-app (visual smoke test):** add a real Anthropic key in Settings → open the source
+popover → "Chat with AI" → paste a brief above → Submit. The dev console + `eval/runs.jsonl`
+capture the exact prompt and raw response.
 
-A scripted runner (feed each prompt, capture JSON, auto-check the must-nots like
-"no hue in the magenta/pink band") is a later step once the model-direct contract lands.
+**Headless (fast iteration):** `pnpm eval [prompt-id]` — no app needed. See `eval/README.md`.

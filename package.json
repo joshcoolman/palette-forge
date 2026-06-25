@@ -14,7 +14,8 @@
     "test": "vitest run",
     "lint": "eslint",
     "format": "prettier --write . && eslint --fix",
-    "check": "prettier --check ."
+    "check": "prettier --check .",
+    "eval": "node --env-file=.env.local scripts/eval.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",

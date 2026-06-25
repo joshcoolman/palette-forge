@@ -36,12 +36,31 @@ layer — the thing LangSmith/Langfuse sell, scoped to one person and one file.
 
 ## Using it
 
+Two paths, same log:
+
+**Dev-UI runner** (visual, in-app):
 ```bash
-pnpm dev                      # the capture endpoint is live only here
+pnpm dev
 # add an Anthropic key in Settings → "Chat with AI" → run a brief from prompts.md
 tail -f eval/runs.jsonl       # watch runs land
 cat eval/latest.json          # eyeball the most recent one
 ```
+
+**Headless runner** (no app needed — Claude Code uses this):
+```bash
+# 1. Create .env.local from the example and add your key
+cp .env.local.example .env.local
+# edit .env.local: ANTHROPIC_API_KEY=sk-ant-...
+
+pnpm eval                     # run all briefs
+pnpm eval lawn-care           # run one brief by ID (partial match)
+pnpm eval wellness            # partial match works too
+```
+
+The headless runner reads `eval/prompts.md`, calls the API directly, prints palette
+names / rationale / key hex values and any must-not reminders to stdout, then writes
+to the same `eval/runs.jsonl` + `eval/latest.json`. Use it to iterate on
+`knowledge/color-theorist.md` without spinning up the app — edit, run, read, repeat.
 
 Each line:
 
