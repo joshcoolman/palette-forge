@@ -74,79 +74,91 @@ export function EvalRunner({ onRun }: { onRun: (brief: string) => void }) {
     'rounded bg-black/25 px-2 py-1 text-white outline-none placeholder:text-white/50'
   const solid = 'rounded bg-white/90 px-2.5 py-1 font-medium text-black hover:bg-white'
 
-  return (
-    <div
-      className="w-full rounded-[var(--app-radius)] text-xs"
-      style={{ background: BURNT, color: '#fff' }}
-    >
-      <div className="flex flex-wrap items-center gap-2 px-4 py-2">
-        <span className="font-mono font-semibold uppercase tracking-wide">
-          eval · dev
-        </span>
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          aria-label="Role"
-          className={`min-w-[150px] ${field}`}
-        >
-          {ROLES.map((r) => (
-            <option key={r} value={r} className="text-black">
-              {roleLabel(r)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-          aria-label="Eval prompt"
-          className={`min-w-[320px] ${field}`}
-        >
-          {prompts.map((p) => (
-            <option key={p.id} value={p.id} className="text-black">
-              {p.label}
-            </option>
-          ))}
-        </select>
-        <button type="button" onClick={run} className={solid}>
-          Run
-        </button>
-        <button
-          type="button"
-          onClick={() => setAdding((a) => !a)}
-          aria-label="Add a prompt"
-          aria-pressed={adding}
-          className="flex items-center gap-1 rounded border border-white/40 px-2 py-1 hover:bg-white/10"
-        >
-          <Plus size={12} /> New
-        </button>
-      </div>
+  const selectedBrief = prompts.find((x) => x.id === selected)?.brief
 
-      {adding && (
-        <form
-          className="flex flex-wrap items-center gap-2 px-4 pb-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            void saveAndRun()
-          }}
-        >
-          <input
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="label — e.g. battery-question — off-topic"
-            aria-label="New prompt label"
-            className={`min-w-[240px] ${field}`}
-          />
-          <input
-            value={brief}
-            onChange={(e) => setBrief(e.target.value)}
-            placeholder="the brief / what the user types"
-            aria-label="New prompt brief"
-            className={`min-w-[360px] flex-1 ${field}`}
-          />
-          <button type="submit" className={solid}>
-            Save &amp; Run
+  return (
+    <div className="w-full">
+      <div
+        className="w-full rounded-[var(--app-radius)] text-xs"
+        style={{ background: BURNT, color: '#fff' }}
+      >
+        <div className="flex flex-wrap items-center gap-2 px-4 py-2">
+          <span className="font-mono font-semibold uppercase tracking-wide">
+            eval · dev
+          </span>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            aria-label="Role"
+            className={`min-w-[150px] ${field}`}
+          >
+            {ROLES.map((r) => (
+              <option key={r} value={r} className="text-black">
+                {roleLabel(r)}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            aria-label="Eval prompt"
+            className={`min-w-[320px] ${field}`}
+          >
+            {prompts.map((p) => (
+              <option key={p.id} value={p.id} className="text-black">
+                {p.label}
+              </option>
+            ))}
+          </select>
+          <button type="button" onClick={run} className={solid}>
+            Run
           </button>
-        </form>
+          <button
+            type="button"
+            onClick={() => setAdding((a) => !a)}
+            aria-label="Add a prompt"
+            aria-pressed={adding}
+            className="flex items-center gap-1 rounded border border-white/40 px-2 py-1 hover:bg-white/10"
+          >
+            <Plus size={12} /> New
+          </button>
+        </div>
+
+        {adding && (
+          <form
+            className="flex flex-wrap items-center gap-2 px-4 pb-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void saveAndRun()
+            }}
+          >
+            <input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="label — e.g. battery-question — off-topic"
+              aria-label="New prompt label"
+              className={`min-w-[240px] ${field}`}
+            />
+            <input
+              value={brief}
+              onChange={(e) => setBrief(e.target.value)}
+              placeholder="the brief / what the user types"
+              aria-label="New prompt brief"
+              className={`min-w-[360px] flex-1 ${field}`}
+            />
+            <button type="submit" className={solid}>
+              Save &amp; Run
+            </button>
+          </form>
+        )}
+      </div>
+      {/* The selected brief, shown on the page background below the panel (not
+          inside it) — a quick read of what you're about to run while building up
+          the golden set. */}
+      {selectedBrief && (
+        <p className="px-4 pt-1.5 text-[11px] leading-snug text-white/40">
+          {selectedBrief}
+        </p>
       )}
     </div>
   )
