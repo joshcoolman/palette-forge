@@ -2,14 +2,12 @@
 
 ## Where we are (2026-06-25, end of session)
 
-**Everything is on `main` and deployed.** `main` (HEAD `8ef40a9`, a merge commit) now
-contains all of yesterday's *and* today's work and was pushed → Vercel production deploy to
-**colorfordays.com**. Currently on branch **`feat/prompt-to-palette`** (HEAD `6f3cd4f`),
-**clean, fully pushed, and content-identical to `main`** — future work on the branch will
-diverge from here as normal. Gate green on every commit (`tsc`, `eslint`, 73 tests, `build`);
-CI runs on push + PR.
+**Everything is on `main` and deployed; `feat/prompt-to-palette` has been merged and
+deleted (local + remote) — `main` is now the only branch.** `main` (HEAD `d4a44ae`) is
+clean, fully pushed → Vercel production at **colorfordays.com**. Gate green on every commit
+(`tsc`, `eslint`, 73 tests, `build`); CI runs on push + PR.
 
-This session shipped three things, in order:
+This session shipped, in order:
 
 ## 1. Repo-hardening quick wins (morning) — `108a2e9` via PR #7
 
@@ -85,15 +83,26 @@ dropdown. The eval bar is now a role × brief matrix.
 ## How state is captured (so we don't lose the thread)
 
 - **Done-work:** prose commit messages + `log/YYYY-MM-DD.md` beats (today: `log/2026-06-25.md`).
-  Reliable and habitual.
-- **Where-we-are / next:** this file (`continue.md`) — keep it fresh at session ends, it's the
-  load-bearing handoff doc.
+- **Where-we-are / next:** this file (`continue.md`) — now also **surfaced first in `/docs`**
+  (added to the docs glob), and kept fresh by a **`.claude/settings.json` Stop hook** that nudges
+  when commits outpace it. Load-bearing handoff doc.
 - **Bigger plans:** `docs/` (e.g. `epic-ai-layer.md`, `plan-ai-conversational-refine.md`,
   `poor-mans-evals.md`) + `CLAUDE.md`'s "Parked" list + memories.
 
+## Workflow hardening done this session (beyond the app)
+
+- `continue.md` surfaced first in the `/docs` viewer (`d4a44ae`); a Stop hook nudges if it drifts.
+- Two principles graduated to **global `~/.claude/CLAUDE.md`** (apply to all repos): *portability
+  as a habit* and *minimal prose contracts; tune with evidence*. Plus the continue.md "read &
+  verify on session start" note and `branch-cleanup-fastidious` / `minimal-system-prompts` memories.
+- **Side quest (outpaint-studio):** closed. It's the canonical greenfield baseline; the everywhere-
+  floor (a `continue.md` + the global read-it instruction) is already in place there, so no per-repo
+  hook/CI/log port was needed. The convention-based `/docs` route was evaluated for back-porting
+  *here* and **declined** (its `NN-` ordering collides with our ISO-date log filenames; churn on a
+  correct file). The convention model stays outpaint's; the reusable value lives at the principle level.
+
 ## Git state
 
-`feat/prompt-to-palette`, clean, fully pushed (HEAD `6f3cd4f`). `main` (`8ef40a9`) has
-everything and is live on colorfordays.com. Branch == main content-wise. No PR open. A real
-Anthropic key in `.env.local` (and in Settings) exercises the AI path; the dev eval bar's Role
-dropdown is the way to A/B personas locally.
+On **`main`** only (the feature branch was merged and deleted, local + remote), clean, fully
+pushed (HEAD `d4a44ae`), live on colorfordays.com. A real Anthropic key in `.env.local` (and in
+Settings) exercises the AI path; the dev eval bar's Role dropdown A/Bs personas locally.
