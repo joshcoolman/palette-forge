@@ -57,6 +57,10 @@ engine chose the accent — see `docs/plan-ai-model-direct.md` for why, and the 
 
 > Hey, I'm putting together a party for my kid and his friends. They're all really into Minecraft, and I was hoping you can create some nice color palettes for some invitations I'm creating.
 
+## New Black Couch
+
+> So I recently got a new black couch, and it is a central piece, but I'm wondering what a good palette for the room would be to sort of accent it properly.
+
 ---
 
 ## How to use
