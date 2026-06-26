@@ -35,11 +35,29 @@ export interface CallParams {
   signal?: AbortSignal
 }
 
+/**
+ * Dev-only key bridge. `__DEV_ANTHROPIC_KEY__` is replaced at build time by
+ * `vite.config.ts`: the local `.env.local` ANTHROPIC_API_KEY during `vite dev`,
+ * an empty string in any real build. So locally the AI affordances (incl. the dev
+ * eval bar) light up from `.env.local` with no UI entry, while a hosted build
+ * (Vercel) never receives the key. The `import.meta.env.DEV` guard is belt-and-
+ * suspenders — it also strips this branch from production bundles entirely.
+ */
+declare const __DEV_ANTHROPIC_KEY__: string
+
+/** The active key: the user's browser-stored key wins; otherwise, in dev only,
+ *  the `.env.local` key bridged through Vite. Empty string means "no key". */
+export function resolveApiKey(): string {
+  const stored = getSettings().apiKey.trim()
+  if (stored) return stored
+  return import.meta.env.DEV ? __DEV_ANTHROPIC_KEY__.trim() : ''
+}
+
 /** True when a key is present. The single gate every AI affordance checks before
  *  it renders. Synchronous on purpose — reads the hydrated in-memory mirror so the
  *  UI can decide *existence* without an async hop (no flash of AI UI). */
 export function hasKey(): boolean {
-  return getSettings().apiKey.trim().length > 0
+  return resolveApiKey().length > 0
 }
 
 /**
@@ -51,7 +69,7 @@ export async function* callAnthropic(
   params: CallParams,
 ): AsyncGenerator<string, void, unknown> {
   const settings = getSettings()
-  const apiKey = settings.apiKey.trim()
+  const apiKey = resolveApiKey()
   if (!apiKey) throw new Error('No Anthropic API key set')
 
   const { default: Anthropic } = await import('@anthropic-ai/sdk')
