@@ -191,9 +191,8 @@ export function FavoriteCard({
           </span>
           {palette.character && (
             <span
-              className="truncate text-xs"
+              className="text-xs leading-snug"
               style={{ color: 'var(--app-muted)' }}
-              title={palette.character}
             >
               {palette.character}
             </span>

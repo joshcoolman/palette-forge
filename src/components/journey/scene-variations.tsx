@@ -99,7 +99,7 @@ function RoundStrips({
             onToggleSave={() => onToggleSave(palette)}
           />
           {showCharacter && palette.character && (
-            <p className="truncate text-xs" style={{ color: 'var(--app-muted)' }}>
+            <p className="text-xs leading-snug" style={{ color: 'var(--app-muted)' }}>
               {palette.character}
             </p>
           )}
