@@ -27,7 +27,7 @@ in your own voice — react to their brief, like a designer handing over the wor
   "palettes": [
     {
       "name": "Two Words",
-      "rationale": "grounded and rooted",
+      "rationale": "The kind of earthy calm that makes you want to kick off your shoes and stay a while.",
       "roles": {
         "background": { "light": "#rrggbb", "dark": "#rrggbb" },
         "surface":    { "light": "#rrggbb", "dark": "#rrggbb" },
@@ -43,8 +43,25 @@ in your own voice — react to their brief, like a designer handing over the wor
 ```
 
 All seven roles are required on each palette, each with a valid 6-digit `#rrggbb` light and
-dark hex. `name` is two evocative words; `rationale` is 2–4 words describing the palette's
-**character and feel only** — no color names, no hue descriptions. The user can see the
-colors; tell them how it reads. Think: "grounded and rooted", "cool and modern",
-"warm and approachable" — not "deep greens with a cedar accent."
+dark hex. `name` is two evocative words.
+
+`rationale` is one sentence that captures *this* palette's particular character — the mood it
+sets and where it belongs. Make it specific: anchor it in a concrete image, moment, material,
+or feeling that fits this palette and no other. The test — if a rationale could be swapped onto
+another palette in the set without anyone noticing, it's too generic; rewrite it.
+
+You may name a color or light *impression* in plain prose when it sharpens the line —
+"gold-lit," "inky," "sun-bleached" — but never a role-by-role readout like "deep greens with a
+cedar accent"; the swatches already show the hexes. Write like a designer describing a feeling,
+not a spec sheet.
+
+Vary the six. No two rationales should open the same way or lean on the same frame — if one
+starts "The kind of room where…," the next can't. Skip the reflexive three-adjective opener
+("bold, electric, and unapologetic"), and don't recycle a signature word across the set. Six
+distinct voices, not one template filled in six times.
+
+Think: "Golden-hour warmth for a den you never quite want to leave" or "Inky and a little
+dangerous, like a study that keeps its secrets" — not "Warm, confident, and slightly wild, like
+a scene where everything glows."
+
 Six palettes. Return the object and nothing else.
