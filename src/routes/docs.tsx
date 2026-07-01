@@ -15,7 +15,7 @@ import { IconButton } from '#/components/ui/icon-button'
 export const Route = createFileRoute('/docs')({ component: DocsPage })
 
 const RAW: Record<string, string> = import.meta.glob(
-  ['/continue.md', '/README.md', '/CLAUDE.md', '/docs/**/*.md', '/log/*.md'],
+  ['/README.md', '/CLAUDE.md', '/docs/**/*.md', '/log/*.md'],
   { query: '?raw', import: 'default', eager: true },
 )
 
@@ -49,10 +49,6 @@ function classify(path: string): {
   order: number
 } {
   const base = path.split('/').pop()!.replace(/\.md$/i, '')
-  // The root handoff doc — single file in the repo root, surfaced first here as the
-  // "where are we" first stop. Stays one file; this route just reads it at build time.
-  if (path === '/continue.md')
-    return { section: 'Start here', title: 'Continue', order: -1 }
   if (path === '/README.md') return { section: 'Start here', title: 'README', order: 0 }
   if (path === '/docs/SPEC.md') return { section: 'Start here', title: 'Spec', order: 1 }
   if (path === '/CLAUDE.md')

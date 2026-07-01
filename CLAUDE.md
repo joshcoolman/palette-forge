@@ -24,7 +24,7 @@ This is a **public repo the owner points to as evidence of their craft** — dev
 
 ## Current state
 
-See [`continue.md`](continue.md) for where the build actually is — it's the live record, kept current with every commit (refreshed via `/continue-prompt`, with a Stop-hook staleness check). This file holds the **rules**, which don't go stale; `continue.md` holds the **state**, which does. Don't restate current state, phase status, or what's parked here — that's `continue.md`'s job, and a frozen copy in this always-loaded file would quietly drift out of sync with it. For the full architecture see [`docs/SPEC.md`](docs/SPEC.md); for the AI layer, [`docs/epic-ai-layer.md`](docs/epic-ai-layer.md); for the eval workflow, [`eval/README.md`](eval/README.md).
+State lives in **git, not a handoff doc.** What changed and why is in the commit history and the dated beats in [`log/`](log/); outstanding or planned-but-unfinished work is tracked as **GitHub issues.** There is no `continue.md` — this file holds the **rules**, which don't go stale, and nothing here needs to be kept in sync with a session-state file. For the full architecture see [`docs/SPEC.md`](docs/SPEC.md); for the AI layer, [`docs/epic-ai-layer.md`](docs/epic-ai-layer.md); for the eval workflow, [`eval/README.md`](eval/README.md).
 
 ## Build log
 
