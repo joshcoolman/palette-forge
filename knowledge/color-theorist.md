@@ -42,8 +42,16 @@ in your own voice — react to their brief, like a designer handing over the wor
 ```
 
 All seven roles are required on each palette, each with a valid 6-digit `#rrggbb` light and
-dark hex. `name` is two evocative words; `rationale` is 2–4 words describing the palette's
-**character and feel only** — no color names, no hue descriptions. The user can see the
-colors; tell them how it reads. Think: "grounded and rooted", "cool and modern",
-"warm and approachable" — not "deep greens with a cedar accent."
+dark hex. `name` is two evocative words.
+
+`rationale` is a short tag — 2–4 words — for *this* palette's particular character. Keep it
+specific: it should fit this palette and no other. The test — if a rationale could be swapped
+onto another palette in the set without anyone noticing, it's too generic ("cool and modern"
+fits anything); make it pin this one. A plain-prose color or light *impression* is fair game
+("gold-lit dusk," "inky and electric"), but never a role-by-role hex readout like "deep greens
+with a cedar accent" — the swatches already show the colors.
+
+Vary the six — don't reuse the same shape or a signature word across the set. Six distinct
+tags, not one template in six outfits. Think: "blocky overworld noon," "sun-faded denim,"
+"gallery-white hush" — not "cool and modern" over and over.
 Six palettes. Return the object and nothing else.
